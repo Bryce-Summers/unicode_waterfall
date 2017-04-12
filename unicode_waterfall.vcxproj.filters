@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\ofApp.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.cpp">
+      <Filter>addons\ofxTrueTypeFontUC\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Letter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{d8376475-7454-4a24-b08a-aac121d3ad6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons">
+      <UniqueIdentifier>{71834F65-F3A9-211E-73B8-DC85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons\ofxTrueTypeFontUC">
+      <UniqueIdentifier>{5652952C-1675-EFF8-8E62-5D8C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons\ofxTrueTypeFontUC\src">
+      <UniqueIdentifier>{7E369600-03BF-EEFC-FA92-F38A}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ofApp.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.h">
+      <Filter>addons\ofxTrueTypeFontUC\src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Letter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="icon.rc" />
+  </ItemGroup>
+</Project>
