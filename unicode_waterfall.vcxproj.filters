@@ -13,6 +13,9 @@
     <ClCompile Include="src\Letter.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="grid.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -36,6 +39,9 @@
       <Filter>addons\ofxTrueTypeFontUC\src</Filter>
     </ClInclude>
     <ClInclude Include="src\Letter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="grid.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

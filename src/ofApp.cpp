@@ -3,22 +3,46 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     frame = 0;
+
+    //string unicode_test = "Testing «ταБЬℓσ» : 1<2 & 4 + 1>3, now 20 % off!";
+
+    /*
+    int frame_rate = 30;
+    this -> seconds_per_frame = 1.0 / frame_rate
+    */
+
+    int sentances_per_second = 1;
+    this -> seconds_per_frame = 1.0 / sentances_per_second;
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 
-    // Test String.
-    if (frame % 30 == 0)
-    {
-        letters.push_back(Letter(ofRandom(ofGetWidth()), -20, 10));
-    }
-    frame += 1;
+    // Handle time and differences.
+    float new_time = ofGetElapsedTimef(); // Time in seconds.
+    float dt = new_time - time;
+    time = new_time;
 
-    // Determine the amount of time that has elapsed since the last update call frame.
-    float new_time = ofGetElapsedTimef();
-    float dt       = new_time - time;
-    time           = new_time;
+    // Used to trigger the creation of new sentances.
+    time_accum += dt;
+
+    // Test String.
+    if (time_accum > this -> seconds_per_frame)
+    {
+        time_accum -= this -> seconds_per_frame;
+    
+        // Create a sentance of letters.
+        int letters_per_sentance = 5;
+        Letter * previous_letter = NULL;
+        for(int i = 0; i < letters_per_sentance; i++)
+        {
+            
+            letters.push_back(Letter(ofRandom(ofGetWidth()), -20, 10, previous_letter));
+            previous_letter = &letters.back();
+            
+        }
+        
+    }
 
     vector<list<Letter>::iterator> dead_letters;
 

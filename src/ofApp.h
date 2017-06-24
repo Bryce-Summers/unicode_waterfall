@@ -26,4 +26,8 @@ class ofApp : public ofBaseApp{
         int frame;
 
         float time;
+        float time_accum = 0;
+
+        float seconds_per_frame;
+        int frame_rate;
 };

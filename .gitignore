@@ -1,7 +1,7 @@
 # Annoying Visual Studio files.
 
 .db
-.VC.db
+.VC.dbgiit
 obj/*
 bin/*.exe
 
