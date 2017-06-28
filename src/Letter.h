@@ -1,11 +1,12 @@
 #pragma once
 
 #include "ofMain.h"
+#include "grid.h"
 
 class Letter
 {
 public:
-    Letter(float x, float y, float radius, Letter * letter_to_my_left);
+    Letter(float x, float y, float radius, Letter * letter_to_my_left, char character, ofTrueTypeFont * font);
     ~Letter();
 
     // -- Public Interface.
@@ -17,14 +18,25 @@ public:
     float getX();
     float getY();
 
+
+// Init functions
+private:
+
+    void init_texture(char character, ofTrueTypeFont * font);
+
+
 private:
     enum State{WATERFALL, POOL, TEXT_SCROLL};
     State state = WATERFALL;
 
     bool collision_detection; // Controls whether the letter needs to avoid letters and obstacles.
 
+    char character;
+    ofFbo fbo;
+    ofFloatColor background_color = ofFloatColor(1.0, 1.0, 1.0);
 
-    ofTexture texture;
+    ofTrueTypeFont * font;
+
 
     // Indicates the letter to the left of this one in the final sentance that will be displayed.
     Letter * letter_to_my_left = NULL;
@@ -34,6 +46,10 @@ private:
     float x_offset_from_left;
     
     float radius;
+
+    // Angle the letter texture is rotated.
+    float angle = 0;
+    
 
     // -- Physics dynamics.
     float px, py;
@@ -77,6 +93,22 @@ private:
     void stepTextScrollP(float dt);
 
     float text_scroll_speed = 40;
+
+
+// Collision Detetion Functions.
+private:
+    Grid grid;
+
+    // Removes this Letter from every grid cell that it itersects.
+    void remove_from_collision_grid();
+
+    // Adds this letter to every grid cell that the letter's bounding box intersects.
+    void add_to_collision_grid();
+
+    // Update's this letter's physical values, such as velocity,
+    // to reflect the results of any collisions that this letter experiences.
+    void resolve_collisions();
+    std::vector<Letter *> report_collisions();
 
 };
 

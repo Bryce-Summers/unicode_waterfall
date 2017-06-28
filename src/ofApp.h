@@ -30,4 +30,18 @@ class ofApp : public ofBaseApp{
 
         float seconds_per_frame;
         int frame_rate;
+
+
+        void loadFonts();
+        // From fonts example.
+        bool bFirst;
+        string typeStr;
+
+        ofTrueTypeFont  franklinBook14;
+        ofTrueTypeFont	verdana14;
+        ofTrueTypeFont	verdana30;
+
+        ofTrueTypeFont  franklinBook14A;
+        ofTrueTypeFont	verdana14A;
+
 };

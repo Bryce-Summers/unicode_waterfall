@@ -1,7 +1,7 @@
 #include "Letter.h"
 
 
-Letter::Letter(float x, float y, float radius, Letter * left)
+Letter::Letter(float x, float y, float radius, Letter * left, char character, ofTrueTypeFont * font)
 {
     // Position and Physics.
     this -> px = x;
@@ -19,13 +19,61 @@ Letter::Letter(float x, float y, float radius, Letter * left)
 
     // FIXME: For now we are assuming that the letters will be of equal width.
     this -> x_offset_from_left = radius * 2;
+
+    this -> font = font;
+
+    this -> character = character;
 }
 
 
 Letter::~Letter()
 {
+    
 }
 
+/*
+ *
+ * Initialization functions.
+ *
+ */
+
+void Letter::init_texture(char character, ofTrueTypeFont * font)
+{
+    this -> character = character;
+
+    // Determine character size on screen.
+    ofRectangle bounds = font -> getGlyphBBox();
+    int width  = bounds.getWidth();
+    int height = bounds.getHeight();
+
+    // Allocate a large enough frame buffer object to hold 
+    this -> fbo.allocate(width, height, GL_RGBA);
+
+    // OBSERVATIONS: 
+    // 1. ofSetColor(white) needs to be called before drawing the fbo's.
+    // 2. The background may be set, but drawing the string doesn't seem to be working.
+    // 3. drawString is the location of the base line.
+
+    this -> fbo.begin();
+    ofClear(0, 0, 0, 0);
+
+    // Draw a string onto the texture at the given left, baseline position.
+    // the texture is big enough to hold any glyph and the ascender indicates the distance from the top to the baseline, if we want to provide enough space for any glyph.
+    ofSetColor(0, 0, 0, 255);
+
+
+    string s;
+    s.push_back(character);
+    s.push_back('\0');
+    cout << s << endl;
+    
+
+    font -> drawString(s, 0, font -> getAscenderHeight());
+    this -> fbo.end();
+
+    ofDisableLighting();
+
+}
 
 /*
  *
@@ -35,6 +83,8 @@ Letter::~Letter()
 
 void Letter::update(float dt)
 {
+    angle += 1;
+
     stepAcceleration(dt);
     stepVelocity(dt);
     stepPosition(dt);
@@ -52,16 +102,43 @@ void Letter::update(float dt)
     {
         state = TEXT_SCROLL;
     }
+
+    
 }
 
 void Letter::draw()
 {
+
+    // Perform texture allocation here in the serial loop to prevent multiple binding problems.
+    if (this -> fbo.isAllocated() == false)
+    {
+        this -> init_texture(this -> character, this -> font);
+    }
+
     // For now we will draw circles to represent these letters on the screen.
     ofSetColor(0, 0, 0);
     ofFill();
-    ofDrawCircle(this -> px, this -> py, this -> radius);
+    //ofDrawCircle(this -> px, this -> py, this -> radius);
 
-    // FIXME: Draw Letters, instead of circles.
+    // FIXME: Draw textures Letters, instead of circles.
+    //this -> texture.draw(this -> px, this -> py);
+
+    ofPushMatrix();//will isolate the transform
+    ofTranslate(this -> px, this -> py); // Move the 0 coordinate to location (px, py)
+    ofRotate(this -> angle);//whatever we draw next gets rotated 45 degrees
+    //ofTranslate(px, py);
+    int w = fbo.getWidth();
+    int h = fbo.getHeight();
+
+    // Set Alpha to 255, without this line the fbo draws as black.
+    ofSetColor(255, 255, 255, 255);
+    this -> fbo.draw(-w/2, -h/2);// Drawn at origin, because of ofTranslate call.
+    //ofDrawCircle(this -> px, this -> py, this -> radius);
+    //ofDrawCircle(0, 0, this -> radius);
+
+    ofPopMatrix();//will stop other things from being drawn rotated
+
+    //this -> fbo.draw(50, 50);
 }
 
 bool Letter::isDead()
