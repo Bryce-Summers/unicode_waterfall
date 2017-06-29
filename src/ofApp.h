@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "Letter.h"
+#include "Obstacle.h"
 
 class ofApp : public ofBaseApp{
 
@@ -22,7 +23,7 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 		
-        list<Letter> letters;
+
         int frame;
 
         float time;
@@ -43,5 +44,12 @@ class ofApp : public ofBaseApp{
 
         ofTrueTypeFont  franklinBook14A;
         ofTrueTypeFont	verdana14A;
+
+
+        void loadGridAndObstacles();
+        // Objects in the scene.
+        Grid * grid;
+        list<Obstacle> obstacles;
+        list<Letter> letters;
 
 };

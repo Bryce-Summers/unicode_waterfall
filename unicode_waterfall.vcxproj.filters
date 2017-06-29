@@ -16,7 +16,12 @@
     <ClCompile Include="src\grid.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Collidable.cpp" />
+    <ClCompile Include="src\Collidable.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Obstacle.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -45,7 +50,12 @@
     <ClInclude Include="src\grid.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Collidable.h" />
+    <ClInclude Include="src\Collidable.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Obstacle.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />

@@ -2,17 +2,26 @@
 
 #include "ofMain.h"
 #include "grid.h"
+#include "Collidable.h"
 
-class Letter
+class Letter : public Collidable
 {
 public:
-    Letter(float x, float y, float radius, Letter * letter_to_my_left, char character, ofTrueTypeFont * font);
+    Letter(float x,
+        float y,
+        float radius,
+        Letter * letter_to_my_left,
+        char character,
+        ofTrueTypeFont * font,
+        Grid * grid);
     ~Letter();
 
     // -- Public Interface.
     void update(float dt);
     void draw();
     bool isDead();
+
+    void kill();
 
 public:
     float getX();
@@ -26,6 +35,7 @@ private:
 
 
 private:
+    bool dead = false;
     enum State{WATERFALL, POOL, TEXT_SCROLL};
     State state = WATERFALL;
 
@@ -36,7 +46,6 @@ private:
     ofFloatColor background_color = ofFloatColor(1.0, 1.0, 1.0);
 
     ofTrueTypeFont * font;
-
 
     // Indicates the letter to the left of this one in the final sentance that will be displayed.
     Letter * letter_to_my_left = NULL;
@@ -97,18 +106,21 @@ private:
 
 // Collision Detetion Functions.
 private:
-    Grid grid;
+    Grid * grid;
 
-    // Removes this Letter from every grid cell that it itersects.
-    void remove_from_collision_grid();
+// Methods inherited from Collidable.
+public:
+    virtual bool detect_collision_with_rectangle(ofRectangle rect);
 
-    // Adds this letter to every grid cell that the letter's bounding box intersects.
-    void add_to_collision_grid();
+    // Returns true iff this collidable is capable of movement.
+    virtual bool isDynamic();
 
-    // Update's this letter's physical values, such as velocity,
-    // to reflect the results of any collisions that this letter experiences.
-    void resolve_collisions();
-    std::vector<Letter *> report_collisions();
+    // Updates this object's internal physics values to point.
+    // it away from the direction of collision.
+    // Does not modify the position or orientation of the letter, because the letter still needs to validly rmeove itself from the collision grid.
+    virtual bool resolve_collision(ofVec3f direction);
+
+    virtual ofRectangle getBoundingBox();
 
 };
 

@@ -175,6 +175,7 @@
     <ClCompile Include="src\grid.cpp" />
     <ClCompile Include="src\Letter.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Obstacle.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
     <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.cpp" />
   </ItemGroup>
@@ -182,6 +183,7 @@
     <ClInclude Include="src\Collidable.h" />
     <ClInclude Include="src\grid.h" />
     <ClInclude Include="src\Letter.h" />
+    <ClInclude Include="src\Obstacle.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.h" />
   </ItemGroup>

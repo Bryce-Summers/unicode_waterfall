@@ -1,7 +1,14 @@
 #include "Letter.h"
 
 
-Letter::Letter(float x, float y, float radius, Letter * left, char character, ofTrueTypeFont * font)
+Letter::Letter(
+    float x,
+    float y,
+    float radius,
+    Letter * left,
+    char character,
+    ofTrueTypeFont * font,
+    Grid * grid)
 {
     // Position and Physics.
     this -> px = x;
@@ -23,6 +30,8 @@ Letter::Letter(float x, float y, float radius, Letter * left, char character, of
     this -> font = font;
 
     this -> character = character;
+
+    this -> grid = grid;
 }
 
 
@@ -61,12 +70,10 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
     // the texture is big enough to hold any glyph and the ascender indicates the distance from the top to the baseline, if we want to provide enough space for any glyph.
     ofSetColor(0, 0, 0, 255);
 
-
+    // Character to nul terminated string.
     string s;
     s.push_back(character);
-    s.push_back('\0');
-    cout << s << endl;
-    
+    s.push_back('\0');    
 
     font -> drawString(s, 0, font -> getAscenderHeight());
     this -> fbo.end();
@@ -83,6 +90,9 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
 
 void Letter::update(float dt)
 {
+    // Remove the old references to this object stored in the grid.
+    grid -> remove_from_collision_grid(this);
+
     angle += 1;
 
     stepAcceleration(dt);
@@ -103,7 +113,8 @@ void Letter::update(float dt)
         state = TEXT_SCROLL;
     }
 
-    
+    // Add the new references to this object to the grid.
+    grid -> add_to_collision_grid(this);
 }
 
 void Letter::draw()
@@ -143,7 +154,12 @@ void Letter::draw()
 
 bool Letter::isDead()
 {
-    return py > ofGetHeight();
+    return py > ofGetHeight() || dead;
+}
+
+void Letter::kill()
+{
+    dead = true;
 }
 
 float Letter::getX()
@@ -300,4 +316,46 @@ void Letter::stepTextScrollV(float dt)
 void Letter::stepTextScrollP(float dt)
 {
     dynamicsP(dt);
+}
+
+
+
+/*
+ * Collision Detection Methods
+ * Collidable Methods
+ *
+ */
+
+
+// Methods inherited from Collidable.
+bool Letter::detect_collision_with_rectangle(ofRectangle rect)
+{
+    cout << "LETTER::detect_collision_with_rectangle not yet implemented." << endl;
+    return false;
+}
+
+// Returns true iff this collidable is capable of movement.
+bool Letter::isDynamic()
+{
+    return true;
+}
+
+    // Updates this object's internal physics values to point.
+    // it away from the direction of collision.
+bool Letter::resolve_collision(ofVec3f direction)
+{
+    cout << "Letter::resolve_collision not implemented" << endl;
+    return false;
+}
+
+ofRectangle Letter::getBoundingBox()
+{
+    // FIXME: Produce the proper angled bounds.
+
+    
+    int width  = fbo.getWidth();
+    int height = fbo.getHeight();
+    
+
+    return ofRectangle(this -> px, this -> py, width, height);
 }

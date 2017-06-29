@@ -20,17 +20,22 @@ public:
     Collidable();
     virtual ~Collidable();
 
-// -- Collision functions.
 
-// Returns whether this object is in collision with the given rectangle.
-// FIXME: Think about orientation.
-virtual bool detect_collision_with_rectangle(ofRectangle rect) = 0;
+    // -- Collision functions.
 
-// Returns true iff this collidable is capable of movement.
-virtual bool isDynamic() = 0;
+    // Returns whether this object is in collision with the given rectangle.
+    // FIXME: Think about orientation.
+    virtual bool detect_collision_with_rectangle(ofRectangle rect) = 0;
 
-// Updates this object's internal physics values to point 
-// it away from the direction of collision.
-virtual bool resolve_collision(ofVec3f direction) = 0;
+    // Returns true iff this collidable is capable of movement.
+    virtual bool isDynamic() = 0;
+
+    // Updates this object's internal physics values to point 
+    // it away from the direction of collision.
+    virtual bool resolve_collision(ofVec3f direction) = 0;
+
+    // Returns the axis aligned bounding box for this collidable object.
+    // Assumed to be in standard form, which the position at its top left corner.
+    virtual ofRectangle getBoundingBox() = 0;
 
 };

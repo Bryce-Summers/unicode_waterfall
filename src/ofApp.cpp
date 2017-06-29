@@ -15,6 +15,7 @@ void ofApp::setup(){
     this -> seconds_per_frame = 1.0 / sentances_per_second;
 
     loadFonts();
+    loadGridAndObstacles();
 }
 
 void ofApp::loadFonts()
@@ -48,6 +49,25 @@ void ofApp::loadFonts()
     typeStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789,:&!?";
 }
 
+void ofApp::loadGridAndObstacles()
+{
+    // A grid spaced out over the window width in 100 by 100 equal locations.
+    grid = new Grid(40, 40, ofGetWidth(), ofGetHeight());
+    
+    ofPolyline p;
+    for (int i = 0; i < 20; i++)
+    {
+        float angle = i*PI*2/20;
+        float x = 200 + 50*cos(angle);
+        float y = 200 + 50*sin(angle);
+        p.addVertex(ofPoint(x, y));
+    }
+
+    // Create an obstacle that automatically adds itself to the grid.
+    obstacles.push_back(Obstacle(p, grid));
+    
+}
+
 //--------------------------------------------------------------
 void ofApp::update(){
 
@@ -70,15 +90,25 @@ void ofApp::update(){
         for(int i = 0; i < letters_per_sentance; i++)
         {
             
-            letters.push_back(Letter(ofRandom(ofGetWidth()), -20, 10, previous_letter, 'L', &verdana14));
+            int x = ofRandom(ofGetWidth());
+            int y = 20;
+            
+            /*
+            int x = 200; // A test to see if the letters collide with the circle.
+            int y = 200;
+            */
+
+            letters.push_back(Letter(x, y, 10, previous_letter, 'L', &verdana14, grid));
             previous_letter = &letters.back();
             
         }
         
     }
 
+    // We use a set to determine dead letters without duplication.
     vector<list<Letter>::iterator> dead_letters;
 
+    // First pass, update positions.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
         (*iter).update(dt);
@@ -88,9 +118,29 @@ void ofApp::update(){
         }
     }
 
+    // Second pass, resolve collisions.
+    for (auto iter = letters.begin(); iter != letters.end(); ++iter)
+    {
+        if ((*iter).isDead())
+        {
+            //grid -> remove_from_collision_grid(&*iter);
+            continue;
+        }
+
+        // If the letter encounters a collision, kill it off.
+        if (grid -> resolve_collisions(&*iter))
+        {
+            dead_letters.push_back(iter);
+        }
+    }
+
     // Remove all dead letters from the update list and deallocate them.
     for (auto iter = dead_letters.begin(); iter != dead_letters.end(); ++iter)
     {
+        // remove letter from collisions.
+        grid -> remove_from_collision_grid(&**iter);
+
+        // remove letter from update and visualization.
         letters.erase(*iter);
     }
 }
@@ -100,9 +150,15 @@ void ofApp::draw()
 {
     ofBackground(ofColor(255));
 
+    grid -> draw();
 
     // Draw all of the letters to the screen.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
+    {
+        (*iter).draw();
+    }
+
+    for (auto iter = obstacles.begin(); iter != obstacles.end(); iter++)
     {
         (*iter).draw();
     }
