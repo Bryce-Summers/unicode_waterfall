@@ -1,6 +1,7 @@
 #pragma once
 #include "ofMain.h"
 #include "Collidable.h"
+#include "Body.h"
 
 /*
  * A grid that drives several behaviors in the scene.
@@ -15,7 +16,7 @@ class GridCell
 {
 
 private:
-    std::set<Collidable *> current_objects;
+    std::set<Body *> current_objects;
 
     // Physics properties that are stored along the grid.
     
@@ -33,13 +34,13 @@ public:
     int grid_y;
 
     // Add a collidable to this grid cell.
-    void addCollidable(Collidable * obj);
+    void addCollidable(Body * obj);
     
     // Remove a collidable from this grid cell.
-    void removeCollidable(Collidable * obj);
+    void removeCollidable(Body * obj);
 
     // unions every collidable in this grid cell to the given collision set.
-    void addAllCollidablesToSet(std::set<Collidable *> & collision_set);
+    void addAllCollidablesToSet(std::set<Body *> & collision_set);
 
     int size();
 };
@@ -70,15 +71,15 @@ private:
 public:
 
     // Removes the given collidable object from this grid.
-    void remove_from_collision_grid(Collidable * obj);
+    void remove_from_collision_grid(Body * obj);
 
     // Adds the given collidable object to this grid.
-    void add_to_collision_grid(Collidable * obj);
+    void add_to_collision_grid(Body * obj);
 
     // Resolves the collisions for the given dynamic object.
     // Tests the object against all objects in it's vicinity
     // RETURNS true iff collisions were detected and resolved.
-    bool resolve_collisions(Collidable * dynamic_obj);
+    bool resolve_collisions(Body * dynamic_obj);
 
 
 // Internal Functions that operate the grid.
@@ -103,7 +104,7 @@ private:
 
     // Looks up a set of all Collidable Objects on the grid that could
     // intersect the given axis aligned bounding box.
-    void lookupCollidablesInBox(ofRectangle aabb, std::set<Collidable *> & output);
+    void lookupBodiesInBox(ofRectangle aabb, std::set<Body *> & output);
 
     // Detect Intersection of 2 arbitrarily rotated rectangles.
     bool detect_isect_rect_rect(ofRectangle rect1, ofRectangle rect2);

@@ -3,8 +3,10 @@
 #include "ofMain.h"
 #include "grid.h"
 #include "Collidable.h"
+#include "OBB.h"
+#include "Body.h"
 
-class Letter : public Collidable
+class Letter : public Body
 {
 public:
     Letter(float x,
@@ -31,6 +33,7 @@ public:
 // Init functions
 private:
 
+    // Visuality and Collision geometry.
     void init_texture(char character, ofTrueTypeFont * font);
 
 
@@ -53,12 +56,9 @@ private:
     // my x = letter_to_my_left x + width + spacing + kerning.
     // my x = left x + x_offset_from_left
     float x_offset_from_left;
-    
-    float radius;
 
     // Angle the letter texture is rotated.
     float angle = 0;
-    
 
     // -- Physics dynamics.
     float px, py;
@@ -103,24 +103,11 @@ private:
 
     float text_scroll_speed = 40;
 
-
-// Collision Detetion Functions.
+// Collision Detection.
 private:
     Grid * grid;
 
-// Methods inherited from Collidable.
-public:
-    virtual bool detect_collision_with_rectangle(ofRectangle rect);
-
-    // Returns true iff this collidable is capable of movement.
-    virtual bool isDynamic();
-
-    // Updates this object's internal physics values to point.
-    // it away from the direction of collision.
-    // Does not modify the position or orientation of the letter, because the letter still needs to validly rmeove itself from the collision grid.
-    virtual bool resolve_collision(ofVec3f direction);
-
-    virtual ofRectangle getBoundingBox();
-
+    virtual Collidable * getCollidable();
+    virtual bool isDynamic(){return true;}
+    OBB * collidable;
 };
-

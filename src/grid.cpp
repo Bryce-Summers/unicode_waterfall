@@ -63,10 +63,16 @@ void Grid::createGrid(int numRows, int numColumns, int screen_w, int screen_h)
 // -- Public interface.
 
 // Adds the given collidable object to this grid.
-void Grid::add_to_collision_grid(Collidable * obj)
+void Grid::add_to_collision_grid(Body * obj)
 {
+    Collidable * collidable = obj -> getCollidable();
+    if (collidable == NULL)
+    {
+        return;
+    }
+
     int r0, r1, c0, c1;
-    populate_grid_bounds(obj, &r0, &r1, &c0, &c1);
+    populate_grid_bounds(collidable, &r0, &r1, &c0, &c1);
 
     for(int row = r0; row <= r1; row++)
     for (int col = c0; col <= c1; col++)
@@ -77,10 +83,17 @@ void Grid::add_to_collision_grid(Collidable * obj)
 }
 
 // Removes the given collidable object from this grid.
-void Grid::remove_from_collision_grid(Collidable * obj)
+void Grid::remove_from_collision_grid(Body * obj)
 {
+
+    Collidable * collidable = obj -> getCollidable();
+    if (collidable == NULL)
+    {
+        return;
+    }
+
     int r0, r1, c0, c1;
-    populate_grid_bounds(obj, &r0, &r1, &c0, &c1);
+    populate_grid_bounds(collidable, &r0, &r1, &c0, &c1);
 
     for (int row = r0; row <= r1; row++)
     for (int col = c0; col <= c1; col++)
@@ -92,7 +105,8 @@ void Grid::remove_from_collision_grid(Collidable * obj)
 
 // Resolves the collisions for the given dynamic object.
 // Tests the object against all objects in it's vicinity
-bool Grid::resolve_collisions(Collidable * dynamic_obj)
+// Returns true if collisions were detected and resolved.
+bool Grid::resolve_collisions(Body * dynamic_obj)
 {
     // Nothing needs doing if the input object is not dynamic.
     if(dynamic_obj -> isDynamic() == false)
@@ -100,11 +114,17 @@ bool Grid::resolve_collisions(Collidable * dynamic_obj)
         return false;
     }
 
-    // Look up all candidates minus the object itself.
-    ofRectangle aabb = dynamic_obj -> getBoundingBox();
+    Collidable * collidable = dynamic_obj -> getCollidable();
+    if(collidable == NULL)
+    {
+       return false;
+    }
 
-    std::set<Collidable *> candidates;
-    this -> lookupCollidablesInBox(aabb, candidates);
+    // Look up all candidates minus the object itself.
+    ofRectangle aabb = dynamic_obj -> getCollidable() -> getBoundingBox();
+
+    std::set<Body *> candidates;
+    this ->lookupBodiesInBox(aabb, candidates);
 
     candidates.erase(dynamic_obj);
 
@@ -125,8 +145,8 @@ void Grid::populate_grid_bounds(Collidable * obj,
     int * c0,
     int * c1)
 {
-    // Add a collidable to every cell within the given bounding box.
-    ofRectangle aabb = obj->getBoundingBox();
+    // Add a collidable to every cell within the AABB 
+    ofRectangle aabb = obj -> getBoundingBox();
     populate_grid_bounds(aabb, r0, r1, c0, c1);
 }
 
@@ -186,7 +206,7 @@ int Grid::index2Col(int index)
 
 // -- Collision detection methods.
 
-void Grid::lookupCollidablesInBox(ofRectangle aabb, std::set<Collidable *> & collison_set)
+void Grid::lookupBodiesInBox(ofRectangle aabb, std::set<Body *> & collison_set)
 {
     collison_set.clear();
 
@@ -237,17 +257,17 @@ int Grid::line_side_test(ofVec2f a1, ofVec2f a2, ofVec2f c)
  // Grid Cell.
 ///
 
-void GridCell::addCollidable(Collidable * obj)
+void GridCell::addCollidable(Body * obj)
 {
     current_objects.insert(obj);
 }
 
-void GridCell::removeCollidable(Collidable * obj)
+void GridCell::removeCollidable(Body * obj)
 {
     current_objects.erase(obj);
 }
 
-void GridCell::addAllCollidablesToSet(std::set<Collidable *> & collision_set)
+void GridCell::addAllCollidablesToSet(std::set<Body *> & collision_set)
 {
     for (auto iter = current_objects.begin(); iter != current_objects.end(); ++iter)
     {

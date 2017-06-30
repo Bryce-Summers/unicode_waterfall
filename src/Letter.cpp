@@ -13,13 +13,15 @@ Letter::Letter(
     // Position and Physics.
     this -> px = x;
     this -> py = y;
-    this -> radius = radius;
 
     this -> vx = 0;
     this -> vy = 0;
 
     this -> ay = this -> gravity;
     this -> ax = 0;
+
+    // Collision Detection Geometry will be created with the texture later.
+    collidable = NULL;
 
     // State.
     this -> letter_to_my_left = left;
@@ -37,7 +39,7 @@ Letter::Letter(
 
 Letter::~Letter()
 {
-    
+    delete collidable;
 }
 
 /*
@@ -79,6 +81,9 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
     this -> fbo.end();
 
     ofDisableLighting();
+
+    // Initialize Oriented Bounding Box Collision Geometry.
+    this -> collidable = new OBB(ofVec2f(this -> px, this -> py), width/2, height/2, this -> angle);
 
 }
 
@@ -150,6 +155,8 @@ void Letter::draw()
     ofPopMatrix();//will stop other things from being drawn rotated
 
     //this -> fbo.draw(50, 50);
+
+    this -> collidable -> draw();
 }
 
 bool Letter::isDead()
@@ -326,36 +333,7 @@ void Letter::stepTextScrollP(float dt)
  *
  */
 
-
-// Methods inherited from Collidable.
-bool Letter::detect_collision_with_rectangle(ofRectangle rect)
+Collidable * Letter::getCollidable()
 {
-    cout << "LETTER::detect_collision_with_rectangle not yet implemented." << endl;
-    return false;
-}
-
-// Returns true iff this collidable is capable of movement.
-bool Letter::isDynamic()
-{
-    return true;
-}
-
-    // Updates this object's internal physics values to point.
-    // it away from the direction of collision.
-bool Letter::resolve_collision(ofVec3f direction)
-{
-    cout << "Letter::resolve_collision not implemented" << endl;
-    return false;
-}
-
-ofRectangle Letter::getBoundingBox()
-{
-    // FIXME: Produce the proper angled bounds.
-
-    
-    int width  = fbo.getWidth();
-    int height = fbo.getHeight();
-    
-
-    return ofRectangle(this -> px, this -> py, width, height);
+    return this -> collidable;
 }

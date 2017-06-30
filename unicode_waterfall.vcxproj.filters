@@ -10,17 +10,29 @@
     <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.cpp">
       <Filter>addons\ofxTrueTypeFontUC\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Letter.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\grid.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Collidable.cpp">
-      <Filter>src</Filter>
+      <Filter>src\Collision_Geometries</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OBB.cpp">
+      <Filter>src\Collision_Geometries</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Letter.cpp">
+      <Filter>src\Bodies</Filter>
     </ClCompile>
     <ClCompile Include="src\Obstacle.cpp">
-      <Filter>src</Filter>
+      <Filter>src\Bodies</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Body.cpp">
+      <Filter>src\Bodies</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ConvexHull.cpp">
+      <Filter>src\Collision_Geometries</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AABB.cpp">
+      <Filter>src\Collision_Geometries</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -36,6 +48,12 @@
     <Filter Include="addons\ofxTrueTypeFontUC\src">
       <UniqueIdentifier>{7E369600-03BF-EEFC-FA92-F38A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Bodies">
+      <UniqueIdentifier>{46ee976c-b57e-46a0-b8f8-c1570e4e740b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Collision_Geometries">
+      <UniqueIdentifier>{f9fbc295-9e33-48eb-a016-22b35cefcaf7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ofApp.h">
@@ -44,17 +62,32 @@
     <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.h">
       <Filter>addons\ofxTrueTypeFontUC\src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Letter.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\grid.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Collidable.h">
-      <Filter>src</Filter>
+      <Filter>src\Collision_Geometries</Filter>
+    </ClInclude>
+    <ClInclude Include="src\OBB.h">
+      <Filter>src\Collision_Geometries</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Letter.h">
+      <Filter>src\Bodies</Filter>
     </ClInclude>
     <ClInclude Include="src\Obstacle.h">
+      <Filter>src\Bodies</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Body.h">
+      <Filter>src\Bodies</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ConvexHull.h">
+      <Filter>src\Collision_Geometries</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UWF.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AABB.h">
+      <Filter>src\Collision_Geometries</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
