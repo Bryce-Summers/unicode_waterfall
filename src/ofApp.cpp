@@ -64,7 +64,8 @@ void ofApp::loadGridAndObstacles()
     }
 
     // Create an obstacle that automatically adds itself to the grid.
-    obstacles.push_back(Obstacle(p, grid));
+    Obstacle * obj = new Obstacle(p, grid);
+    obstacles.push_back(obj);
     
 }
 
@@ -90,29 +91,29 @@ void ofApp::update(){
         for(int i = 0; i < letters_per_sentance; i++)
         {
             
-            int x = ofRandom(ofGetWidth());
+            int x = 50 + ofRandom(ofGetWidth() - 50);
             int y = 20;
             
             /*
             int x = 200; // A test to see if the letters collide with the circle.
             int y = 200;
             */
-
-            letters.push_back(Letter(x, y, 10, previous_letter, 'L', &verdana14, grid));
-            previous_letter = &letters.back();
+            Letter * l = new Letter(Letter(x, y, 10, previous_letter, 'L', &verdana14, grid));
+            letters.push_back(l);
+            previous_letter = letters.back();
             
         }
         
     }
 
     // We use a set to determine dead letters without duplication.
-    vector<list<Letter>::iterator> dead_letters;
+    vector<list<Letter *>::iterator> dead_letters;
 
     // First pass, update positions.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
-        (*iter).update(dt);
-        if ((*iter).isDead())
+        (*iter) -> update(dt);
+        if ((*iter) -> isDead())
         {
             dead_letters.push_back(iter);
         }
@@ -121,27 +122,34 @@ void ofApp::update(){
     // Second pass, resolve collisions.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
-        if ((*iter).isDead())
+        if ((*iter) -> isDead())
         {
             //grid -> remove_from_collision_grid(&*iter);
             continue;
         }
 
         // If the letter encounters a collision, kill it off.
-        if (grid -> resolve_collisions(&*iter))
+        if (grid -> resolve_collisions(*iter))
         {
-            dead_letters.push_back(iter);
+            //dead_letters.push_back(iter);
         }
     }
 
     // Remove all dead letters from the update list and deallocate them.
     for (auto iter = dead_letters.begin(); iter != dead_letters.end(); ++iter)
     {
-        // remove letter from collisions.
-        grid -> remove_from_collision_grid(&**iter);
 
-        // remove letter from update and visualization.
+        Letter * l = **iter;
+
+        // remove letter from collisions.
+        grid -> remove_from_collision_grid(l);
+
+        delete l;
+
+        // Remove the now defunct pointer from the letter list.
         letters.erase(*iter);
+
+        // FIXME: Deposit this letter into a standbye repository of letters to save time allocating.
     }
 }
 
@@ -150,17 +158,19 @@ void ofApp::draw()
 {
     ofBackground(ofColor(255));
 
+    #ifdef DEBUG
     grid -> draw();
+    #endif
 
     // Draw all of the letters to the screen.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
-        (*iter).draw();
+        (**iter).draw();
     }
 
     for (auto iter = obstacles.begin(); iter != obstacles.end(); iter++)
     {
-        (*iter).draw();
+        (**iter).draw();
     }
 }
 

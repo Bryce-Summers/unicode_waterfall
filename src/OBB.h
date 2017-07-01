@@ -11,7 +11,7 @@
 class OBB : public Collidable
 {
 public:
-    OBB(ofVec2f center_position,
+    OBB(float x, float y,
        float width_half = 0,
        float height_half = 0,
        float angle_start = 0);
@@ -31,9 +31,12 @@ public:
 public:
     // Orients this OBB to the given angle specified in radians.
     void setToAngle(float angle);
+    void setToPosition(float x, float y);
+    void updatePositionRotation(float x, float y, float angle);
 
 public:
     virtual void draw();
+    void draw(float x, float y, float angle);
     // -- Relevant convex information methods from Collidable super class.
 
     virtual void getSeparatingAxisesNormals(vector<ofVec2f> results);

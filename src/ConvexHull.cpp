@@ -4,7 +4,13 @@
 
 ConvexHull::ConvexHull(ofPolyline pline)
 {
-    this -> pline = pline;
+    this -> pline = ofPolyline();
+
+    for (ofPoint p : pline)
+    {
+        this -> pline.addVertex(p);
+    }
+    this -> pline.setClosed(true);
     center_position = this -> pline.getCentroid2D();
 }
 

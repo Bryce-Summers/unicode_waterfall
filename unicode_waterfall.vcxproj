@@ -174,26 +174,34 @@
     <ClCompile Include="src\AABB.cpp" />
     <ClCompile Include="src\Body.cpp" />
     <ClCompile Include="src\Collidable.cpp" />
+    <ClCompile Include="src\CollideInfo.cpp" />
     <ClCompile Include="src\ConvexHull.cpp" />
     <ClCompile Include="src\grid.cpp" />
     <ClCompile Include="src\Letter.cpp" />
+    <ClCompile Include="src\LineSegment.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\OBB.cpp" />
     <ClCompile Include="src\Obstacle.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
     <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.cpp" />
+    <ClCompile Include="src\OrientedHyperplane.cpp" />
+    <ClCompile Include="src\Ray.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AABB.h" />
     <ClInclude Include="src\Body.h" />
     <ClInclude Include="src\Collidable.h" />
+    <ClInclude Include="src\CollideInfo.h" />
     <ClInclude Include="src\ConvexHull.h" />
     <ClInclude Include="src\grid.h" />
     <ClInclude Include="src\Letter.h" />
+    <ClInclude Include="src\LineSegment.h" />
     <ClInclude Include="src\OBB.h" />
     <ClInclude Include="src\Obstacle.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.h" />
+    <ClInclude Include="src\OrientedHyperplane.h" />
+    <ClInclude Include="src\Ray.h" />
     <ClInclude Include="src\UWF.h" />
   </ItemGroup>
   <ItemGroup>

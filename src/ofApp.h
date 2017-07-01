@@ -49,7 +49,7 @@ class ofApp : public ofBaseApp{
         void loadGridAndObstacles();
         // Objects in the scene.
         Grid * grid;
-        list<Obstacle> obstacles;
-        list<Letter> letters;
+        list<Obstacle *> obstacles;
+        list<Letter *>   letters;
 
 };

@@ -57,13 +57,7 @@ private:
     // my x = left x + x_offset_from_left
     float x_offset_from_left;
 
-    // Angle the letter texture is rotated.
-    float angle = 0;
 
-    // -- Physics dynamics.
-    float px, py;
-    float vx, vy;
-    float ax, ay;
 
     // The y - coordinate that letters transition from the waterfall behavior to the pooling behavior.
     // define horizontal lines the separate Stage 1, Stage 2, and Stage 3.

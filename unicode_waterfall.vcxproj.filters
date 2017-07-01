@@ -34,6 +34,18 @@
     <ClCompile Include="src\AABB.cpp">
       <Filter>src\Collision_Geometries</Filter>
     </ClCompile>
+    <ClCompile Include="src\OrientedHyperplane.cpp">
+      <Filter>src\Hyperplanes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LineSegment.cpp">
+      <Filter>src\Hyperplanes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Ray.cpp">
+      <Filter>src\Hyperplanes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CollideInfo.cpp">
+      <Filter>src\Collision_Geometries</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -53,6 +65,9 @@
     </Filter>
     <Filter Include="src\Collision_Geometries">
       <UniqueIdentifier>{f9fbc295-9e33-48eb-a016-22b35cefcaf7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Hyperplanes">
+      <UniqueIdentifier>{01a0d5b9-0304-4a44-9a30-1091cda5dea5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -87,6 +102,18 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\AABB.h">
+      <Filter>src\Collision_Geometries</Filter>
+    </ClInclude>
+    <ClInclude Include="src\OrientedHyperplane.h">
+      <Filter>src\Hyperplanes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LineSegment.h">
+      <Filter>src\Hyperplanes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Ray.h">
+      <Filter>src\Hyperplanes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CollideInfo.h">
       <Filter>src\Collision_Geometries</Filter>
     </ClInclude>
   </ItemGroup>

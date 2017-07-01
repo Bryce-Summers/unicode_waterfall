@@ -18,7 +18,7 @@ Obstacle::Obstacle(ofPolyline pline, Grid * grid)
 
 Obstacle::~Obstacle()
 {
-    delete collidable;
+    //delete collidable;
 }
 
 void Obstacle::draw()

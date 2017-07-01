@@ -24,7 +24,7 @@ Letter::Letter(
     collidable = NULL;
 
     // State.
-    this -> letter_to_my_left = left;
+    this -> letter_to_my_left = NULL;//left; //
 
     // FIXME: For now we are assuming that the letters will be of equal width.
     this -> x_offset_from_left = radius * 2;
@@ -83,7 +83,7 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
     ofDisableLighting();
 
     // Initialize Oriented Bounding Box Collision Geometry.
-    this -> collidable = new OBB(ofVec2f(this -> px, this -> py), width/2, height/2, this -> angle);
+    this -> collidable = new OBB(this -> px, this -> py, width/2, height/2, this -> angle);
 
 }
 
@@ -98,7 +98,7 @@ void Letter::update(float dt)
     // Remove the old references to this object stored in the grid.
     grid -> remove_from_collision_grid(this);
 
-    angle += 1;
+    angle += .01;
 
     stepAcceleration(dt);
     stepVelocity(dt);
@@ -116,6 +116,11 @@ void Letter::update(float dt)
     if (state == POOL && py > text_scroll_y_coordinate)
     {
         state = TEXT_SCROLL;
+    }
+
+    if (this -> collidable != NULL)
+    {
+        this -> collidable -> updatePositionRotation(this -> px, this -> py, this -> angle);
     }
 
     // Add the new references to this object to the grid.
@@ -139,9 +144,14 @@ void Letter::draw()
     // FIXME: Draw textures Letters, instead of circles.
     //this -> texture.draw(this -> px, this -> py);
 
+    // We retrieve a snapshot of the values at this point in time, so that drawing is consistent.
+    float x = this -> px;
+    float y = this -> py;
+    float angle = this -> angle;
+
     ofPushMatrix();//will isolate the transform
-    ofTranslate(this -> px, this -> py); // Move the 0 coordinate to location (px, py)
-    ofRotate(this -> angle);//whatever we draw next gets rotated 45 degrees
+    ofTranslate(x, y); // Move the 0 coordinate to location (px, py)
+    ofRotate(ofRadToDeg(angle));
     //ofTranslate(px, py);
     int w = fbo.getWidth();
     int h = fbo.getHeight();
@@ -155,8 +165,9 @@ void Letter::draw()
     ofPopMatrix();//will stop other things from being drawn rotated
 
     //this -> fbo.draw(50, 50);
-
-    this -> collidable -> draw();
+    #ifdef DEBUG
+    this -> collidable -> draw(x, y, (angle));
+    #endif
 }
 
 bool Letter::isDead()

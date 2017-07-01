@@ -19,6 +19,13 @@ void Grid::draw()
     {
         int index = indexAtRowColumn(row, col);
         GridCell cell = gridCells[index];
+
+        // Ignore cells with no obstacles in them.
+        if (cell.size() <= 0)
+        {
+            continue;
+        }
+
         ofSetColor(0);
         ofNoFill();
         ofRect(cell.screen_x, cell.screen_y, gridX2screen, gridY2screen);
@@ -74,6 +81,11 @@ void Grid::add_to_collision_grid(Body * obj)
     int r0, r1, c0, c1;
     populate_grid_bounds(collidable, &r0, &r1, &c0, &c1);
 
+    if (c0 < 1)
+    {
+       return;
+    }
+
     for(int row = r0; row <= r1; row++)
     for (int col = c0; col <= c1; col++)
     {
@@ -124,19 +136,39 @@ bool Grid::resolve_collisions(Body * dynamic_obj)
     ofRectangle aabb = dynamic_obj -> getCollidable() -> getBoundingBox();
 
     std::set<Body *> candidates;
-    this ->lookupBodiesInBox(aabb, candidates);
+    this -> lookupBodiesInBox(aabb, candidates);
 
     candidates.erase(dynamic_obj);
 
-    // For now return true if we have encountered another object.
-    if (candidates.size() > 0)
+    // If there are no other bodies, then there was no collision.
+    if (candidates.size() == 0)
     {
-        return true;
+        return false;
     }
 
-    return false;
-}
+    // Otherwise, we resolve collisions if found.
+    Collidable * c1 = dynamic_obj -> getCollidable();
+    bool resolution_happened = false;
+    for (Body * other : candidates)
+    {
+        Collidable * c2 = other -> getCollidable();
 
+        // No collidable -> no collision can be determined.
+        if (c2 == NULL)
+        {
+            continue;
+        }
+
+        bool collision_detected = c1 -> detect_collision_convex(c2);
+        if (collision_detected)
+        {
+            resolution_happened = true;
+            dynamic_obj -> resolve_collision(other);
+        }
+    }
+    
+    return resolution_happened;
+}
 
 // Utility functions
 void Grid::populate_grid_bounds(Collidable * obj, 

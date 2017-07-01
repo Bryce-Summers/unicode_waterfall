@@ -1,20 +1,26 @@
 #include "OBB.h"
 
-OBB::OBB(ofVec2f position,
+OBB::OBB(float x, float y,
   float width_half,
   float height_half,
   float angle_start)
 {
-    this -> center_position = position;
     this -> radius_right    = width_half;
     this -> radius_up       = height_half;
-    
+
+    this -> setToPosition(x, y);
     this -> setToAngle(angle_start);
 }
 
 
 OBB::~OBB()
 {
+}
+
+void OBB::updatePositionRotation(float x, float y, float angle)
+{
+    setToAngle(angle);
+    setToPosition(x, y);
 }
 
 void OBB::setToAngle(float angle)
@@ -27,6 +33,11 @@ void OBB::setToAngle(float angle)
 
     right_direction = ofVec2f(rx, ry);
     up_direction    = ofVec2f(ux, uy);
+}
+
+void OBB::setToPosition(float x, float y)
+{
+    this -> center_position = ofVec2f(x, y);
 }
 
 
@@ -102,6 +113,7 @@ void OBB::toPolyline(ofPolyline & output)
     output.setClosed(true);
 }
 
+// Official draw function, may be out of synch.
 void OBB::draw()
 {
     ofPolyline pline;
@@ -112,3 +124,35 @@ void OBB::draw()
   
 }
 
+void OBB::draw(float x, float y, float angle)
+{
+
+    ofVec2f center = ofVec2f(x, y);
+
+    float rx = cos(angle);
+    float ry = sin(angle);
+
+    float ux = cos(angle + PI / 2);
+    float uy = sin(angle + PI / 2);
+
+    ofVec2f right = ofVec2f(rx, ry) * radius_right;
+    ofVec2f up = ofVec2f(ux, uy)    * radius_up;
+    ofVec2f left = -right;
+    ofVec2f down = -up;
+
+    ofVec2f p0 = center_position + left + up;
+    ofVec2f p1 = center_position + right + up;
+    ofVec2f p2 = center_position + right + down;
+    ofVec2f p3 = center_position + left + down;
+
+    ofPolyline pline;
+    pline.addVertex(p0);
+    pline.addVertex(p1);
+    pline.addVertex(p2);
+    pline.addVertex(p3);
+
+    pline.setClosed(true);
+
+    ofSetColor(0, 0, 0, 255);
+    pline.draw();
+}
