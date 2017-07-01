@@ -1,6 +1,8 @@
 #pragma once
 
-#include "UWF.h"
+#include "ofMain.h"
+#include "AABB.h"
+#include "Collidable.h"
 
 /* Oriented Bounding Box (OBB)
  * Written by Bryce Summers on Jun.29.2017
@@ -56,6 +58,11 @@ public:
     // Assumed to be in standard form, which the position at its top left corner.
     virtual ofRectangle getBoundingBox();
 
+    // Returns a list of all points that may be tested for penetrations.
+    virtual void getAllPenetrationPoints(vector<ofVec2f> * output);
+    
+    // Translates this collidable to the new position.
+    virtual void setCenterPoint(ofVec2f pos);
 
 private:
     

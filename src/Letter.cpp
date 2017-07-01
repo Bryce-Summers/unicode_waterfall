@@ -11,14 +11,11 @@ Letter::Letter(
     Grid * grid)
 {
     // Position and Physics.
-    this -> px = x;
-    this -> py = y;
+    this -> position = ofVec2f(x, y);
 
-    this -> vx = 0;
-    this -> vy = 0;
+    this -> velocity = ofVec2f(0, 0);
 
-    this -> ay = this -> gravity;
-    this -> ax = 0;
+    this -> acceleration = ofVec2f(0, this -> gravity);
 
     // Collision Detection Geometry will be created with the texture later.
     collidable = NULL;
@@ -83,7 +80,7 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
     ofDisableLighting();
 
     // Initialize Oriented Bounding Box Collision Geometry.
-    this -> collidable = new OBB(this -> px, this -> py, width/2, height/2, this -> angle);
+    this -> collidable = new OBB(position.x, position.y, width/2, height/2, this -> angle);
 
 }
 
@@ -107,20 +104,20 @@ void Letter::update(float dt)
 
     // Transition between states.
 
-    if (state == WATERFALL && py > pool_y_coordinate)
+    if (state == WATERFALL && position.y > pool_y_coordinate)
     {
         state = POOL;
         //vy *= -1; // Bounce letters off of the line.
     }
 
-    if (state == POOL && py > text_scroll_y_coordinate)
+    if (state == POOL && position.y > text_scroll_y_coordinate)
     {
         state = TEXT_SCROLL;
     }
 
     if (this -> collidable != NULL)
     {
-        this -> collidable -> updatePositionRotation(this -> px, this -> py, this -> angle);
+        this -> collidable -> updatePositionRotation(position.x, position.y, this -> angle);
     }
 
     // Add the new references to this object to the grid.
@@ -145,8 +142,8 @@ void Letter::draw()
     //this -> texture.draw(this -> px, this -> py);
 
     // We retrieve a snapshot of the values at this point in time, so that drawing is consistent.
-    float x = this -> px;
-    float y = this -> py;
+    float x = position.x;
+    float y = position.y;
     float angle = this -> angle;
 
     ofPushMatrix();//will isolate the transform
@@ -172,7 +169,7 @@ void Letter::draw()
 
 bool Letter::isDead()
 {
-    return py > ofGetHeight() || dead;
+    return position.y > ofGetHeight() || dead;
 }
 
 void Letter::kill()
@@ -182,12 +179,12 @@ void Letter::kill()
 
 float Letter::getX()
 {
-    return px;
+    return position.x;
 }
 
 float Letter::getY()
 {
-    return py;
+    return position.y;
 }
 
 
@@ -237,19 +234,18 @@ void Letter::dynamicsA(float dt)
 void Letter::dynamicsV(float dt)
 {
     // FIXME: Use RK5 or some other better integration scheme.
-    this -> vx += this -> ax*dt;
-    this -> vy += this -> ay*dt;
+    this -> velocity += this -> acceleration*dt;
 
     // Limit the velocity of letters to ensure collision detection accuracy and for better controlled aesthetics.
-    vy = CLAMP(vy, -terminal_velocity, terminal_velocity);
-    vx = CLAMP(vx, -terminal_velocity, terminal_velocity);
+    velocity.x = CLAMP(velocity.x, -terminal_velocity, terminal_velocity);
+    velocity.y = CLAMP(velocity.y, -terminal_velocity, terminal_velocity);
+    
 }
 
 void Letter::dynamicsP(float dt)
 {
     // FIXME: Use RK5 or some other better integration scheme.
-    this -> px += this -> vx*dt;
-    this -> py += this -> vy*dt;
+    this -> position += this -> velocity*dt;
 }
 
 
@@ -283,7 +279,7 @@ void Letter::stepPoolV(float dt)
     dynamicsV(dt);
 
     // Gradually mitigate the gravity acceleration.
-    ay *= .999;
+    acceleration.y *= .999;
 
     // Oscilate the horizontal movement.
     //vx = 20 * cos(ofGetElapsedTimef());
@@ -291,7 +287,7 @@ void Letter::stepPoolV(float dt)
     // Interpolate the velocity to the pool speed.
     float per = .99;
 
-    vy = vy*per + pool_y_speed * (1.0 - per);
+    velocity.y = velocity.y*per + pool_y_speed * (1.0 - per);
     
     // Move the letter closer towards the center.
     float center_x = ofGetWidth()/2;
@@ -299,7 +295,7 @@ void Letter::stepPoolV(float dt)
 
     if (letter_to_my_left == NULL)
     {
-        target_x = this -> px;
+        target_x = this -> position.x;
     }
     else
     {
@@ -307,7 +303,7 @@ void Letter::stepPoolV(float dt)
     }
     
     // Velocity is skewed towards the letter's position in the sentance.
-    vx = vx*per + (target_x - px)*40*(1.0 - per);
+    velocity.x = velocity.x*per + (target_x - position.x)*40*(1.0 - per);
 
     // FIXME: Coagulate the letters with their leaders.
 }
@@ -322,13 +318,13 @@ void Letter::stepPoolP(float dt)
 
 void Letter::stepTextScrollA(float dt)
 {
-    ay = 0;
+    acceleration.y = 0;
 }
 
 void Letter::stepTextScrollV(float dt)
 {
-    vx = 0;
-    vy = text_scroll_speed;
+    velocity.x = 0;
+    velocity.y = text_scroll_speed;
 }
 
 void Letter::stepTextScrollP(float dt)
@@ -347,4 +343,9 @@ void Letter::stepTextScrollP(float dt)
 Collidable * Letter::getCollidable()
 {
     return this -> collidable;
+}
+
+void Letter::updatePositionFromCollidable()
+{
+    this -> position = collidable -> getCenterPoint();
 }

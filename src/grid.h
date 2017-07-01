@@ -1,6 +1,6 @@
 #pragma once
 #include "ofMain.h"
-#include "Collidable.h"
+#include "CollideHeaders.h"
 #include "Body.h"
 
 /*

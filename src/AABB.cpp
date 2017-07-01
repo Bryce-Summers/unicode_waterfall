@@ -1,4 +1,4 @@
-#include "AABB.h"
+#include "CollideHeaders.h"
 
 AABB::AABB()
 {
@@ -88,4 +88,29 @@ void AABB::draw()
     ofRectangle bounds = this -> getBoundingBox();
     ofSetColor(0, 0, 0, 255);
     ofRect(bounds);
+}
+
+
+// Returns a list of all points that may be tested for penetrations.
+void AABB::getAllPenetrationPoints(vector<ofVec2f> * output)
+{
+    // Counter - Clockwise.
+    ofVec2f pt0 = min;
+    ofVec2f pt1 = ofVec2f(min.x, max.y);
+    ofVec2f pt2 = max;
+    ofVec2f pt3 = ofVec2f(max.x, min.y);
+
+    output -> push_back(pt0);
+    output -> push_back(pt1);
+    output -> push_back(pt2);
+    output -> push_back(pt3);
+}
+
+void AABB::setCenterPoint(ofVec2f pos)
+{
+    ofVec2f current_center_point = (min + max)/2;
+    ofVec2f offset = pos - current_center_point;
+
+    min += offset;
+    max += offset;
 }

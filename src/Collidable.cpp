@@ -1,6 +1,4 @@
-#include "Collidable.h"
-#include "OBB.h"
-
+#include "CollideHeaders.h"
 
 Collidable::Collidable()
 {
@@ -74,10 +72,7 @@ float Collidable::getProjectedLength(ofVec2f pt, ofVec2f center, ofVec2f directi
     return ABS(projectedLength);
 }
 
-bool Collidable::computeFuturePenetrationLocation(
-    Collidable * other,
-    ofVec2f direction,
-    CollideInfo * output)
+bool Collidable::computeFuturePenetrationLocation(Collidable * other, ofVec2f direction, CollideInfo * output)
 {
     /* 1. Extract all of the penetration points and segments.
     ** 2. For all points on this body (body1) cast a ray in the direction.
@@ -107,18 +102,19 @@ bool Collidable::computeFuturePenetrationLocation(
 
     bool found_result = false;
 
+    // Start the collisions at infinity.
     output -> time_till_collision = std::numeric_limits<float>::max();
 
     // Cast rays from 1 onto the segments of 2.
-    found_result = found_result || findMinIntersection(rays1, segments2, output);
+    found_result = found_result || findMinIntersection(rays1, segments2, output, true);
 
     // Cast rays from 2 onto the segments of 1.
-    found_result = found_result || findMinIntersection(rays2, segments1, output);
+    found_result = found_result || findMinIntersection(rays2, segments1, output, false);
 
     return found_result;
 }
 
-void pointsToRays(vector<ofVec2f> & points, ofVec2f direction,  vector<Ray> * output)
+void  Collidable::pointsToRays(vector<ofVec2f> & points, ofVec2f direction,  vector<Ray> * output)
 {
     for (ofVec2f pt : points)
     {
@@ -136,27 +132,70 @@ void Collidable::pointsToSegments(vector<ofVec2f> & points, vector<LineSegment> 
     }
 }
 
-bool findMinIntersection(vector<Ray> & rays, vector<LineSegment> & segments, CollideInfo * info)
+bool  Collidable::findMinIntersection(vector<Ray> & rays, vector<LineSegment> & segments, CollideInfo * info, bool from_location1)
 {
-
-
     // 6.30.2017 FIXME:
     // do the minnimization. cast every ray onto all segments.
     // FIXME: only cast onto segments pointing on the front side towards the rays.
 
 
+    ofVec2f * from_location; // Location on ray collider.
+    ofVec2f * to_location;   // Lcoation on segments collider.
 
+    if (from_location1)
+    {
+        from_location = &(info -> location1);
+        to_location   = &(info -> location2);
+    }
+    else
+    {
+        from_location = &(info -> location2);
+        to_location   = &(info -> location1);
+    }
 
+    bool found = false;
 
     // Start out with no time found.
     float min_time = info -> time_till_collision;
+    float epsilon = .01;
+    float new_time;
     for (Ray ray : rays)
     {
         for (LineSegment seg : segments)
         {
-            bool getIntersectionTime(float * time_out, OrientedHyperplane * other);
+            // Update Intersection info if found.
+
+            if (ray.getIntersectionTime(&new_time, &seg) && new_time < min_time + epsilon)
+            {                
+                // Collision are of roughly equal distance,
+                // So it is probably an edge - edge collision,
+                // So we average the points together to get the collision point
+                // Closer to the center of mass.
+                if (abs(min_time - new_time) < epsilon)
+                {
+                    *from_location = (ray.getPoint1() + *from_location) / 2;
+                    *to_location   = (ray.getPointAtTime(new_time) + *to_location) / 2;
+                }
+                else // Point - Segment collision
+                {
+                    *from_location = ray.getPoint1();
+                    *to_location   = ray.getPointAtTime(new_time);
+                }
+
+                info -> time_till_collision = new_time;
+                found = true;
+            }
         }
     }
 
-    return min_time > 0;
+    return found;
+}
+
+void Collidable::separateFromOther(Collidable * other, ofVec2f direction, float separation_distance)
+{
+    float offset_length = other -> getRadiusAlongDirection(direction) + separation_distance;
+    
+    ofVec2f offset = offset_length * direction;
+    ofVec2f new_position = this -> getCenterPoint() + offset;
+    this -> setCenterPoint(new_position);
 }

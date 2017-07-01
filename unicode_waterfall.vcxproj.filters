@@ -116,6 +116,9 @@
     <ClInclude Include="src\CollideInfo.h">
       <Filter>src\Collision_Geometries</Filter>
     </ClInclude>
+    <ClInclude Include="src\CollideHeaders.h">
+      <Filter>src\Collision_Geometries</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />

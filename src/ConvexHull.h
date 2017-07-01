@@ -1,6 +1,8 @@
 #pragma once
 
-#include "UWF.h"
+#include "ofMain.h"
+
+#include "CollideHeaders.h"
 
 /*
  * Convex Polyline defined region.
@@ -29,6 +31,7 @@ public:
     virtual float getRadiusAlongDirection(ofVec2f direction);
 
     virtual ofVec2f getCenterPoint();
+    virtual void setCenterPoint(ofVec2f pos);
 
     // Returns true iff this collidable is capable of movement.
     virtual bool isConvex();
@@ -38,4 +41,6 @@ public:
     virtual ofRectangle getBoundingBox();
 
     virtual void draw();
+
+    virtual void getAllPenetrationPoints(vector<ofVec2f> * output);
 };

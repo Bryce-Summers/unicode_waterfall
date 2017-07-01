@@ -49,3 +49,8 @@ bool Ray::timeInBounds(float time)
 {
     return time >= 0;
 }
+
+ofVec2f Ray::getPointAtTime(float time)
+{
+    return this -> position + this -> direction*time;
+}

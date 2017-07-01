@@ -1,5 +1,7 @@
 #pragma once
 
+#define DEBUG
+
 #include "ofMain.h"
 #include "Letter.h"
 #include "Obstacle.h"

@@ -35,3 +35,8 @@ ofPolyline Obstacle::convexHull(ofPolyline pline)
     cout << "Obstacle::convexhull, implement me!" << endl;
     return pline;
 }
+
+void Obstacle::updatePositionFromCollidable()
+{
+    this -> position = collidable -> getCenterPoint();
+}

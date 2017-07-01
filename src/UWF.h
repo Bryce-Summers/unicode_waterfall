@@ -9,15 +9,17 @@
 //#define DEBUG // Comment this out to disable debugging.
 
 // Numerics.
+/*
 #include <limits>
+#include "ofMain.h"
 
 // UWF classes.
-#include "Collidable.h"
+#include "CollideInfo.h"
 #include "OBB.h"
 #include "AABB.h"
-#include "CollideInfo.h"
+#include "Collidable.h"
 
-
-#include "OrientedHyperplane.h"
 #include "LineSegment.h"
 #include "Ray.h"
+#include "OrientedHyperplane.h"
+*/

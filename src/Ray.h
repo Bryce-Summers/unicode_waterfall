@@ -1,6 +1,9 @@
 #pragma once
 
-#include "UWF.h"
+#include "ofMain.h"
+#include "OrientedHyperplane.h"
+#include "LineSegment.h"
+
 
 class Ray : public OrientedHyperplane
 {
@@ -28,4 +31,7 @@ public:
     // 0 <= time <= 1.
     // For out purposes, collisions at endpoints are important for OBB - OBB intersections.
     virtual bool timeInBounds(float time);
+
+    ofVec2f getPointAtTime(float time);
+
 };

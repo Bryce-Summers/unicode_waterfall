@@ -1,6 +1,7 @@
 #pragma once
 
-#include "UWF.h"
+#include "ofMain.h"
+#include "OrientedHyperplane.h"
 
 class LineSegment : public OrientedHyperplane
 {

@@ -91,14 +91,14 @@ void ofApp::update(){
         for(int i = 0; i < letters_per_sentance; i++)
         {
             
-            int x = 50 + ofRandom(ofGetWidth() - 50);
+            int x = ofRandom(ofGetWidth());
             int y = 20;
             
             /*
             int x = 200; // A test to see if the letters collide with the circle.
             int y = 200;
             */
-            Letter * l = new Letter(Letter(x, y, 10, previous_letter, 'L', &verdana14, grid));
+            Letter * l = new Letter(x, y, 10, previous_letter, 'L', &verdana14, grid);
             letters.push_back(l);
             previous_letter = letters.back();
             

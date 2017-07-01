@@ -2,9 +2,10 @@
 
 #include "ofMain.h"
 #include "grid.h"
+#include "Body.h"
 #include "Collidable.h"
 #include "OBB.h"
-#include "Body.h"
+
 
 class Letter : public Body
 {
@@ -57,8 +58,6 @@ private:
     // my x = left x + x_offset_from_left
     float x_offset_from_left;
 
-
-
     // The y - coordinate that letters transition from the waterfall behavior to the pooling behavior.
     // define horizontal lines the separate Stage 1, Stage 2, and Stage 3.
     float pool_y_coordinate = 400;
@@ -104,4 +103,7 @@ private:
     virtual Collidable * getCollidable();
     virtual bool isDynamic(){return true;}
     OBB * collidable;
+
+    // Updates this body's position from its collidable object.
+    virtual void updatePositionFromCollidable();
 };

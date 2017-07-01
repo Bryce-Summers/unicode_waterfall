@@ -1,6 +1,7 @@
 #pragma once
 
-#include "UWF.h"
+#include "ofMain.h"
+#include "Collidable.h"
 
 class AABB : Collidable
 {
@@ -31,6 +32,7 @@ public:
     virtual float getRadiusAlongDirection(ofVec2f direction);
 
     virtual ofVec2f getCenterPoint();
+    virtual void setCenterPoint(ofVec2f pos);
 
     // Returns true iff this collidable is capable of movement.
     virtual bool isConvex();
@@ -41,4 +43,9 @@ public:
     
     // Draws rectangle in world space.
     virtual void draw();
+
+    // Returns a list of all points that may be tested for penetrations.
+    virtual void getAllPenetrationPoints(vector<ofVec2f> * output);
+
+
 };

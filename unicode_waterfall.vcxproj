@@ -191,6 +191,7 @@
     <ClInclude Include="src\AABB.h" />
     <ClInclude Include="src\Body.h" />
     <ClInclude Include="src\Collidable.h" />
+    <ClInclude Include="src\CollideHeaders.h" />
     <ClInclude Include="src\CollideInfo.h" />
     <ClInclude Include="src\ConvexHull.h" />
     <ClInclude Include="src\grid.h" />

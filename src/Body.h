@@ -8,7 +8,8 @@
  *
  */
 
-#include "UWF.h"
+#include "ofMain.h"
+#include "CollideHeaders.h"
 
 class Body
 {

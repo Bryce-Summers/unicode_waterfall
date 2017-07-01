@@ -1,6 +1,10 @@
 #pragma once
 
 #include "ofMain.h"
+#include "LineSegment.h"
+#include "Ray.h"
+#include "CollideInfo.h"
+#include "OBB.h"
 
 /*
  * Base Class for collision capable objects.
@@ -33,13 +37,8 @@ public:
 
     // REQUIRES: this object does not currently collide with the other.
     //           output should be default.
-    bool computeFuturePenetrationLocation(
-            Collidable * other,
-            ofVec2f direction,
-            CollideInfo * output);
+    bool computeFuturePenetrationLocation(Collidable * other, ofVec2f direction, CollideInfo * output);
 
-    // Returns a list of all points that may be tested for penetrations.
-    virtual void getAllPenetrationPoints(vector<ofVec2f> * output) = 0;
     void pointsToSegments(vector<ofVec2f> & points, vector<LineSegment> * output);
     void pointsToRays(vector<ofVec2f> & points, ofVec2f direction, vector<Ray> * output);
 
@@ -47,11 +46,15 @@ public:
     // If 2 roughly equally short locations are found they are averaged together.
     // returns true iff an intersection was found at a shorter time than the 1 info had when inputted.
     // REQUIRES: info should have a dummy time value set.
-    bool findMinIntersection(vector<Ray> & rays, vector<LineSegment> & segments, CollideInfo * info, float max_time);
+    bool findMinIntersection(vector<Ray> & rays, vector<LineSegment> & segments, CollideInfo * info, bool fromLocation1);
 
-
+    // Returns a list of all points that may be tested for penetrations.
+    virtual void getAllPenetrationPoints(vector<ofVec2f> * output) = 0;
     virtual void getSeparatingAxisesNormals(vector<ofVec2f> results) = 0;
-    virtual void separateFromOther(Collidable * other, ofVec2f direction, float separation_distance) = 0;
+
+    // Moves this object in the given direction until their is a separating hyperplane between this
+    // and the other object and the separation distance is as given.
+    void separateFromOther(Collidable * other, ofVec2f direction, float separation_distance);
 
     // Returns the farthest distance from the center point on this object
     // to any other point on the object as measured by the project onto the given direction.
@@ -60,7 +63,7 @@ public:
     virtual float getRadiusAlongDirection(ofVec2f direction) = 0;
 
     virtual ofVec2f getCenterPoint() = 0;
-    virtual void moveCenterPoint(ofVec2f pos) = 0; // Translates this collidable to the new position.
+    virtual void setCenterPoint(ofVec2f pos) = 0; 
 
     // Returns true iff this collidable is capable of movement.
     virtual bool isConvex() = 0;

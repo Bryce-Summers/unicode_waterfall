@@ -8,8 +8,7 @@
  *          about a collision.
  */
 
-#include "UWF.h"
-
+#include "ofMain.h"
 
 class CollideInfo
 {
@@ -25,9 +24,11 @@ public:
     float time_till_collision;
 
     // Physics Dynamics information.
+    /*
     bool dynamic1;
     bool dynamic2;
     float mass1;
     float mass2;
+    */
 };
 

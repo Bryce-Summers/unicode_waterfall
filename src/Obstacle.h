@@ -1,4 +1,6 @@
 #pragma once
+
+#include "Body.h"
 #include "Grid.h"
 #include "ConvexHull.h"
 
@@ -27,4 +29,5 @@ public:
 
     virtual bool isDynamic(){ return true;}
     virtual Collidable * getCollidable(){return collidable;}
+    virtual void updatePositionFromCollidable();
 };

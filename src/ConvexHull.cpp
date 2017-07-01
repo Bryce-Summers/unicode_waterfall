@@ -84,3 +84,28 @@ void ConvexHull::draw()
     ofSetColor(0, 0, 0, 255);
     this -> pline.draw();
 }
+
+void ConvexHull::setCenterPoint(ofVec2f pos)
+{
+    // Udpates the center point and manually translates the polyline.
+    // FIXME: Alternatively I could mutate the polyline vertex values by a transform matrix when
+    //        methods are called.
+    ofVec2f offset = pos - this -> center_position;
+    this -> center_position = pos;
+    
+    int len = pline.size();
+    for (int i = 0; i < len; i++)
+    {
+        this -> pline[i] += offset;
+    }
+    
+    return;
+}
+
+void ConvexHull::getAllPenetrationPoints(vector<ofVec2f> * output)
+{
+    for (ofPoint pt : pline)
+    {
+        output -> push_back(ofVec2f(pt.x, pt.y));
+    }
+}

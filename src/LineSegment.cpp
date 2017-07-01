@@ -29,5 +29,6 @@ ofVec2f LineSegment::getDirection()
 
 bool LineSegment::timeInBounds(float time)
 {
-    return 0 <= time && time <= 1.0;
+    float epsilon = .01;
+    return -0 - epsilon <= time && time <= 1.0 + epsilon;
 }

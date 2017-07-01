@@ -156,3 +156,25 @@ void OBB::draw(float x, float y, float angle)
     ofSetColor(0, 0, 0, 255);
     pline.draw();
 }
+
+// Returns a list of all points that may be tested for penetrations.
+void OBB::getAllPenetrationPoints(vector<ofVec2f> * output)
+{
+
+    // Simply converts the bounding polyline to a vector vector.
+
+    ofPolyline pline;
+    toPolyline(pline);
+
+    for (ofPoint pt : pline)
+    {
+        ofVec2f vec = ofVec2f(pt.x, pt.y);
+        output -> push_back(vec);
+    }
+}
+
+// Translates this collidable to the new position.
+void OBB::setCenterPoint(ofVec2f pos)
+{
+    this -> center_position = pos;
+}

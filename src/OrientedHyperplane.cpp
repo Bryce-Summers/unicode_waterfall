@@ -92,7 +92,7 @@ bool OrientedHyperplane::getIntersectionTime(float * time_out, OrientedHyperplan
 
     // The point needs to be at a proper position for both hyperplanes.
     // This allows us to genarically intersect lines, segments, and rays.
-    if (!this -> timeInBounds(u) || !other -> timeInBounds)
+    if (!(this -> timeInBounds(u)) || !(other -> timeInBounds(v)))
     {
         return false;
     }

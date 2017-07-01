@@ -95,6 +95,13 @@ void Body::solve1DRigidBodyCollision(Body * other, float * v1_in_out, float * v2
     float v1 = *v1_in_out;
     float v2 = *v2_in_out;
 
+    // Collision with a static object results in a full bounce.
+    if (!(other -> isDynamic()))
+    {
+        *v1_in_out = -v1;
+        return;
+    }
+
     // Temporary renaming of velocity both are computed using the original values.
     float u1 = v2;
     float u2 = v2;
