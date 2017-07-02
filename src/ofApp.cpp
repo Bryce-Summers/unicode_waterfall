@@ -67,6 +67,24 @@ void ofApp::loadGridAndObstacles()
     Obstacle * obj = new Obstacle(p, grid);
     obstacles.push_back(obj);
     
+    // Construct some bounds for the sides of the view screen.
+    /*
+    ofPolyline left;
+    left.addVertex(1, -100);
+    left.addVertex(1, ofGetWindowHeight());
+    left.addVertex(-50, ofGetWindowHeight() / 2);
+
+    ofPolyline right;
+    right.addVertex(ofGetWindowWidth() - 1, -100);
+    right.addVertex(ofGetWindowWidth() - 1, ofGetWindowHeight());
+    right.addVertex(ofGetWindowWidth() + 50, ofGetWindowHeight()/2);
+
+    Obstacle * o_left  = new Obstacle(left, grid);
+    Obstacle * o_right = new Obstacle(right, grid);
+
+    obstacles.push_back(o_left);
+    obstacles.push_back(o_right);
+    */
 }
 
 //--------------------------------------------------------------
@@ -75,6 +93,12 @@ void ofApp::update(){
     // Handle time and differences.
     float new_time = ofGetElapsedTimef(); // Time in seconds.
     float dt = new_time - time;
+
+// Debugging works better with fixed time steps.
+#ifdef FIXED_TIME
+    dt = .1;
+#endif // FIXED_TIME
+    
     time = new_time;
 
     // Used to trigger the creation of new sentances.
@@ -83,15 +107,16 @@ void ofApp::update(){
     // Test String.
     if (time_accum > this -> seconds_per_frame)
     {
-        time_accum -= this -> seconds_per_frame;
+        time_accum = 0;//-= this -> seconds_per_frame;
     
         // Create a sentance of letters.
         int letters_per_sentance = 5;
         Letter * previous_letter = NULL;
         for(int i = 0; i < letters_per_sentance; i++)
         {
-            
-            int x = ofRandom(ofGetWidth());
+            // Blank space on the left and right sides of the screen where letters will not form.
+            int margin = 20;
+            int x = margin + ofRandom(ofGetWidth() - margin*2);
             int y = 20;
             
             /*
@@ -144,10 +169,12 @@ void ofApp::update(){
         // remove letter from collisions.
         grid -> remove_from_collision_grid(l);
 
-        delete l;
-
         // Remove the now defunct pointer from the letter list.
         letters.erase(*iter);
+
+        delete l;
+
+
 
         // FIXME: Deposit this letter into a standbye repository of letters to save time allocating.
     }

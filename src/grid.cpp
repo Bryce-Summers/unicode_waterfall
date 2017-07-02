@@ -81,11 +81,6 @@ void Grid::add_to_collision_grid(Body * obj)
     int r0, r1, c0, c1;
     populate_grid_bounds(collidable, &r0, &r1, &c0, &c1);
 
-    if (c0 < 1)
-    {
-       return;
-    }
-
     for(int row = r0; row <= r1; row++)
     for (int col = c0; col <= c1; col++)
     {
@@ -151,6 +146,10 @@ bool Grid::resolve_collisions(Body * dynamic_obj)
     bool resolution_happened = false;
     for (Body * other : candidates)
     {
+        // NOTE: if a null access exception gets thrown here,
+        // it probably means that there is some portion of the code that
+        // modifies the position or orientation of a body without removing it
+        // from the broad phase collision grid and redding it in its modified state.
         Collidable * c2 = other -> getCollidable();
 
         // No collidable -> no collision can be determined.
@@ -163,7 +162,14 @@ bool Grid::resolve_collisions(Body * dynamic_obj)
         if (collision_detected)
         {
             resolution_happened = true;
+            
+            // The resolution may invalidate the pointers in the grid.
+            this -> remove_from_collision_grid(dynamic_obj);
+            this -> remove_from_collision_grid(other);
             dynamic_obj -> resolve_collision(other);
+            this -> add_to_collision_grid(dynamic_obj);
+            this -> add_to_collision_grid(other);
+            
         }
     }
     

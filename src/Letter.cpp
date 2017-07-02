@@ -31,6 +31,10 @@ Letter::Letter(
     this -> character = character;
 
     this -> grid = grid;
+
+    this -> dynamic = true;
+
+    this -> last_dt = 0.0;
 }
 
 
@@ -92,10 +96,21 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
 
 void Letter::update(float dt)
 {
+    this -> last_dt = dt;
+
     // Remove the old references to this object stored in the grid.
     grid -> remove_from_collision_grid(this);
 
-    angle += .01;
+    angle += this -> angle_speed*dt;
+    this -> angle_speed *= .99; // Slow down the angle speed.
+
+
+    if ((position.x < 10 && velocity.x < 0) || 
+        (position.x > ofGetWidth() - 10 && velocity.x > 0))
+    {
+        velocity.x *= -1;
+    }
+
 
     stepAcceleration(dt);
     stepVelocity(dt);
@@ -348,4 +363,15 @@ Collidable * Letter::getCollidable()
 void Letter::updatePositionFromCollidable()
 {
     this -> position = collidable -> getCenterPoint();
+}
+
+void Letter::revertToPrevious()
+{
+    // Rewind time.
+    float dt = -.01;//this -> last_dt;
+
+    grid -> remove_from_collision_grid(this);
+    this -> position += this -> velocity * dt;
+    this -> angle    += this -> angle_speed * dt;
+    grid -> add_to_collision_grid(this);
 }

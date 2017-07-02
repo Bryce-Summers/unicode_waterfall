@@ -2,6 +2,12 @@
 
 Body::Body()
 {
+    // Default Values.
+    restitution_coef = 1.0;
+    mass = 1.0;
+    angle = 0;
+    angle_speed = 0;
+    dynamic = false;
 }
 
 
@@ -36,18 +42,32 @@ void Body::resolve_collision(Body * other)
     // Used as the direction of collision.
     ofVec2f velocity = this -> getTranslationalVelocity();
 
+    if (this->position.x < 10)
+    {
+        //cout << "left" << endl;
+    }
+
     Collidable * c1 = this  -> getCollidable();
     Collidable * c2 = other -> getCollidable();
 
     float separation_dist = 1;
+    ofVec2f movement_direction = velocity.normalized();
 
     // 1. separate, then update synch this body's position with the collidable.
-    c1 -> separateFromOther(c2, -velocity, separation_dist);
+    c1 -> separateFromOther(c2, -movement_direction, separation_dist);
+    
+    //this -> revertToPrevious();
+    
+    if(other -> isDynamic())
+    {
+        other -> revertToPrevious();
+    }
+
     this -> updatePositionFromCollidable();
 
     // 2, 3.
     CollideInfo info;
-    c1 -> computeFuturePenetrationLocation(c2, velocity, &info);
+    c1 -> computeFuturePenetrationLocation(c2, movement_direction, &info);
 
     this -> updateDynamics(info, other);
 
@@ -55,6 +75,7 @@ void Body::resolve_collision(Body * other)
 
 void Body::updateDynamics(CollideInfo & info, Body * body2)
 {
+
     Body * body1 = this;
     
     // Extract all relevant quantities,
@@ -103,7 +124,7 @@ void Body::solve1DRigidBodyCollision(Body * other, float * v1_in_out, float * v2
     }
 
     // Temporary renaming of velocity both are computed using the original values.
-    float u1 = v2;
+    float u1 = v1;
     float u2 = v2;
 
     // 0.0 - 1.0, what percentage of the momentum is conserved.
@@ -161,6 +182,7 @@ ofVec2f Body::getVelocityAtPt(ofVec2f location)
 // NOTE: This is not virtual, because we can do the projection using the other virtual methods.
 void Body::addVelocityAtPt(ofVec2f velocity, ofVec2f location)
 {   
+    /* 1st Attempt. Didn't go so well, because the objects don't bounce.
     ofVec2f translation_direction = this -> getTranslationalVelocity().getNormalized();
     
     ofVec2f delta_translate = velocity.dot(translation_direction) * translation_direction;
@@ -169,7 +191,26 @@ void Body::addVelocityAtPt(ofVec2f velocity, ofVec2f location)
 
     this -> addTranslationalVelocity(delta_translate);
     this -> addRotationalVelocity(delta_angle, location);
+    */
 
+    // https://physics.stackexchange.com/questions/87484/effect-of-incoming-force-on-linear-vs-angular-velocity
+    // Second attempt, now with forces acting as torque.
+
+    ofVec2f center_to_location = location - this -> getCenterOfMass();
+    center_to_location.normalize();
+
+    ofVec2f line_of_action = velocity.normalized();
+
+    // Decompose the vector from the center to the point of collision
+    // Into the parts that are 
+    ofVec2f par  = center_to_location.dot(line_of_action)*line_of_action;
+    ofVec2f perp = center_to_location - par;
+
+    ofVec2f translationalVelocity = velocity.dot(par)*par;
+    ofVec2f rotationalVelocity    = velocity - translationalVelocity;//.dot(perp)*perp;
+    this -> addTranslationalVelocity(translationalVelocity);
+    this -> addRotationalVelocity(rotationalVelocity, location);
+    
 }
 
 ofVec2f Body::getCurrentAngularVelocityAtPt(ofVec2f location)
@@ -208,7 +249,7 @@ void Body::addRotationalVelocity(ofVec2f velocity, ofVec2f location)
     // If negative angular direction, invert delta speed.
     ofVec2f perp = ofVec2f(-center_to_location.y, center_to_location.x).normalize();
     
-    if (perp.dot(velocity) < 0)
+    if (perp.dot(velocity) > 0)
     {
         delta_angular_speed = -delta_angular_speed;
     }

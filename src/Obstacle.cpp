@@ -40,3 +40,9 @@ void Obstacle::updatePositionFromCollidable()
 {
     this -> position = collidable -> getCenterPoint();
 }
+
+// Obstacles don't revert, because they are inert.
+void Obstacle::revertToPrevious()
+{
+    return;
+}

@@ -19,7 +19,7 @@ ConvexHull::~ConvexHull()
 {
 }
 
-void ConvexHull::getSeparatingAxisesNormals(vector<ofVec2f> results)
+void ConvexHull::getSeparatingAxisesNormals(vector<ofVec2f> * results)
 {
     int len = pline.size();
     for (int i = 0; i < len; i++)
@@ -28,8 +28,8 @@ void ConvexHull::getSeparatingAxisesNormals(vector<ofVec2f> results)
         ofPoint b = pline[(i + 1) % len];
 
         ofVec3f direction = b - a;
-        ofVec2f normal = ofVec2f(-direction.y, direction.x);
-        results.push_back(normal);
+        ofVec2f normal = ofVec2f(-direction.y, direction.x).normalized();
+        results -> push_back(normal);
     }
     
     return;

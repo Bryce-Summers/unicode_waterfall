@@ -50,7 +50,7 @@ public:
 
     // Returns a list of all points that may be tested for penetrations.
     virtual void getAllPenetrationPoints(vector<ofVec2f> * output) = 0;
-    virtual void getSeparatingAxisesNormals(vector<ofVec2f> results) = 0;
+    virtual void getSeparatingAxisesNormals(vector<ofVec2f> * results) = 0;
 
     // Moves this object in the given direction until their is a separating hyperplane between this
     // and the other object and the separation distance is as given.

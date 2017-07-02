@@ -41,7 +41,7 @@ public:
     void draw(float x, float y, float angle);
     // -- Relevant convex information methods from Collidable super class.
 
-    virtual void getSeparatingAxisesNormals(vector<ofVec2f> results);
+    virtual void getSeparatingAxisesNormals(vector<ofVec2f> * results);
 
     // Returns the farthest distance from the center point on this object
     // to any other point on the object as measured by the project onto the given direction.

@@ -1,6 +1,7 @@
 #pragma once
 
-#define DEBUG
+//#define DEBUG
+//#define FIXED_TIME Sets this to fixed time step mode.
 
 #include "ofMain.h"
 #include "Letter.h"

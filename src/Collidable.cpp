@@ -15,7 +15,7 @@ Collidable::~Collidable()
 bool Collidable::detect_collision_convex(Collidable * other)
 {
     // This collision detection check doesn't work without convex objects.
-    if (isConvex() || other-> isConvex())
+    if (!isConvex() || !other-> isConvex())
     {
         return false;
     }
@@ -23,8 +23,8 @@ bool Collidable::detect_collision_convex(Collidable * other)
     // Determine an exhastive list of directions that we will test separations on.
     vector<ofVec2f> directions;
 
-    this  -> getSeparatingAxisesNormals(directions);
-    other -> getSeparatingAxisesNormals(directions);
+    this  -> getSeparatingAxisesNormals(&directions);
+    other -> getSeparatingAxisesNormals(&directions);
 
     
     // Precompute center points and distances.
@@ -37,8 +37,8 @@ bool Collidable::detect_collision_convex(Collidable * other)
     for (auto iter = directions.begin(); iter != directions.end(); ++iter)
     {
         ofVec2f direction = *iter;
-        float ra = this -> getRadiusAlongDirection(direction);
-        float rb = this -> getRadiusAlongDirection(direction);
+        float ra = this  -> getRadiusAlongDirection(direction);
+        float rb = other -> getRadiusAlongDirection(direction);
 
         // ASSUMPTION: ra >= 0 and rb >= 0
 
@@ -46,6 +46,10 @@ bool Collidable::detect_collision_convex(Collidable * other)
         if (ra + rb < separation_distance)
         {
             return false;
+        }
+        else
+        {
+            continue;
         }
     }
     
@@ -88,7 +92,7 @@ bool Collidable::computeFuturePenetrationLocation(Collidable * other, ofVec2f di
     vector<ofVec2f> points1;
     vector<ofVec2f> points2;
     getAllPenetrationPoints(&points1);
-    getAllPenetrationPoints(&points2);
+    other -> getAllPenetrationPoints(&points2);
     
     vector<LineSegment> segments1;
     vector<LineSegment> segments2;
@@ -180,22 +184,32 @@ bool  Collidable::findMinIntersection(vector<Ray> & rays, vector<LineSegment> & 
                 {
                     *from_location = ray.getPoint1();
                     *to_location   = ray.getPointAtTime(new_time);
+                    info -> collision_normal = seg.getNormal(ray.getPoint1());
                 }
 
-                info -> time_till_collision = new_time;
+                min_time = new_time;
                 found = true;
             }
         }
     }
 
+    info -> time_till_collision = min_time;
     return found;
 }
 
 void Collidable::separateFromOther(Collidable * other, ofVec2f direction, float separation_distance)
 {
-    float offset_length = other -> getRadiusAlongDirection(direction) + separation_distance;
+    ofVec2f pt_this  = this  -> getCenterPoint();
+    ofVec2f pt_other = other -> getCenterPoint();
+
+    float desired_distance = this -> getRadiusAlongDirection(direction) +
+                             other -> getRadiusAlongDirection(direction) + separation_distance;
+    float current_distance = abs((pt_this - pt_other).dot(direction));
     
-    ofVec2f offset = offset_length * direction;
+    // The distance we need to move to be at minnimum the desired distance away.
+    float delta_distance = max(0.0f, desired_distance - current_distance);  
+
+    ofVec2f offset = delta_distance * direction;
     ofVec2f new_position = this -> getCenterPoint() + offset;
     this -> setCenterPoint(new_position);
 }

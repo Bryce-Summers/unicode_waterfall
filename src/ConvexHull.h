@@ -23,8 +23,6 @@ public:
 
     // -- Methods from Collidable.
 
-    virtual void getSeparatingAxisesNormals(vector<ofVec2f> results);
-
     // Returns the farthest distance from the center point on this object
     // to any other point on the object as measured by the project onto the given direction.
     // Used in separating axis theorem calculations.
@@ -43,4 +41,5 @@ public:
     virtual void draw();
 
     virtual void getAllPenetrationPoints(vector<ofVec2f> * output);
+    virtual void getSeparatingAxisesNormals(vector<ofVec2f> * results);
 };

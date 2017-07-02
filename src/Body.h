@@ -18,6 +18,7 @@ public:
     ~Body();
 
 // Dynamics quantities.
+
 protected:
    
     float mass;
@@ -31,10 +32,9 @@ protected:
     // -- Rotational Physics Dynamics.
 
     // Planar orientation in radians.
-    float angle;
     float angle_speed;
-
-    bool dynamic = false;
+    float angle;
+    bool dynamic;
 
 
 public:
@@ -75,5 +75,9 @@ public:
     // IN/OUT v1, v2, updates the given velocities from the results of the 1D collision
     // between this and the other rigid body.
     void solve1DRigidBodyCollision(Body * other, float * v1, float * v2);
+
+    // Reverts this body to its last position and angle.
+    // Only required if the body is dynamic.
+    virtual void revertToPrevious() = 0;
 };
 

@@ -29,11 +29,11 @@ void AABB::expandByPt(ofVec2f pt)
 }
 
 
-void AABB::getSeparatingAxisesNormals(vector<ofVec2f> results)
+void AABB::getSeparatingAxisesNormals(vector<ofVec2f> * results)
 {
     // 2 unique normal axises. Takes symmetry into consideration.
-    results.push_back(ofVec2f(1.0, 0));
-    results.push_back(ofVec2f(0, 1.0));
+    results -> push_back(ofVec2f(1.0, 0));
+    results -> push_back(ofVec2f(0, 1.0));
 }
 
 // Returns the farthest distance from the center point on this object

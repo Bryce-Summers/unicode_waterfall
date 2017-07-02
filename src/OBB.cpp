@@ -41,17 +41,20 @@ void OBB::setToPosition(float x, float y)
 }
 
 
-void OBB::getSeparatingAxisesNormals(vector<ofVec2f> results)
+void OBB::getSeparatingAxisesNormals(vector<ofVec2f> * results)
 {
-    results.push_back(right_direction);
-    results.push_back(up_direction);
+    results -> push_back(right_direction);
+    results -> push_back(up_direction);
 }
 
 // Returns the farthest distance from the center point on this object
 // to any other point on the object as measured by the project onto the given direction.
 // Used in separating axis theorem calculations.
+// REQUIRES: direction should be normalized.
 float OBB::getRadiusAlongDirection(ofVec2f direction)
 {
+    direction.normalize();
+
     // Maximum component projected radiuses.
     float proj_up   = abs(direction.dot(right_direction))*radius_right;
     float proj_down = abs(direction.dot(up_direction))*radius_up;
