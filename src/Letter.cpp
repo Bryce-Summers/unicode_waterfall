@@ -8,8 +8,9 @@ Letter::Letter(
     Letter * left,
     char character,
     ofTrueTypeFont * font,
-    Grid * grid)
+    Grid * grid) : Body(grid)
 {
+
     // Position and Physics.
     this -> position = ofVec2f(x, y);
 
@@ -21,7 +22,8 @@ Letter::Letter(
     collidable = NULL;
 
     // State.
-    this -> letter_to_my_left = NULL;//left; //
+    this -> letter_to_my_left  = left;
+    //this -> letter_to_my_right = right;
 
     // FIXME: For now we are assuming that the letters will be of equal width.
     this -> x_offset_from_left = radius * 2;
@@ -104,13 +106,12 @@ void Letter::update(float dt)
     angle += this -> angle_speed*dt;
     this -> angle_speed *= .99; // Slow down the angle speed.
 
-
+    // Bounce off side walls.
     if ((position.x < 10 && velocity.x < 0) || 
         (position.x > ofGetWidth() - 10 && velocity.x > 0))
     {
         velocity.x *= -1;
     }
-
 
     stepAcceleration(dt);
     stepVelocity(dt);
@@ -122,6 +123,9 @@ void Letter::update(float dt)
     if (state == WATERFALL && position.y > pool_y_coordinate)
     {
         state = POOL;
+
+        // Collisions are no longer used in stage 2.
+        this -> deactivateCollider();
         //vy *= -1; // Bounce letters off of the line.
     }
 
@@ -130,10 +134,7 @@ void Letter::update(float dt)
         state = TEXT_SCROLL;
     }
 
-    if (this -> collidable != NULL)
-    {
-        this -> collidable -> updatePositionRotation(position.x, position.y, this -> angle);
-    }
+    updateCollidableFromPosition();
 
     // Add the new references to this object to the grid.
     grid -> add_to_collision_grid(this);
@@ -184,7 +185,16 @@ void Letter::draw()
 
 bool Letter::isDead()
 {
-    return position.y > ofGetHeight() || dead;
+    // all letters should die off at once.
+    // The left hand letter is allowed to die.
+    if (this -> letter_to_my_left == NULL)
+    {
+        return (position.y > ofGetHeight() || dead);
+    }
+    else
+    {
+        return this -> letter_to_my_left -> isDead();
+    }
 }
 
 void Letter::kill()
@@ -300,27 +310,33 @@ void Letter::stepPoolV(float dt)
     //vx = 20 * cos(ofGetElapsedTimef());
 
     // Interpolate the velocity to the pool speed.
-    float per = .99;
+    float per = .0;
 
     velocity.y = velocity.y*per + pool_y_speed * (1.0 - per);
     
     // Move the letter closer towards the center.
-    float center_x = ofGetWidth()/2;
-    float target_x;
-
-    if (letter_to_my_left == NULL)
-    {
-        target_x = this -> position.x;
-    }
-    else
-    {
-        target_x = letter_to_my_left -> getX() + this -> x_offset_from_left;
-    }
+    ofVec2f target_position = this -> getTargetPosition();
     
     // Velocity is skewed towards the letter's position in the sentance.
-    velocity.x = velocity.x*per + (target_x - position.x)*40*(1.0 - per);
+    velocity = velocity*per + (target_position - position + ofVec2f(0, pool_y_speed))*(1.0 - per);
 
     // FIXME: Coagulate the letters with their leaders.
+}
+
+ofVec2f Letter::getTargetPosition()
+{
+    // If this letter is the leader then it wants to be right where it is.
+    if (letter_to_my_left == NULL)
+    {
+        if (state == TEXT_SCROLL)
+        {
+            return ofVec2f(left_scroll_margin, this -> position.y);
+        }
+        return this -> position;
+    }
+
+    // Otherwise it wants to line up to the right of its leader.
+    return this -> letter_to_my_left -> getTargetPosition() + ofVec2f(this -> x_offset_from_left, 0);
 }
 
 void Letter::stepPoolP(float dt)
@@ -340,6 +356,22 @@ void Letter::stepTextScrollV(float dt)
 {
     velocity.x = 0;
     velocity.y = text_scroll_speed;
+
+    velocity += (getTargetPosition() - this -> position)*move_to_left;
+
+    // Bring the letter facing upwards.
+    float angle_speed1 = -angle/3;
+    float angle_speed2 = (PI*2 - angle)/3;
+
+    // Set angle speed to the direction with lowest absolute value.
+    if (-angle_speed1 < angle_speed2)
+    {
+        this -> angle_speed = angle_speed1;
+    }
+    else
+    {
+        this -> angle_speed = angle_speed2;
+    }
 }
 
 void Letter::stepTextScrollP(float dt)
@@ -373,5 +405,15 @@ void Letter::revertToPrevious()
     grid -> remove_from_collision_grid(this);
     this -> position += this -> velocity * dt;
     this -> angle    += this -> angle_speed * dt;
+    this -> updateCollidableFromPosition();
     grid -> add_to_collision_grid(this);
+
+}
+
+void Letter::updateCollidableFromPosition()
+{   
+    if(this -> collidable != NULL)
+    {
+        this -> collidable -> updatePositionRotation(position.x, position.y, this -> angle);
+    }
 }

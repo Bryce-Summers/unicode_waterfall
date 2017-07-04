@@ -6,6 +6,7 @@
 #include "ofMain.h"
 #include "Letter.h"
 #include "Obstacle.h"
+#include <fstream>
 
 class ofApp : public ofBaseApp{
 
@@ -54,5 +55,9 @@ class ofApp : public ofBaseApp{
         Grid * grid;
         list<Obstacle *> obstacles;
         list<Letter *>   letters;
+
+        void loadInputText();
+        vector<string> input; //declare a vector of strings to store data  
+        int line_index;
 
 };

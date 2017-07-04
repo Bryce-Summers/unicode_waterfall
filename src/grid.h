@@ -12,6 +12,8 @@
  *    Narrow pass polygon - polygon collision detection only needs to be performed between polygons that share a grid cell.
  */
 
+class Body;
+
 class GridCell
 {
 

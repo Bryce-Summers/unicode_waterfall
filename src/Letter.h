@@ -43,6 +43,11 @@ private:
     enum State{WATERFALL, POOL, TEXT_SCROLL};
     State state = WATERFALL;
 
+    // 1.0 is fast, 0.0 is not at all.
+    float move_to_left = .9;
+    float left_scroll_margin = 50;
+
+
     bool collision_detection; // Controls whether the letter needs to avoid letters and obstacles.
 
     char character;
@@ -52,7 +57,8 @@ private:
     ofTrueTypeFont * font;
 
     // Indicates the letter to the left of this one in the final sentance that will be displayed.
-    Letter * letter_to_my_left = NULL;
+    Letter * letter_to_my_left  = NULL;
+    Letter * letter_to_my_right = NULL;
 
     // my x = letter_to_my_left x + width + spacing + kerning.
     // my x = left x + x_offset_from_left
@@ -90,6 +96,8 @@ private:
     void stepPoolP(float dt);
 
     float pool_y_speed = 30;
+    // Calculate the target position based on the left letter.
+    ofVec2f getTargetPosition();
 
     // Text Scroll behaviour.
     void stepTextScrollA(float dt);
@@ -111,4 +119,5 @@ private:
 
     
     virtual void revertToPrevious();
+    virtual void updateCollidableFromPosition();
 };

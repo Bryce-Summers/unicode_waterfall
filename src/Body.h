@@ -10,19 +10,27 @@
 
 #include "ofMain.h"
 #include "CollideHeaders.h"
+#include "grid.h"
+
+class Grid;
 
 class Body
 {
 public:
-    Body();// Values should be set by the subclasses if needed.
+    Body(Grid * grid);// Values should be set by the subclasses if needed.
     ~Body();
 
 // Dynamics quantities.
+private:
+    bool collidable = true;
 
 protected:
    
+    Grid * grid;
+
     float mass;
     float restitution_coef;
+
 
     // -- Translational Physics dynamics.
     ofVec2f position; // Location of the center of mass.
@@ -38,6 +46,10 @@ protected:
 
 
 public:
+    bool isCollidable();
+    void deactivateCollider();
+    void activateCollider();
+
     virtual Collidable * getCollidable() = 0;
 
     // Updates this body's position from its collidable object.
@@ -79,5 +91,15 @@ public:
     // Reverts this body to its last position and angle.
     // Only required if the body is dynamic.
     virtual void revertToPrevious() = 0;
+
+    virtual void updateCollidableFromPosition() = 0;
+
+private:
+    // Moves the body that has rammed the other backwards in time in preparation for a collision point search.
+    // Returns true if this is the body that has been moved.
+    // REturns false if the other body has been moved.
+    bool separatePenetratingBody(Body * other);
+    // Moves this body such that the pt at the old location has been translated to the new_location.
+    void moveBody(ofVec2f old_location, ofVec2f new_location);
 };
 

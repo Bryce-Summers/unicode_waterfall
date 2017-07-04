@@ -116,7 +116,7 @@ void Grid::remove_from_collision_grid(Body * obj)
 bool Grid::resolve_collisions(Body * dynamic_obj)
 {
     // Nothing needs doing if the input object is not dynamic.
-    if(dynamic_obj -> isDynamic() == false)
+    if(dynamic_obj -> isDynamic() == false || !dynamic_obj -> isCollidable())
     {
         return false;
     }
@@ -146,6 +146,12 @@ bool Grid::resolve_collisions(Body * dynamic_obj)
     bool resolution_happened = false;
     for (Body * other : candidates)
     {
+        // Ignore collisions with bodies that are deactivated.
+        if (!other -> isCollidable())
+        {
+            continue;
+        }
+
         // NOTE: if a null access exception gets thrown here,
         // it probably means that there is some portion of the code that
         // modifies the position or orientation of a body without removing it

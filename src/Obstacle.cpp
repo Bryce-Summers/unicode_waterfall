@@ -1,7 +1,7 @@
 #include "Obstacle.h"
 
 
-Obstacle::Obstacle(ofPolyline pline, Grid * grid)
+Obstacle::Obstacle(ofPolyline pline, Grid * grid) : Body(grid)
 {
     this -> pline = pline;
     this -> pline.setClosed(true);
@@ -39,6 +39,12 @@ ofPolyline Obstacle::convexHull(ofPolyline pline)
 void Obstacle::updatePositionFromCollidable()
 {
     this -> position = collidable -> getCenterPoint();
+}
+
+void Obstacle::updateCollidableFromPosition()
+{
+    // FIXME: Adjust Grid...
+    this -> collidable -> setCenterPoint(this -> position);
 }
 
 // Obstacles don't revert, because they are inert.

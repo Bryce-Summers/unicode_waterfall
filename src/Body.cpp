@@ -1,7 +1,9 @@
 #include "Body.h"
 
-Body::Body()
+Body::Body(Grid * grid)
 {
+    this -> grid = grid;
+
     // Default Values.
     restitution_coef = 1.0;
     mass = 1.0;
@@ -50,28 +52,77 @@ void Body::resolve_collision(Body * other)
     Collidable * c1 = this  -> getCollidable();
     Collidable * c2 = other -> getCollidable();
 
-    float separation_dist = 1;
-    ofVec2f movement_direction = velocity.normalized();
+    //float separation_dist = 1;
 
     // 1. separate, then update synch this body's position with the collidable.
-    c1 -> separateFromOther(c2, -movement_direction, separation_dist);
-    
+    //c1 -> separateFromOther(c2, -movement_direction, separation_dist);
     //this -> revertToPrevious();
-    
+    bool c1_moved = separatePenetratingBody(other);
+
+    /*
     if(other -> isDynamic())
     {
         other -> revertToPrevious();
     }
+    */
 
     this -> updatePositionFromCollidable();
 
     // 2, 3.
     CollideInfo info;
-    c1 -> computeFuturePenetrationLocation(c2, movement_direction, &info);
+    if(c1_moved)
+    {
+        ofVec2f movement_direction = this -> velocity.normalized();
+        c1 -> computeFuturePenetrationLocation(c2, movement_direction, &info);
+        this -> moveBody(info.location1, info.location2 - movement_direction);
+    }
+    else
+    {
+        ofVec2f movement_direction = other -> velocity.normalized();
+        c2 -> computeFuturePenetrationLocation(c1, movement_direction, &info);
+        other -> moveBody(info.location1, info.location2 - movement_direction);
+    }
 
+    // Udpates both body's dynamics.
     this -> updateDynamics(info, other);
 
 }
+
+bool Body::separatePenetratingBody(Body * other)
+{
+
+    ofVec2f pt1 = this -> getCenterOfMass();
+    ofVec2f pt2 = other -> getCenterOfMass();
+
+    ofVec2f towardsOther = pt2 - pt2;
+    towardsOther.normalize();
+
+    float proj_1 = this -> getTranslationalVelocity().dot(towardsOther);
+    float proj_2 = this -> getTranslationalVelocity().dot(-towardsOther);
+
+    if (proj_1 < proj_2 || !other -> isDynamic())
+    {
+        //this -> revertToPrevious();
+        // Move the object far back, because it will be collided soon.
+        this -> moveBody(this -> position, this -> position - this -> velocity.normalized()*100);
+        return true;
+    }
+    else
+    {
+        //other -> revertToPrevious();
+        other -> moveBody(other -> position, other -> position - other -> velocity.normalized() * 100);
+        return false;
+    }
+}
+
+void Body::moveBody(ofVec2f old_location, ofVec2f new_location)
+{
+    grid -> remove_from_collision_grid(this);
+    this -> position += new_location - old_location;
+    this -> updateCollidableFromPosition();
+    grid -> add_to_collision_grid(this);
+}
+
 
 void Body::updateDynamics(CollideInfo & info, Body * body2)
 {
@@ -99,9 +150,12 @@ void Body::updateDynamics(CollideInfo & info, Body * body2)
     ofVec2f new_projected_velocity2 = v2*normal;
 
     // Negate the original component and add the new projected componants.
-    body1 -> addVelocityAtPt(-old_projected_velocity1 + new_projected_velocity1, position1);
-    body2 -> addVelocityAtPt(-old_projected_velocity2 + new_projected_velocity2, position2);
-    
+    ofVec2f body1_away_from_body2 = body1 -> getCenterOfMass() - body2 -> getCenterOfMass();
+    body1_away_from_body2.normalize()*4;
+    ofVec2f body2_away_from_body1 = -body1_away_from_body2;
+    body1 -> addVelocityAtPt(-old_projected_velocity1 + new_projected_velocity1 + body1_away_from_body2, position1);
+    body2 -> addVelocityAtPt(-old_projected_velocity2 + new_projected_velocity2 + body2_away_from_body1, position2);
+
 }
 
 // IN/OUT v1, v2, updates the given velocities from the results of the 1D collision
@@ -206,8 +260,8 @@ void Body::addVelocityAtPt(ofVec2f velocity, ofVec2f location)
     ofVec2f par  = center_to_location.dot(line_of_action)*line_of_action;
     ofVec2f perp = center_to_location - par;
 
-    ofVec2f translationalVelocity = velocity.dot(par)*par;
-    ofVec2f rotationalVelocity    = velocity - translationalVelocity;//.dot(perp)*perp;
+    ofVec2f translationalVelocity = velocity *.9;//.dot(par)*par;
+    ofVec2f rotationalVelocity    = velocity *.1;// - translationalVelocity;//.dot(perp)*perp;
     this -> addTranslationalVelocity(translationalVelocity);
     this -> addRotationalVelocity(rotationalVelocity, location);
     
@@ -256,4 +310,19 @@ void Body::addRotationalVelocity(ofVec2f velocity, ofVec2f location)
 
     angle_speed += delta_angular_speed;
         
+}
+
+void Body::deactivateCollider()
+{
+    this -> collidable = false;
+}
+
+void Body::activateCollider()
+{
+    this -> collidable = true;
+}
+
+bool Body::isCollidable()
+{
+    return collidable;
 }

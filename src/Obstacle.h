@@ -30,6 +30,7 @@ public:
     virtual bool isDynamic(){ return true;}
     virtual Collidable * getCollidable(){return collidable;}
     virtual void updatePositionFromCollidable();
+    virtual void updateCollidableFromPosition();
 
     // Dummy function, because obstacles are static.
     virtual void revertToPrevious();
