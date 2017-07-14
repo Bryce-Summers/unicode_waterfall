@@ -6,9 +6,10 @@ Letter::Letter(
     Letter * left,
     char character,
     ofTrueTypeFont * font,
-    Grid * grid,
+    LetterManager * letterManager,
     float offset_from_left,
-    bool space_before) : Body(grid)
+    bool space_before,
+    int sentance_index) : Body(letterManager -> grid)
 {
 
     // Position and Physics.
@@ -32,13 +33,21 @@ Letter::Letter(
 
     this -> character = character;
 
-    this -> grid = grid;
+    this -> letterManager = letterManager;
 
     this -> dynamic = true;
 
     this -> last_dt = 0.0;
 
     this -> space_before = space_before;
+
+    this -> sentance_index = sentance_index;
+
+    // Handle words of length 1.
+    if (isStartOfWord() && isEndOfWord())
+    {
+        setWordComplete();
+    }
 }
 
 
@@ -105,6 +114,24 @@ void Letter::update(float dt)
 {
     this -> last_dt = dt;
 
+    // Safe guard against letters
+    // FIXME: Remove this and solve it by gurantteeing that letters do not get stuck.
+    time += dt;
+    if (state == WATERFALL && time > 10)
+    {
+        ofVec2f center = ofVec2f(960, 500);
+        ofVec2f offset = this -> position - center;
+
+        if (offset.length() > 300)
+        {
+            state = POOL;
+            this -> position = center;
+            this -> acceleration = ofVec2f(0, 0);
+            this -> velocity = ofVec2f(0, 0);
+        }
+        
+    }
+
     // Bounce off side walls.
     if ((position.x < 10 && velocity.x < 0) || 
         (position.x > ofGetWidth() - 10 && velocity.x > 0))
@@ -137,10 +164,16 @@ void Letter::move(float dt)
         //vy *= -1; // Bounce letters off of the line.
     }
 
-    // Transition to text scrolling when the sentance is finished.
-    if (sentance_complete)
+    // Transition to text scrolling.
+    if (state == POOL &&
+        this -> sentance_complete == true &&
+        letterManager -> isScrollReady() &&
+        this -> sentance_index == letterManager -> get_scroll_index())
     {
-        state = TEXT_SCROLL;
+        this -> setGroupState(TEXT_SCROLL);
+        this -> letterManager -> next_scroll();
+
+        cout << "Index scrolled = " << this -> sentance_index << endl;
     }
 
     updateCollidableFromPosition();
@@ -204,12 +237,12 @@ bool Letter::isDead()
     if (this -> letter_to_my_left == NULL)
     {
         // Caching the dead value makes dead collection O(n) for an n letter list.
-        dead = (position.y > ofGetHeight() || dead);
+        dead = (state == TEXT_SCROLL && position.y > ofGetHeight() || dead);
         return dead;
     }
     else
     {
-        return this -> letter_to_my_left -> isDead();
+        return this -> letter_to_my_left -> isDead(); // Deadness is determined at the sentance level.
     }
 }
 
@@ -333,8 +366,10 @@ void Letter::stepPoolA(float dt)
 
         // Velocity is skewed towards the letter's position in the sentance.
         acceleration = desired_velocity - this -> velocity;
+        acceleration *= 50;
     }
 
+    
     if (free)
     {
         ofVec2f center = ofVec2f(960, 500);
@@ -343,7 +378,7 @@ void Letter::stepPoolA(float dt)
         float temp = -perpCenter.y;
         perpCenter.y = perpCenter.x;
         perpCenter.x = temp;
-        this -> acceleration = toCenter*dt*40 + perpCenter*dt*40;
+        this -> acceleration = toCenter*40 + perpCenter*40;
     }
 
 }
@@ -359,8 +394,8 @@ void Letter::stepPoolV(float dt)
     
     if (!free)
     {
-        ofVec2f desired_velocity = (target_position - this -> position);
-        this -> velocity = desired_velocity;
+        ofVec2f desired_velocity = (target_position - this -> position)*.01/dt;
+        //this -> velocity = desired_velocity;
     }
 }
 
@@ -368,15 +403,16 @@ void Letter::stepPoolP(float dt)
 {
     dynamicsP(dt);
 
+    // -- Make connected words rigid.
     bool free;
     ofVec2f target_position = this -> getTargetPosition(&free);
-    if (connected_left) // Once a left connection has been made, things get rigid.
+    if (connected_left && driving == LEFT) 
     {
         this -> position = target_position;
     }
-    else
+    else if(connected_right && driving == RIGHT)
     {
-        this -> position = target_position;
+        this->position = target_position;
     }
 }
 
@@ -396,36 +432,110 @@ ofVec2f Letter::getTargetPosition(bool * free)
 
     if (state == POOL)
     {
-        // Try to move to left or right letter.
-        if (pool_goto_right_of_left(&output))
+        // -- Handle Magnet logic.
+        /* The algorithm tries out 4 discrete results as follows:
+         *  1. Move magnetized letters towards each other,
+         *     connect them when they are close enough.
+         *  2. Magnetize unconnected unmagnetized groups of letters that fullfill the connection requirements.
+         *     i.e. letters attract neighbors in their word, complete words attract each other.
+         *  3. Connected letters follow their group in the driving direction.
+         *  4. Set driving ends to free motion.
+         */
+
+
+        // -- Magnets attract towards their opposite.
+        
+        // Follow, connect, then demagnetize left.
+        if (magnet_left)
         {
-            // NOTE: We don't need dist_sqr if connected_left is already true.
-            // same for symmetrical case below.
-            ofVec2f offset = output - this -> position;
-            float dist_sqr = offset.lengthSquared();
-            float threshold = 100;
-            if (!connected_left && dist_sqr < threshold) // 10^2
+            getOffsetPositionFromLeft(&output);
+
+            if(!connected_left)
             {
-                connect_to_left(); // Update letter, word, and sentance connectivity values.
+                // NOTE: We don't need dist_sqr if connected_left is already true.
+                // same for symmetrical case below.
+                ofVec2f offset = output - this -> position;
+                float dist_sqr = offset.lengthSquared();
+                float threshold = 100;
+                if (dist_sqr < threshold) // 10^2
+                {
+                    setMagnet(LEFT, false);
+                    letter_to_my_left -> setMagnet(RIGHT, false);
+
+                    connect_to_left(); // Update letter, word, and sentance connectivity values.
+                
+                    setDriving(LEFT);
+                }
             }
+
             return output;
         }
-         
-        
-        if(!connected_right && pool_goto_left_of_right(&output))
+
+        // Follow, connect, then demagnetize right.
+        if (magnet_right)
         {
-            ofVec2f offset = output - this -> position;
-            float dist_sqr = offset.lengthSquared();
-            float threshold = 100;
-            if (!connected_right && dist_sqr < threshold) // 10^2
+            getOffsetPositionFromRight(&output);
+
+            if (!connected_right)
             {
-                connect_to_right(); // Update letter, word, and sentance connectivity values.
+                ofVec2f offset = output - this -> position;
+                float dist_sqr = offset.lengthSquared();
+                float threshold = 100;
+                if (dist_sqr < threshold) // 10^2
+                {
+                    setMagnet(RIGHT, false);
+                    letter_to_my_right -> setMagnet(LEFT, false);
+
+                    connect_to_right(); // Update letter, word, and sentance connectivity values.
+                    setDriving(LEFT);
+                }
             }
+
+            return output;
+        }
+
+        // -- Magnetize letters if they meet the requirements for connection.
+
+        // Magnetize left.
+        if (!connected_left && pool_goto_right_of_left())
+        {
+            setMagnet(LEFT, true);
+            letter_to_my_left -> setMagnet(RIGHT, true);
+            setDriving(LEFT);
+            letter_to_my_left -> setDriving(RIGHT);
+
+            getOffsetPositionFromLeft(&output);
+            return output;
+        }
+
+        // Magnetize right.
+        if(!connected_right && pool_goto_left_of_right())
+        {
+            setMagnet(RIGHT, true);
+            this -> letter_to_my_right -> setMagnet(LEFT, true);
+            setDriving(RIGHT);
+            letter_to_my_right -> setDriving(LEFT);
+
+            getOffsetPositionFromRight(&output);
+            return output;
+        }
+
+        // Follow left connection.
+        if (connected_left && driving == LEFT)
+        {
+            getOffsetPositionFromLeft(&output);
+            return output;
+        }
+
+        // Follow right connection.
+        if (connected_right && driving == RIGHT)
+        {
+            getOffsetPositionFromRight(&output);
             return output;
         }
 
         // Default Circulation behavior.
-        *free = true;
+        *free = true; // Calling function can freely move this letter.
         return this -> position;
     }
 
@@ -444,7 +554,65 @@ ofVec2f Letter::getTargetPosition(bool * free)
     return this -> letter_to_my_left -> getTargetPosition(&free1) + ofVec2f(this -> x_offset_from_left, 0);
 }
 
-inline bool Letter::pool_goto_right_of_left(ofVec2f * output)
+void Letter::setDriving(Direction direction)
+{
+    this -> driving = direction;
+    
+    Letter * search = this;
+
+    // backkwards.
+    while (search -> connected_left)
+    {
+        search = search -> letter_to_my_left;
+        search -> driving = direction;
+    }
+
+    search = this;
+
+    // Forwards.
+    while (search -> connected_right)
+    {
+        search = search -> letter_to_my_right;
+        search -> driving = direction;
+    }
+}
+
+void Letter::setMagnet(Direction direction, bool value)
+{  
+    Letter * search = findStartOfConnectedGroup();
+    Letter * last_search;
+    
+    // Set elements from left to right.
+    do
+    {
+        last_search = search;
+
+        switch (direction)
+        {
+            case LEFT:  search -> magnet_left  = value; break;
+            case RIGHT: search -> magnet_right = value; break;
+        }
+
+        search = search -> letter_to_my_right;
+    }
+    while(last_search -> connected_right);
+}
+
+void Letter::setGroupState(State state)
+{
+    Letter * search = findStartOfConnectedGroup();
+    Letter * last_search;
+
+    // Set elements from left to right.
+    do
+    {
+        last_search = search;
+        search -> state = state;
+        search = search -> letter_to_my_right;
+    } while (last_search -> connected_right);
+}
+
+inline bool Letter::pool_goto_right_of_left()
 {
     if (this -> letter_to_my_left == NULL)
     {
@@ -455,7 +623,6 @@ inline bool Letter::pool_goto_right_of_left(ofVec2f * output)
 
     if (connected_left)
     {
-        getOffsetPositionFromLeft(output);
         return true;
     }
 
@@ -472,7 +639,6 @@ inline bool Letter::pool_goto_right_of_left(ofVec2f * output)
     {
         if(!isStartOfWord())
         {
-            getOffsetPositionFromLeft(output);
             return true; // going towards left.
         }
 
@@ -488,11 +654,9 @@ inline bool Letter::pool_goto_right_of_left(ofVec2f * output)
         // -- FIXME: Remove me.
         if (this -> isStartOfWord())
         {
-            getOffsetPositionFromLeft(output);
             return true;
         }
 
-        getOffsetPositionFromLeft(output);
         return true;
     }
 
@@ -524,7 +688,7 @@ inline bool Letter::getOffsetPositionFromRight(ofVec2f * output) // ASSUMES that
     return true;
 }
 
-inline bool Letter::pool_goto_left_of_right(ofVec2f * output)
+inline bool Letter::pool_goto_left_of_right()
 {
     if (this -> letter_to_my_right == NULL)
     {
@@ -535,7 +699,6 @@ inline bool Letter::pool_goto_left_of_right(ofVec2f * output)
 
     if (connected_right)
     {
-        getOffsetPositionFromRight(output);
         return true;
     }
 
@@ -552,11 +715,20 @@ inline bool Letter::pool_goto_left_of_right(ofVec2f * output)
     {
         if(!isEndOfWord())
         {
-            getOffsetPositionFromRight(output);
             return true; // going towards right.
         }
 
         return false; // Start of word, not yet connected to the whole word.
+    }
+
+    // Word to word.
+    if (combine_stage == PARTIAL_SENTANCE)
+    {
+        if (isEndOfWord() && this -> letter_to_my_right -> combine_stage == PARTIAL_SENTANCE)
+        {
+            return true;
+        }
+        return false;
     }
 
     // At the word to sentance stage words hunt down their left neighbor.
@@ -712,13 +884,13 @@ void Letter::setWordComplete()
         latest_search = search;
         search -> word_complete = true;
         search -> combine_stage = PARTIAL_SENTANCE;
-        cout << search -> character;
+        //cout << search -> character;
 
         // Iterate.
         search = search -> letter_to_my_right;
     }while(latest_search -> isEndOfWord() == false);
 
-    cout << endl;
+    //cout << endl;
 
 }
 
@@ -834,6 +1006,28 @@ Letter * Letter::findStartOfWord()
     while (!(search -> isStartOfWord()))
     {
         search = search -> letter_to_my_left;
+    }
+
+    return search;
+}
+
+Letter * Letter::findStartOfConnectedGroup()
+{
+    Letter * search = this;
+    while (search -> connected_left)
+    {
+        search = search -> letter_to_my_left;
+    }
+
+    return search;
+}
+
+Letter * Letter::findEndOfConnectedGroup()
+{
+    Letter * search = this;
+    while (search -> connected_right)
+    {
+        search = search -> letter_to_my_right;
     }
 
     return search;

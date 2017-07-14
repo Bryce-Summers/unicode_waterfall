@@ -178,6 +178,7 @@
     <ClCompile Include="src\ConvexHull.cpp" />
     <ClCompile Include="src\grid.cpp" />
     <ClCompile Include="src\Letter.cpp" />
+    <ClCompile Include="src\LetterManager.cpp" />
     <ClCompile Include="src\LineSegment.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\OBB.cpp" />
@@ -197,6 +198,7 @@
     <ClInclude Include="src\ConvexHull.h" />
     <ClInclude Include="src\grid.h" />
     <ClInclude Include="src\Letter.h" />
+    <ClInclude Include="src\LetterManager.h" />
     <ClInclude Include="src\LineSegment.h" />
     <ClInclude Include="src\OBB.h" />
     <ClInclude Include="src\Obstacle.h" />

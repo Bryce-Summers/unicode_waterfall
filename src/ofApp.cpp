@@ -17,6 +17,8 @@ void ofApp::setup(){
     loadFonts();
     loadGridAndObstacles();
     loadInputText();
+
+    letter_manager = new LetterManager(grid, this -> seconds_per_frame / 2);
 }
 
 void ofApp::loadFonts()
@@ -59,7 +61,7 @@ void ofApp::loadGridAndObstacles()
 {
     // A grid spaced out over the window width in 100 by 100 equal locations.
     grid = new Grid(40, 40, ofGetWidth(), ofGetHeight());
-    
+
     ofPolyline p;
     for (int i = 0; i < 20; i++)
     {
@@ -154,6 +156,14 @@ void ofApp::update(){
     if (time_accum > this -> seconds_per_frame && line_index < input.size())
     {
         time_accum = 0;//-= this -> seconds_per_frame;
+
+        // Remove me.
+        if(bogus)
+        {
+            return;
+        }
+        
+        //bogus = true;
     
         // Create a sentance of letters.
         //int letters_per_sentance = 5;
@@ -216,9 +226,10 @@ void ofApp::update(){
                 previous_letter,
                 c,
                 &verdana14,
-                grid,
+                letter_manager,
                 previous_to_this_distance,
-                last_was_a_space); // last_was_a_space used to delliminate words.
+                last_was_a_space,
+                line_index - 1); // last_was_a_space used to delliminate words.
             
             letters.push_back(l);
             if(previous_letter != NULL)
@@ -234,6 +245,8 @@ void ofApp::update(){
         }
         
     }
+
+    letter_manager -> update(dt);
 
     // We use a set to determine dead letters without duplication.
     vector<list<Letter *>::iterator> dead_letters;

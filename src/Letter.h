@@ -5,6 +5,7 @@
 #include "Body.h"
 #include "Collidable.h"
 #include "OBB.h"
+#include "LetterManager.h"
 
 
 class Letter : public Body
@@ -14,9 +15,10 @@ public:
         Letter * letter_to_my_left,
         char character,
         ofTrueTypeFont * font,
-        Grid * grid,
+        LetterManager * letter_manager,
         float offset_from_left,
-        bool space_before);
+        bool space_before,
+        int sentance_index);
     ~Letter();
 
     // -- Public Interface.
@@ -42,6 +44,10 @@ private:
 
 
 private:
+
+    float time = 0;
+
+
     bool dead = false;
     enum State{WATERFALL, POOL, TEXT_SCROLL};
     State state = WATERFALL;
@@ -50,6 +56,7 @@ private:
     float move_to_left = 1.0;
     float left_scroll_margin = 50;
 
+    int sentance_index;
 
     bool collision_detection; // Controls whether the letter needs to avoid letters and obstacles.
 
@@ -120,6 +127,17 @@ private:
     bool connected_left = false;
     bool connected_right = false;
 
+    // Used to explictly allow letters to attract each other.
+    bool magnet_left  = false;
+    bool magnet_right = false;
+    enum Direction { LEFT, RIGHT };
+    void setMagnet(Direction direction, bool value);
+
+    // Whether the letters are driven from the front or driven from the back.
+    // True if left, false if right.
+    bool driving = true;
+    void setDriving(Direction direction);// set driving for every element of this component.
+
     // -- Words.
     bool isStartOfWord();
     bool isEndOfWord();
@@ -139,6 +157,8 @@ private:
     void setSentanceComplete();
 
     void update_word_sentance_connectivity();
+
+    void setGroupState(State state);
     
     enum Combine_Stage {
         // Letters.
@@ -153,6 +173,10 @@ private:
 
     // FIXME: ensure that the complete sentances are scrolled in the correct order.
     //int my_sentance_index;
+
+    // Returns a pointer to the first letter in this connected group.
+    Letter * findStartOfConnectedGroup();
+    Letter * findEndOfConnectedGroup();
 
     // Returns a pointer to the first letter of this word.
     Letter * findStartOfWord();
@@ -171,12 +195,10 @@ private:
 
     // -- Position and movement functions.
 
-    // Sets output to target_letter position plus the offset if target_letter is not null.
-    // The functions gravitate letters towards each other letters to words, then words to sentances.
-    // They handle all of the connectivity checking along the way.
-    // RETURNS true iff the output was set with a position and the movement is legal.
-    inline bool pool_goto_right_of_left(ofVec2f * output);
-    inline bool pool_goto_left_of_right(ofVec2f * output);
+    // Returns true if the the conditions have been met for this letter to magnet
+    // towards the left letter.
+    inline bool pool_goto_right_of_left();
+    inline bool pool_goto_left_of_right();
 
     // Puts the result in the output.
     // If the letter to my left stands still,
@@ -201,7 +223,7 @@ private:
 
 // Collision Detection.
 private:
-    Grid * grid;
+    LetterManager * letterManager;
 
     virtual Collidable * getCollidable();
     virtual bool isDynamic(){return true;}

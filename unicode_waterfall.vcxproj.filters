@@ -49,6 +49,9 @@
     <ClCompile Include="src\Useful.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\LetterManager.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -123,6 +126,9 @@
       <Filter>src\Collision_Geometries</Filter>
     </ClInclude>
     <ClInclude Include="src\Useful.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LetterManager.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

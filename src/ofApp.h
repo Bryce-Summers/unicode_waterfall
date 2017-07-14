@@ -8,6 +8,7 @@
 #include "Obstacle.h"
 #include <fstream>
 #include "Useful.h" // char to string.
+#include "LetterManager.h"
 
 class ofApp : public ofBaseApp{
 
@@ -29,6 +30,8 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
 		
         int frame;
+
+        bool bogus = false;
 
         float time;
         float time_accum = 0;
@@ -54,6 +57,7 @@ class ofApp : public ofBaseApp{
 
         void loadGridAndObstacles();
         // Objects in the scene.
+        LetterManager * letter_manager;
         Grid * grid;
         list<Obstacle *> obstacles;
         list<Letter *>   letters;
