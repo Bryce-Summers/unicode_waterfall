@@ -10,17 +10,18 @@
 class Letter : public Body
 {
 public:
-    Letter(float x,
-        float y,
-        float radius,
+    Letter(float x, float y,
         Letter * letter_to_my_left,
         char character,
         ofTrueTypeFont * font,
-        Grid * grid);
+        Grid * grid,
+        float offset_from_left,
+        bool space_before);
     ~Letter();
 
     // -- Public Interface.
-    void update(float dt);
+    void update(float dt); // Udpates internal state, but not position.
+    void move(float dt);   // Second pass updates all of the positions.
     void draw();
     bool isDead();
 
@@ -30,6 +31,8 @@ public:
     float getX();
     float getY();
 
+    // Sets the letter to my right field.
+    void setRightLetter(Letter * right);
 
 // Init functions
 private:
@@ -44,7 +47,7 @@ private:
     State state = WATERFALL;
 
     // 1.0 is fast, 0.0 is not at all.
-    float move_to_left = .9;
+    float move_to_left = 1.0;
     float left_scroll_margin = 50;
 
 
@@ -56,9 +59,18 @@ private:
 
     ofTrueTypeFont * font;
 
+    // Letters implicitly form doubly linked, non-circular lists.
+    // These pointers are used a lot in stage 2 when the letters are being combined into words and then into sentances.
     // Indicates the letter to the left of this one in the final sentance that will be displayed.
+    // For garbage collection, etc we will query left.
+    // For normal queries either left or right should be fine.
     Letter * letter_to_my_left  = NULL;
     Letter * letter_to_my_right = NULL;
+    // TRUE IFF this letter was preceded by a space in the input text.
+    // This parameter combined with the letter pointers and helper methods may be used to
+    // determine the starting and ending points for words.
+    bool space_before; 
+
 
     // my x = letter_to_my_left x + width + spacing + kerning.
     // my x = left x + x_offset_from_left
@@ -95,9 +107,90 @@ private:
     void stepPoolV(float dt);
     void stepPoolP(float dt);
 
-    float pool_y_speed = 30;
+    // The target speed of circulation for the 
+    const float pool_speed = 30;
+
+    // --  Lots of helper functions for the implementation of the 
+    // letter -> word -> sentance combining pool.
+
+    // -- Letters.
+    bool inPool();
+    // TRUE if this letter and the one to the left have 'snapped' together and are linked.
+    // Letter level booleans.
+    bool connected_left = false;
+    bool connected_right = false;
+
+    // -- Words.
+    bool isStartOfWord();
+    bool isEndOfWord();
+    bool word_complete = false; // Cached value.
+    bool isWordComplete();  // Derives word_complete from letter level booleans.
+    void setWordComplete(); // Sets word_complete to true in all letters in this word.
+    /*
+    Letter * start_of_word = NULL; // Cached start and end letter for sentance level transversal.
+    Letter * end_of_word = NULL; // Premature optimization is the root of all evil.
+    */
+
+    /// -- Sentances.
+    inline bool isStartOfSentance();
+    inline bool isEndOfSentance();
+    bool sentance_complete = false;
+    bool isSentanceComplete(); // Derives sentance complete form the word level booleans.
+    void setSentanceComplete();
+
+    void update_word_sentance_connectivity();
+    
+    enum Combine_Stage {
+        // Letters.
+        PARTIAL_WORD, // A group of letters that are not yet a full word.
+
+        // Words.
+        PARTIAL_SENTANCE, // A group of full words that is not yet an entire sentance.
+
+        // Sentances.
+        SENTANCE};
+    Combine_Stage combine_stage = PARTIAL_WORD;
+
+    // FIXME: ensure that the complete sentances are scrolled in the correct order.
+    //int my_sentance_index;
+
+    // Returns a pointer to the first letter of this word.
+    Letter * findStartOfWord();
+    // Returns a pointer to the last letter of this word.
+    Letter * findEndOfWord();
+
+    // Returns a pointer to the last letter in the sentance.
+    Letter * findStartOfSentance();
+
+    // Returns a pointer to the first letter in the sentance.
+    Letter * findEndOfSentance();
+
+
     // Calculate the target position based on the left letter.
-    ofVec2f getTargetPosition();
+    ofVec2f getTargetPosition(bool * free);
+
+    // -- Position and movement functions.
+
+    // Sets output to target_letter position plus the offset if target_letter is not null.
+    // The functions gravitate letters towards each other letters to words, then words to sentances.
+    // They handle all of the connectivity checking along the way.
+    // RETURNS true iff the output was set with a position and the movement is legal.
+    inline bool pool_goto_right_of_left(ofVec2f * output);
+    inline bool pool_goto_left_of_right(ofVec2f * output);
+
+    // Puts the result in the output.
+    // If the letter to my left stands still,
+    // returns the position to the right of it at an appropriate
+    // target distance.
+    inline bool getOffsetPositionFromLeft(ofVec2f * output);// ASSUMES that we have a left letter.
+    // If the letter to my right stands still, returns the location to its left at an
+    // appropriate offset.
+    inline bool getOffsetPositionFromRight(ofVec2f * output);// ASSUMES that we have a right
+
+    // Connects this letter to the letter to the left or right and updates the letter,
+    // word, and sentance connectivity values.
+    void connect_to_left();
+    void connect_to_right();
 
     // Text Scroll behaviour.
     void stepTextScrollA(float dt);

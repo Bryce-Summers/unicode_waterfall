@@ -7,6 +7,7 @@
 #include "Letter.h"
 #include "Obstacle.h"
 #include <fstream>
+#include "Useful.h" // char to string.
 
 class ofApp : public ofBaseApp{
 
@@ -27,7 +28,6 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 		
-
         int frame;
 
         float time;
@@ -48,6 +48,8 @@ class ofApp : public ofBaseApp{
 
         ofTrueTypeFont  franklinBook14A;
         ofTrueTypeFont	verdana14A;
+
+        ofTrueTypeFont font;
 
 
         void loadGridAndObstacles();

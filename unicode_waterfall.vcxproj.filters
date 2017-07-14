@@ -46,6 +46,9 @@
     <ClCompile Include="src\CollideInfo.cpp">
       <Filter>src\Collision_Geometries</Filter>
     </ClCompile>
+    <ClCompile Include="src\Useful.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -118,6 +121,9 @@
     </ClInclude>
     <ClInclude Include="src\CollideHeaders.h">
       <Filter>src\Collision_Geometries</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Useful.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

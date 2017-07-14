@@ -27,6 +27,10 @@ void ofApp::loadFonts()
     //old OF default is 96 - but this results in fonts looking larger than in other programs. 
     ofTrueTypeFont::setGlobalDpi(72);
 
+    font.load("verdana.ttf", 14, true, true);
+    font.setLineHeight(18.0f);
+    font.setLetterSpacing(1.037);
+
     verdana14.load("verdana.ttf", 14, true, true);
     verdana14.setLineHeight(18.0f);
     verdana14.setLetterSpacing(1.037);
@@ -67,6 +71,24 @@ void ofApp::loadGridAndObstacles()
 
     // Create an obstacle that automatically adds itself to the grid.
     Obstacle * obj = new Obstacle(p, grid);
+    obstacles.push_back(obj);
+
+    ofPolyline p2;
+    p2.addVertex(ofPoint(525, 200));
+    p2.addVertex(ofPoint(550, 225));
+    p2.addVertex(ofPoint(550, 260));
+    p2.addVertex(ofPoint(500, 260));
+    p2.addVertex(ofPoint(500, 225));
+    obj = new Obstacle(p2, grid);
+    obstacles.push_back(obj);
+
+    ofPolyline p3;
+    p3.addVertex(ofPoint(725, 210));
+    p3.addVertex(ofPoint(750, 225));
+    p3.addVertex(ofPoint(750, 260));
+    p3.addVertex(ofPoint(700, 260));
+    p3.addVertex(ofPoint(700, 225));
+    obj = new Obstacle(p3, grid);
     obstacles.push_back(obj);
     
     // Construct some bounds for the sides of the view screen.
@@ -138,26 +160,77 @@ void ofApp::update(){
         Letter * previous_letter = NULL;
         //for(int i = 0; i < letters_per_sentance; i++)
         string line = input[line_index++];
-        for(char c : line)
+        bool last_was_a_space = false;
+        int len = line.length();
+        char last_char = ' ';
+        const int margin = 20;
+        const int y = 20;//margin + ofRandom(ofGetHeight() - margin*2);
+        
+
+        for(int char_index = 0; char_index < len; char_index++)
         {
+            char c = line[char_index];
             if(c == '\n')
             {
                 continue;
             }
 
+            // Don't create animated invisible letters for spaces, but do record the gap.
+            if(c == ' ')
+            {
+                last_was_a_space = true;
+                continue;
+            }
+
             // Blank space on the left and right sides of the screen where letters will not form.
-            int margin = 20;
             int x = margin + ofRandom(ofGetWidth() - margin*2);
-            int y = 20;
+            
+
+            // figure out the gap between this letter and the next one.
+            int previous_to_this_distance = 0;
+            
+            // If we are past the first character, we compute the correct spacings of the letters.
+            if(char_index > 0)
+            {
+                string str;
+                // The trick is to put the space first,
+                // since trailing spaces are ignored in the font getStringWidth function.
+                if (last_was_a_space)
+                
+                {
+                    str.push_back(' ');
+                }
+                str.push_back(last_char);
+                str.push_back('\n');
+
+                previous_to_this_distance = font.stringWidth(str) + font.getLetterSpacing() + 4;
+            }
             
             /*
             int x = 200; // A test to see if the letters collide with the circle.
             int y = 200;
             */
-            Letter * l = new Letter(x, y, 10, previous_letter, c, &verdana14, grid);
-            letters.push_back(l);
-            previous_letter = letters.back();
+
+            Letter * l = new Letter(
+                x, y,
+                previous_letter,
+                c,
+                &verdana14,
+                grid,
+                previous_to_this_distance,
+                last_was_a_space); // last_was_a_space used to delliminate words.
             
+            letters.push_back(l);
+            if(previous_letter != NULL)
+            {
+                previous_letter -> setRightLetter(l);
+            }
+            
+
+            // Update trailing data for next loop.
+            previous_letter = l;
+            last_char = c;
+            last_was_a_space = false;
         }
         
     }
@@ -165,29 +238,34 @@ void ofApp::update(){
     // We use a set to determine dead letters without duplication.
     vector<list<Letter *>::iterator> dead_letters;
 
-    // First pass, update positions.
+    // First pass, update dynamics.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
         (*iter) -> update(dt);
-        if ((*iter) -> isDead())
-        {
-            dead_letters.push_back(iter);
-        }
+    }
+
+    // Second pass, update position.
+    for (auto iter = letters.begin(); iter != letters.end(); ++iter)
+    {
+        (*iter) -> move(dt);
     }
 
     // Second pass, resolve collisions.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
-        if ((*iter) -> isDead())
-        {
-            //grid -> remove_from_collision_grid(&*iter);
-            continue;
-        }
 
         // If the letter encounters a collision, kill it off.
-        if (grid -> resolve_collisions(*iter))
+        grid -> resolve_collisions(*iter);
+        
+    }
+
+    // Dead collection pass.
+    for (auto iter = letters.begin(); iter != letters.end(); ++iter)
+    {
+        if ((*iter) -> isDead())
         {
-            //dead_letters.push_back(iter);
+            dead_letters.push_back(iter);
+            continue;
         }
     }
 
