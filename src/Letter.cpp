@@ -15,12 +15,16 @@ Letter::Letter(
     // Position and Physics.
     this -> position = ofVec2f(x, y);
 
-    this -> velocity = ofVec2f(0, 0);
+    // Letters already have side to side rotation behavior when they come into the scene.
+    this -> velocity = ofVec2f(ofRandom(5) - 2.5, 0);
 
     this -> acceleration = ofVec2f(0, this -> gravity);
 
     // Collision Detection Geometry will be created with the texture later.
     collidable = NULL;
+
+    // FIXME: Remove this once we are ready to retest collisions.
+    this -> deactivateCollider();
 
     // State.
     this -> letter_to_my_left  = left;
@@ -42,6 +46,10 @@ Letter::Letter(
     this -> space_before = space_before;
 
     this -> sentance_index = sentance_index;
+
+    // Letters start out with a rotational speed.
+    float angular_velocity_variance = PI*5;
+    this -> angle_speed = ofRandom(angular_velocity_variance) - angular_velocity_variance / 2;
 
     // Handle words of length 1.
     if (isStartOfWord() && isEndOfWord())
@@ -154,8 +162,8 @@ void Letter::move(float dt)
     stepPosition(dt);
 
     // Transition between states.
-
-    if (state == WATERFALL && position.y > pool_y_coordinate)
+    float pool_y = this -> letterManager -> getPoolY();
+    if (state == WATERFALL && position.y > pool_y)
     {
         state = POOL;
 

@@ -66,4 +66,13 @@ class ofApp : public ofBaseApp{
         vector<string> input; //declare a vector of strings to store data  
         int line_index;
 
+        // These control where the barriers between the stages are.
+        float pool_y   = 400; // y coordinate where waterfall transforms into pool.
+        float scroll_y = 800; // y coordinate where pool transforms into scroll.
+
+        ofRectangle phase_1;
+        ofRectangle phase_2;
+        ofRectangle phase_3;
+
+        size_t ofApp::stringLength(string & str);
 };

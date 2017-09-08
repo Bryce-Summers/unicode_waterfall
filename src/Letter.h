@@ -85,11 +85,6 @@ private:
 
     float last_dt; // Sometimes used to revert a letter to its previous position.
 
-    // The y - coordinate that letters transition from the waterfall behavior to the pooling behavior.
-    // define horizontal lines the separate Stage 1, Stage 2, and Stage 3.
-    float pool_y_coordinate = 400;
-    float text_scroll_y_coordinate = 600;
-
     // -- Routing functions that call sub behavior functions based on 
     void stepAcceleration(float dt);
     void stepVelocity(float dt);

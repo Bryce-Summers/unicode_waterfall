@@ -18,7 +18,14 @@ void ofApp::setup(){
     loadGridAndObstacles();
     loadInputText();
 
-    letter_manager = new LetterManager(grid, this -> seconds_per_frame / 2);
+    letter_manager = new LetterManager(grid, this -> seconds_per_frame / 2, pool_y, scroll_y);
+
+    int width  = ofGetWidth();
+    int height = ofGetHeight();
+    phase_1 = ofRectangle(0, 0, width, pool_y - 1);
+    phase_2 = ofRectangle(0, pool_y, width, scroll_y - pool_y - 1);
+    phase_3 = ofRectangle(0, scroll_y, width, height - scroll_y);
+
 }
 
 void ofApp::loadFonts()
@@ -55,6 +62,19 @@ void ofApp::loadFonts()
 
     bFirst = true;
     typeStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789,:&!?";
+
+    string str = "From fairest creatures we desire increase, ";
+    
+    string accum;
+
+    int len = str.length();
+    for (int i = 0; i < len + 1; i++)
+    {
+        int length = font.stringWidth(accum);
+        cout << length << endl;
+        char c = str[i];
+        accum.push_back(c);
+    }
 }
 
 void ofApp::loadGridAndObstacles()
@@ -62,6 +82,7 @@ void ofApp::loadGridAndObstacles()
     // A grid spaced out over the window width in 100 by 100 equal locations.
     grid = new Grid(40, 40, ofGetWidth(), ofGetHeight());
 
+    /* We will focus on getting the other stages in working order first.
     ofPolyline p;
     for (int i = 0; i < 20; i++)
     {
@@ -92,6 +113,7 @@ void ofApp::loadGridAndObstacles()
     p3.addVertex(ofPoint(700, 225));
     obj = new Obstacle(p3, grid);
     obstacles.push_back(obj);
+    */
     
     // Construct some bounds for the sides of the view screen.
     /*
@@ -135,6 +157,18 @@ void ofApp::loadInputText()
 
 }
 
+size_t ofApp::stringLength(string & str)
+{
+    // We need this to well form the string for length computation.
+    str.push_back('\n');
+    // str.length();// number of characters.
+    size_t length = font.stringWidth(str);// Width of string displayed on screen.
+    // Remove the linebreak in preparation for adding more characters.
+    str.pop_back();
+
+    return length;
+}
+
 //--------------------------------------------------------------
 void ofApp::update(){
 
@@ -173,9 +207,10 @@ void ofApp::update(){
         bool last_was_a_space = false;
         int len = line.length();
         char last_char = ' ';
-        const int margin = 20;
-        const int y = 20;//margin + ofRandom(ofGetHeight() - margin*2);
-        
+        const int margin = 20;       
+
+        string accum;
+
 
         for(int char_index = 0; char_index < len; char_index++)
         {
@@ -194,7 +229,7 @@ void ofApp::update(){
 
             // Blank space on the left and right sides of the screen where letters will not form.
             int x = margin + ofRandom(ofGetWidth() - margin*2);
-            
+            int y = -20 - ofRandom(margin * 10);
 
             // figure out the gap between this letter and the next one.
             int previous_to_this_distance = 0;
@@ -202,19 +237,39 @@ void ofApp::update(){
             // If we are past the first character, we compute the correct spacings of the letters.
             if(char_index > 0)
             {
-                string str;
+                
+                // TODO: Try end of new string - end of string with last character + len(last_char) - len(c)
+                // We need to account for all of the spaces.
+
+                int len_old = stringLength(accum);
+                cout << len_old << ": " << accum << endl;
+
                 // The trick is to put the space first,
                 // since trailing spaces are ignored in the font getStringWidth function.
+
+                accum.push_back(last_char);
+
                 if (last_was_a_space)
                 
                 {
-                    str.push_back(' ');
+                    accum.push_back(' ');
                 }
-                str.push_back(last_char);
-                str.push_back('\n');
 
-                previous_to_this_distance = font.stringWidth(str) + font.getLetterSpacing() + 4;
+                accum.push_back(c);
+                int len_new = stringLength(accum);
+                accum.pop_back();
+
+                string singleton;
+                singleton.push_back(c);
+                int len_char = stringLength(singleton);
+
+                // This renders the font without kerning.
+                //previous_to_this_distance = font.stringWidth(str) + font.getLetterSpacing() + 4;
+
+                // Distance with proper kerning.
+                previous_to_this_distance = len_new - len_old - len_char;
             }
+
             
             /*
             int x = 200; // A test to see if the letters collide with the circle.
@@ -307,6 +362,18 @@ void ofApp::draw()
 {
     ofBackground(ofColor(255));
 
+    // Hexadecimal color could be used form here maybe?
+    // http://wiki.frankiezafe.org/index.php?title=Programmation:Hexadecimal_color_in_openframeworks
+
+    ofSetColor(155, 255, 255); // blue.
+    ofDrawRectangle(phase_1);
+
+    ofSetColor(255, 127, 129); // red.
+    ofDrawRectangle(phase_2);
+
+    ofSetColor(155, 255, 255); // blue.
+    ofDrawRectangle(phase_3);
+
     #ifdef DEBUG
     grid -> draw();
     #endif
@@ -321,6 +388,22 @@ void ofApp::draw()
     {
         (**iter).draw();
     }
+
+    ofSetColor(0);
+
+    font.drawString("f", 0, 400);
+    font.drawString("fa", 0, 440);
+    font.drawString("fai", 0, 480);
+    font.drawString("fair", 0, 520);
+    font.drawString("faire", 0, 560);
+    font.drawString("faires", 0, 600);
+    font.drawString("fairest", 0, 640);
+    font.drawString("fairest c", 0, 680);
+    font.drawString("fairest cr", 0, 720);
+    font.drawString("fairest cre", 0, 760);
+
+    //font.drawString("Thy self thy foe, to thy sweet self too cruel:", 0, 400);
+    
 }
 
 //--------------------------------------------------------------

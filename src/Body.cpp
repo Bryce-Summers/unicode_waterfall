@@ -288,6 +288,8 @@ void Body::addTranslationalVelocity(ofVec2f velocity)
     this -> velocity += velocity;
 }
 
+// adds the given velocity as a rotational component to this body at a location
+// in world space.
 void Body::addRotationalVelocity(ofVec2f velocity, ofVec2f location)
 {
     ofVec2f center_to_location = location - getCenterOfMass();

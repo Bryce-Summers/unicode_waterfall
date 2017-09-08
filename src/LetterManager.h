@@ -9,7 +9,7 @@ public:
 
     // NOTE: scroll_delay should be no greater than the sentance generation time,
     //       else the number of letters will monototically increase.
-    LetterManager(Grid * grid, float scroll_delay);
+    LetterManager(Grid * grid, float scroll_delay, float pool_y, float scroll_y);
     ~LetterManager();
 
 // -- Fields.
@@ -28,5 +28,15 @@ public:
     bool isScrollReady();
     int get_scroll_index();
     void next_scroll();
-};
 
+
+    // The y - coordinate that letters transition from the waterfall behavior to the pooling behavior.
+    // define horizontal lines the separate Stage 1, Stage 2, and Stage 3.
+    float pool_y_coordinate;
+    float text_scroll_y_coordinate;
+
+    // Get y coordinates of the horizontal lines that demarcate the three regions.
+    float getPoolY();
+    float getScrollY();
+
+};
