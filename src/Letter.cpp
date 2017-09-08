@@ -12,6 +12,9 @@ Letter::Letter(
     int sentance_index) : Body(letterManager -> grid)
 {
 
+    // FIXME: change back to waterfall after kerning is working.
+    this -> state = TEXT_SCROLL;//WATERFALL;
+
     // Position and Physics.
     this -> position = ofVec2f(x, y);
 
@@ -30,7 +33,6 @@ Letter::Letter(
     this -> letter_to_my_left  = left;
     //this -> letter_to_my_right = right;
 
-    // FIXME: For now we are assuming that the letters will be of equal width.
     this -> x_offset_from_left = offset_from_left;
 
     this -> font = font;
@@ -559,7 +561,8 @@ ofVec2f Letter::getTargetPosition(bool * free)
     }    
     
     bool free1;
-    return this -> letter_to_my_left -> getTargetPosition(&free1) + ofVec2f(this -> x_offset_from_left, 0);
+    //return this -> letter_to_my_left -> getTargetPosition(&free1) + ofVec2f(this -> x_offset_from_left, 0);
+    return this -> letter_to_my_left -> position + ofVec2f(this->x_offset_from_left, 0);
 }
 
 void Letter::setDriving(Direction direction)

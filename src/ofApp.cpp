@@ -237,18 +237,12 @@ void ofApp::update(){
             // If we are past the first character, we compute the correct spacings of the letters.
             if(char_index > 0)
             {
-                
-                // TODO: Try end of new string - end of string with last character + len(last_char) - len(c)
-                // We need to account for all of the spaces.
 
+                // length of the image rendered for this string on a screen.
                 int len_old = stringLength(accum);
-                cout << len_old << ": " << accum << endl;
 
                 // The trick is to put the space first,
                 // since trailing spaces are ignored in the font getStringWidth function.
-
-                accum.push_back(last_char);
-
                 if (last_was_a_space)
                 
                 {
@@ -257,17 +251,26 @@ void ofApp::update(){
 
                 accum.push_back(c);
                 int len_new = stringLength(accum);
-                accum.pop_back();
 
                 string singleton;
                 singleton.push_back(c);
                 int len_char = stringLength(singleton);
+                singleton.pop_back();
 
-                // This renders the font without kerning.
-                //previous_to_this_distance = font.stringWidth(str) + font.getLetterSpacing() + 4;
-
+                singleton.push_back(last_char);
+                int len_last_char = stringLength(singleton);
+             
+                // TODO: Try end of new string - end of string with last character + len(last_char) - len(c)
+                // We need to account for all of the spaces.
+   
                 // Distance with proper kerning.
-                previous_to_this_distance = len_new - len_old - len_char;
+                previous_to_this_distance = len_new - len_old - len_char + len_last_char;
+
+                cout << accum << ": " << previous_to_this_distance << endl;
+            }
+            else
+            {
+                accum.push_back(c);
             }
 
             

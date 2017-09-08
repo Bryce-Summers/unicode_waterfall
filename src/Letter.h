@@ -50,7 +50,7 @@ private:
 
     bool dead = false;
     enum State{WATERFALL, POOL, TEXT_SCROLL};
-    State state = WATERFALL;
+    State state;
 
     // 1.0 is fast, 0.0 is not at all.
     float move_to_left = 1.0;
