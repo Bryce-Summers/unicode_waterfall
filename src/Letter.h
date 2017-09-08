@@ -166,6 +166,11 @@ private:
         SENTANCE};
     Combine_Stage combine_stage = PARTIAL_WORD;
 
+    // 3 seconds.
+    float time_delay_between_combines = 3;
+    float combine_delay = time_delay_between_combines;
+
+
     // FIXME: ensure that the complete sentances are scrolled in the correct order.
     //int my_sentance_index;
 
@@ -214,7 +219,9 @@ private:
     void stepTextScrollV(float dt);
     void stepTextScrollP(float dt);
 
-    float text_scroll_speed = 40;
+    // FIXME: After kerning works, put this back; 40
+    float text_scroll_speed = 10;
+    bool left_pool = false; // Signals whether a sentance has left the pool or not.
 
 // Collision Detection.
 private:

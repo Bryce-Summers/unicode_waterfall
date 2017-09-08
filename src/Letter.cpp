@@ -12,8 +12,7 @@ Letter::Letter(
     int sentance_index) : Body(letterManager -> grid)
 {
 
-    // FIXME: change back to waterfall after kerning is working.
-    this -> state = TEXT_SCROLL;//WATERFALL;
+    this -> state = WATERFALL;
 
     // Position and Physics.
     this -> position = ofVec2f(x, y);
@@ -142,6 +141,11 @@ void Letter::update(float dt)
         
     }
 
+    if (state == POOL && combine_delay > 0)
+    {
+        combine_delay -= dt;
+    }
+
     // Bounce off side walls.
     if ((position.x < 10 && velocity.x < 0) || 
         (position.x > ofGetWidth() - 10 && velocity.x > 0))
@@ -149,12 +153,40 @@ void Letter::update(float dt)
         velocity.x *= -1;
     }
 
+    // bounce off pool walls.
+    if (state == POOL)
+    {
+        if (position.y < letterManager->getPoolY() && velocity.y < 0 ||
+            position.y > letterManager->getScrollY() && velocity.y > 0)
+        {
+            velocity.y *= -1;
+        }
+    }
+
     stepAcceleration(dt);
     stepVelocity(dt);
+
+    float mag = this -> acceleration.length();
+    if (mag > this -> letterManager -> getSpeedLimit())
+    {
+        this -> acceleration.normalize();
+        this -> acceleration *= letterManager -> getSpeedLimit();
+    }
+
+    // Now for velocity.
+    mag = this -> velocity.length();
+    if (mag > this -> letterManager -> getSpeedLimit())
+    {
+        this -> velocity.normalize();
+        this -> velocity *= letterManager -> getSpeedLimit();
+    }
 }
 
 void Letter::move(float dt)
 {
+
+    float y0 = this -> position.y;
+
     // Remove the old references to this object stored in the grid.
     grid -> remove_from_collision_grid(this);
 
@@ -181,10 +213,27 @@ void Letter::move(float dt)
         this -> sentance_index == letterManager -> get_scroll_index())
     {
         this -> setGroupState(TEXT_SCROLL);
-        this -> letterManager -> next_scroll();
 
         cout << "Index scrolled = " << this -> sentance_index << endl;
+    }  
+
+    // -- bound the movement, to avoid letters escaping velocity.
+    if (position.x < 0)
+    {
+        position.x = 0;
     }
+    if (position.x > ofGetWidth())
+    {
+        position.x = ofGetWidth();
+    }
+
+    if (abs(position.y - y0) > letterManager -> getSpeedLimit())
+    {
+        float diff = position.y - y0;
+        diff = diff/diff*letterManager->getSpeedLimit();
+        position.y = y0 + diff;
+    }
+
 
     updateCollidableFromPosition();
 
@@ -223,7 +272,15 @@ void Letter::draw()
 
     // Set Alpha to 255, without this line the fbo draws as black.
     ofSetColor(255, 255, 255, 255);
-    this -> fbo.draw(-w/2, -h/2);// Drawn at origin, because of ofTranslate call.
+
+    // Draws this glyph with the origin at its center point.
+    // draws in local space, because of ofTranslate call.
+    // It is then automatically translated to world space.
+    // This needs to be drawn aligned with the left border for text scrolling,
+    // but the middle alignment works better for rotations.
+    this -> fbo.draw(0, -h/2);//-w/2
+
+
     //ofDrawCircle(this -> px, this -> py, this -> radius);
     //ofDrawCircle(0, 0, this -> radius);
 
@@ -368,45 +425,136 @@ void Letter::stepPoolA(float dt)
     bool free;
     ofVec2f target_position = this -> getTargetPosition(&free);
 
+    // Letter is in a sentance. i.e. not free.
     if (!free)
     {
         float snap_percentage = 1.0; // 0.0 - 1.0
 
-        ofVec2f desired_velocity = (target_position - this->position);
+        ofVec2f desired_velocity = (target_position - this -> position);
 
         // Velocity is skewed towards the letter's position in the sentance.
         acceleration = desired_velocity - this -> velocity;
         acceleration *= 50;
     }
 
-    
+    // letter is free roaming or the leader of a word.
     if (free)
     {
-        ofVec2f center = ofVec2f(960, 500);
+
+        // This has the letter rotate around the center of the pool.
+        /*
+        float center_y = (letterManager -> getScrollY() + letterManager -> getPoolY())/2;
+        ofVec2f center = ofVec2f(ofGetWidth()/2, center_y);
         ofVec2f toCenter = center - this -> position;
         ofVec2f perpCenter = toCenter;
         float temp = -perpCenter.y;
         perpCenter.y = perpCenter.x;
         perpCenter.x = temp;
         this -> acceleration = toCenter*40 + perpCenter*40;
-    }
+        */
 
+        // Meandering behavior.
+        /* To meander the word should maintain a constant velocity,
+         * perhaps slower as the word gets longer.
+         * 
+         * The main change will be in direction.
+         * To change the direction, I will choose a random direction and then shoot 2 rays out from
+         * the letter, the direction of the word will be changed weighted by the longer distance
+         * found.
+         */
+        
+        // First we obtain a list of relevant linesegments to cast the ray upon.
+        vector<LineSegment*> * segments = letterManager -> getPoolBoundaries();
+
+        // Generate a Random 2D direction in radians.
+        float angle = ofRandom(PI*2);
+        float dx = cos(angle);
+        float dy = sin(angle);
+        ofVec2f direction = ofVec2f(dx, dy);
+
+        // Create the two rays along this direction.
+        Ray * ray1, * ray2;
+
+        ray1 = new Ray(this -> position, direction);
+        ray2 = new Ray(this -> position, -direction);
+
+        // Find the intersection point of farthest distance from this letter.
+        ofVec2f far_point;
+        float far_dist = 0;
+
+        for (auto iter = segments -> begin(); iter != segments -> end(); ++iter)
+        {
+            LineSegment seg = **iter;
+
+            float dist1 = ray1 -> dist_to_intersection(seg);
+            float dist2 = ray2 -> dist_to_intersection(seg);
+
+            // Note: can only be greater if it has been found and positive anyways...
+            if (dist1 > far_dist)
+            {
+                far_dist = dist1;
+
+                // We need the point for the position,
+                // in addition to the directionality.
+                far_point = ray1 -> getPointAtTime(far_dist);
+            }
+
+            if (dist2 > far_dist)
+            {
+                far_dist = dist2;
+                
+                // We need the point for the position,
+                // in addition to the directionality.
+                far_point = ray2 -> getPointAtTime(far_dist);
+            }
+        }
+
+        // ASSUMPTION: far point is defined,
+        // because the line segments represented a
+        // bounded region (no gaps).
+        // and our letter will not be travelling outside of this region.
+
+        // Now we compute the acceleration vector.
+        this -> acceleration = (far_point - this -> position)*letterManager -> getMeanderingDamping();
+
+        // The acceleration vector will be applied in stepPoolV().
+    }
 }
+
 
 void Letter::stepPoolV(float dt)
 {
     dynamicsV(dt);
 
-    
+
     bool free;
     ofVec2f target_position = this -> getTargetPosition(&free);
-
     
     if (!free)
     {
-        ofVec2f desired_velocity = (target_position - this -> position)*.01/dt;
-        //this -> velocity = desired_velocity;
+        ofVec2f desired_velocity = (target_position - this -> position)*.1/dt;
+        this -> velocity = desired_velocity;
+
+    
+        // Update angle to match where this letter is going.
+        float angle = atan2(desired_velocity.y, desired_velocity.x);
+        this -> angle = angle;
     }
+
+    // -- The Leader Meanders using the acceleration vector described in stepPoolA()
+    if (free)
+    {
+        // dynamics has already applied the acceleration,
+        // so all that remains is to clip the velocity to the meandering velocity.
+
+        this -> velocity.normalize();
+        this -> velocity *= letterManager -> getMeanderingSpeed();
+
+        // Update angle to match where this letter is going.
+        float angle = atan2(velocity.y, velocity.x);
+        this -> angle = angle;
+    }
+
 }
 
 void Letter::stepPoolP(float dt)
@@ -418,11 +566,11 @@ void Letter::stepPoolP(float dt)
     ofVec2f target_position = this -> getTargetPosition(&free);
     if (connected_left && driving == LEFT) 
     {
-        this -> position = target_position;
+        this -> position = target_position*.1 + this -> position*.9;
     }
     else if(connected_right && driving == RIGHT)
     {
-        this->position = target_position;
+        this -> position = target_position*.1 + this -> position*.9;
     }
 }
 
@@ -442,6 +590,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
 
     if (state == POOL)
     {
+
         // -- Handle Magnet logic.
         /* The algorithm tries out 4 discrete results as follows:
          *  1. Move magnetized letters towards each other,
@@ -475,6 +624,8 @@ ofVec2f Letter::getTargetPosition(bool * free)
                     connect_to_left(); // Update letter, word, and sentance connectivity values.
                 
                     setDriving(LEFT);
+                    combine_delay = time_delay_between_combines;
+                    letter_to_my_left -> combine_delay = time_delay_between_combines;
                 }
             }
 
@@ -498,6 +649,8 @@ ofVec2f Letter::getTargetPosition(bool * free)
 
                     connect_to_right(); // Update letter, word, and sentance connectivity values.
                     setDriving(LEFT);
+                    combine_delay = time_delay_between_combines;
+                    letter_to_my_right -> combine_delay = time_delay_between_combines;
                 }
             }
 
@@ -505,9 +658,11 @@ ofVec2f Letter::getTargetPosition(bool * free)
         }
 
         // -- Magnetize letters if they meet the requirements for connection.
+        // but delay combines to allow for proper circulation.
 
         // Magnetize left.
-        if (!connected_left && pool_goto_right_of_left())
+        if (combine_delay < 0 && !connected_left && pool_goto_right_of_left() &&
+            letter_to_my_left -> combine_delay < 0)
         {
             setMagnet(LEFT, true);
             letter_to_my_left -> setMagnet(RIGHT, true);
@@ -519,7 +674,8 @@ ofVec2f Letter::getTargetPosition(bool * free)
         }
 
         // Magnetize right.
-        if(!connected_right && pool_goto_left_of_right())
+        if(combine_delay < 0 && !connected_right && pool_goto_left_of_right() &&
+            this -> letter_to_my_right -> combine_delay < 0)
         {
             setMagnet(RIGHT, true);
             this -> letter_to_my_right -> setMagnet(LEFT, true);
@@ -560,9 +716,17 @@ ofVec2f Letter::getTargetPosition(bool * free)
         return this -> position;
     }    
     
+
+    // - Text Scroll follower behavior.
+
+
+    // Fast scroll convergence.
+
     bool free1;
-    //return this -> letter_to_my_left -> getTargetPosition(&free1) + ofVec2f(this -> x_offset_from_left, 0);
-    return this -> letter_to_my_left -> position + ofVec2f(this->x_offset_from_left, 0);
+    return this -> letter_to_my_left -> getTargetPosition(&free1) + ofVec2f(this -> x_offset_from_left, 0);
+    
+    // Flowy.
+    //return this -> letter_to_my_left -> position + ofVec2f(this->x_offset_from_left, text_scroll_speed);
 }
 
 void Letter::setDriving(Direction direction)
@@ -682,8 +846,19 @@ inline bool Letter::getOffsetPositionFromLeft(ofVec2f * output) // ASSUMES that 
         return false;
     }
 
-    // FIXME: Include rotations.
-    *output = this -> letter_to_my_left -> position + ofVec2f(this -> x_offset_from_left, 0);
+
+    // Get angle leader to this.
+    ofVec2f offset = this -> position - this -> letter_to_my_left -> position;
+        
+    float angle = atan2(offset.y, offset.x);
+    float dx = cos(angle);
+    float dy = sin(angle);
+
+    float mag = this -> x_offset_from_left;
+
+    offset = ofVec2f(dx*mag, dy*mag);
+
+    *output = this -> letter_to_my_left -> position + offset;
     return true;
 }
 
@@ -694,8 +869,18 @@ inline bool Letter::getOffsetPositionFromRight(ofVec2f * output) // ASSUMES that
         return false;
     }
 
+    // for leader to this angle.
+    ofVec2f offset = this -> position - this -> letter_to_my_right -> position;
+    float angle = atan2(offset.y, offset.x);
+
+    float dx = cos(angle);
+    float dy = sin(angle);
+    float mag = this -> letter_to_my_right -> x_offset_from_left;
+
+    offset = ofVec2f(dx*mag, dy*mag);
+
     // FIXME: Include rotations.
-    *output = this -> letter_to_my_right -> position - ofVec2f(this -> letter_to_my_right -> x_offset_from_left, 0);
+    *output = this -> letter_to_my_right -> position - offset;
     return true;
 }
 
@@ -776,6 +961,21 @@ void Letter::stepTextScrollV(float dt)
     bool free;
     velocity += (getTargetPosition(&free) - this -> position)*move_to_left;
 
+    // Quickly eject the sentance form the pool, then scroll at constant scroll speed.
+    float dist_to_pool_end_y = this -> letterManager -> getScrollY() - this -> position.y;
+
+    if (dist_to_pool_end_y > 0)
+    {
+        velocity.y *= 3;
+    }
+    // Next scroll once per sentance.
+    else if(!left_pool && letter_to_my_left == NULL)
+    {
+        // Let the letter Manager scoll another sentance.
+        this -> letterManager -> next_scroll();
+        left_pool = true;
+    }
+
     // Bring the letter facing upwards.
     float angle_speed1 = -angle*move_to_left;
     float angle_speed2 = (PI*2 - angle)*move_to_left;
@@ -796,6 +996,7 @@ void Letter::stepTextScrollV(float dt)
 void Letter::stepTextScrollP(float dt)
 {
     dynamicsP(dt);
+
 }
 
 

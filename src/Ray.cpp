@@ -40,6 +40,20 @@ bool Ray::detect_intersection(LineSegment seg)
     return side1*side2 <= 0 && correct_direction;
 }
 
+// Returns the distance to the given segment.
+// Returns -1 if the given line segment is not intersected.
+float Ray::dist_to_intersection(LineSegment seg)
+{
+    // Reduces this to the standard oriented hyperplane intersection test.
+    float output;
+    if (this -> getIntersectionTime(&output, &seg))
+    {
+        return output;
+    }
+
+    return -1;
+}
+
 ofVec2f Ray::getDirection()
 {
     return this -> direction;

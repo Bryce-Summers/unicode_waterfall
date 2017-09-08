@@ -20,6 +20,9 @@ private:
 public:
     // Returns true iff this ray intersects the given line segment.
     bool detect_intersection(LineSegment seg);
+
+    // Returns the distance to the given segment.
+    // Returns -1 if the given line segment is not intersected.
     float dist_to_intersection(LineSegment seg);
 
     virtual ofVec2f getPoint1();

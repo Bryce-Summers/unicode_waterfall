@@ -11,14 +11,18 @@ void ofApp::setup(){
     this -> seconds_per_frame = 1.0 / frame_rate
     */
 
-    float sentances_per_second = .3;
-    this -> seconds_per_frame = 1.0 / sentances_per_second;
 
     loadFonts();
     loadGridAndObstacles();
     loadInputText();
 
-    letter_manager = new LetterManager(grid, this -> seconds_per_frame / 2, pool_y, scroll_y);
+    // NOTE: We make the time between scolls less than the input rate of sentances, because 
+    // we don't want an unstable queueing scenario that grows unboundedly.
+    letter_manager = new LetterManager(grid, seconds_per_sentance * .5, pool_y, scroll_y,
+        meanderingDamping,
+        meanderingSpeed,
+        scrollSpeed
+    );
 
     int width  = ofGetWidth();
     int height = ofGetHeight();
@@ -187,7 +191,7 @@ void ofApp::update(){
     time_accum += dt;
 
     // Test String.
-    if (time_accum > this -> seconds_per_frame && line_index < input.size())
+    if (time_accum > this -> seconds_per_sentance && line_index < input.size())
     {
         time_accum = 0;//-= this -> seconds_per_frame;
 
@@ -197,6 +201,7 @@ void ofApp::update(){
             return;
         }
         
+        // Cause this to generate only the first sentance for debugging purposes.
         //bogus = true;
     
         // Create a sentance of letters.
@@ -265,8 +270,6 @@ void ofApp::update(){
    
                 // Distance with proper kerning.
                 previous_to_this_distance = len_new - len_old - len_char + len_last_char;
-
-                cout << accum << ": " << previous_to_this_distance << endl;
             }
             else
             {
@@ -392,8 +395,8 @@ void ofApp::draw()
         (**iter).draw();
     }
 
+    /*
     ofSetColor(0);
-
     font.drawString("f", 0, 400);
     font.drawString("fa", 0, 440);
     font.drawString("fai", 0, 480);
@@ -406,6 +409,7 @@ void ofApp::draw()
     font.drawString("fairest cre", 0, 760);
 
     //font.drawString("Thy self thy foe, to thy sweet self too cruel:", 0, 400);
+    */
     
 }
 

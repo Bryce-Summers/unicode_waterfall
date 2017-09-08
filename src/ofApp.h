@@ -36,7 +36,6 @@ class ofApp : public ofBaseApp{
         float time;
         float time_accum = 0;
 
-        float seconds_per_frame;
         int frame_rate;
 
 
@@ -66,9 +65,24 @@ class ofApp : public ofBaseApp{
         vector<string> input; //declare a vector of strings to store data  
         int line_index;
 
+
+        // -- Parameters that can be tweaked.
+
         // These control where the barriers between the stages are.
         float pool_y   = 400; // y coordinate where waterfall transforms into pool.
         float scroll_y = 800; // y coordinate where pool transforms into scroll.
+
+        float sentances_per_second = .3; //.3;
+        float seconds_per_sentance = 1.0 / sentances_per_second;
+
+        // Amount that a given accelaration is damped for altering meandering direction.
+        float meanderingDamping = .5;
+    
+        // The constant speed that a pool word will meander at.
+        float meanderingSpeed = 100;
+
+        // Rate at which sentances scroll down the screen in the Stage 3: text_scroll.
+        float scrollSpeed = 40;
 
         ofRectangle phase_1;
         ofRectangle phase_2;

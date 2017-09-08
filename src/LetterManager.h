@@ -9,15 +9,29 @@ public:
 
     // NOTE: scroll_delay should be no greater than the sentance generation time,
     //       else the number of letters will monototically increase.
-    LetterManager(Grid * grid, float scroll_delay, float pool_y, float scroll_y);
+    LetterManager(Grid * grid,
+                  float scroll_delay,
+                  float pool_y,
+                  float scroll_y,
+                  float meanderingDamping,
+                  float meanderingSpeed,
+                  float scroll_speed);
     ~LetterManager();
 
-// -- Fields.
+private:
+    // -- Fields.
     int next_index = 0;
     float time_per_scroll = 1.0; // Time in Seconds.
     bool scroll_ready = true;    // true iff enough time has passed to allow the next sentance
                                  // into the scroll field.
     float time_till_next_scroll;
+    vector<LineSegment *> pool_boundaries;
+
+    float meanderingDamping;
+    float meanderingSpeed;
+    float scrollSpeed;
+
+    const float speed_limit = 300;
 
 public:
     Grid * grid;
@@ -38,5 +52,15 @@ public:
     // Get y coordinates of the horizontal lines that demarcate the three regions.
     float getPoolY();
     float getScrollY();
+
+    void generatePoolBoundaries();
+
+    // The user may neither modify the returned vector of the line segments inside.
+    vector<LineSegment*> * getPoolBoundaries();
+
+    float getMeanderingDamping();
+    float getMeanderingSpeed();
+
+    const float getSpeedLimit();
 
 };
