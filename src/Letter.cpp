@@ -156,8 +156,11 @@ void Letter::update(float dt)
     // bounce off pool walls.
     if (state == POOL)
     {
-        if (position.y < letterManager->getPoolY() && velocity.y < 0 ||
-            position.y > letterManager->getScrollY() && velocity.y > 0)
+        float top    = this -> y_bound_top();
+        float bottom = this -> y_bound_bottom();
+
+        if (position.y < top && velocity.y < 0 ||
+            position.y > bottom && velocity.y > 0)
         {
             velocity.y *= -1;
         }
@@ -428,6 +431,7 @@ void Letter::stepPoolA(float dt)
     // Letter is in a sentance. i.e. not free.
     if (!free)
     {
+        /*
         float snap_percentage = 1.0; // 0.0 - 1.0
 
         ofVec2f desired_velocity = (target_position - this -> position);
@@ -435,6 +439,7 @@ void Letter::stepPoolA(float dt)
         // Velocity is skewed towards the letter's position in the sentance.
         acceleration = desired_velocity - this -> velocity;
         acceleration *= 50;
+        */
     }
 
     // letter is free roaming or the leader of a word.
@@ -462,7 +467,21 @@ void Letter::stepPoolA(float dt)
          * the letter, the direction of the word will be changed weighted by the longer distance
          * found.
          */
+
+        // Try just rotating the angle by counter - clockwise by a random amount.
+        float angle = atan2(velocity.y, velocity.x);
+        angle += ofRandom(PI/2000);
+
+        float dx = cos(angle);
+        float dy = sin(angle);
+        ofVec2f direction = ofVec2f(dx, dy);
+
+        velocity = direction;
+        acceleration = ofVec2f(0, 0);
+        return;
+    
         
+        /*
         // First we obtain a list of relevant linesegments to cast the ray upon.
         vector<LineSegment*> * segments = letterManager -> getPoolBoundaries();
 
@@ -518,6 +537,7 @@ void Letter::stepPoolA(float dt)
         this -> acceleration = (far_point - this -> position)*letterManager -> getMeanderingDamping();
 
         // The acceleration vector will be applied in stepPoolV().
+        */
     }
 }
 
@@ -532,28 +552,66 @@ void Letter::stepPoolV(float dt)
     
     if (!free)
     {
-        ofVec2f desired_velocity = (target_position - this -> position)*.1/dt;
-        this -> velocity = desired_velocity;
+        ofVec2f desired_velocity = (target_position - this -> position);
 
-    
+        float speed = desired_velocity.length();
+
+        // Chasing letters, should be able to exceed the meander speed to catch up with the
+        // word they want to connect to or follow.
+        float chase_factor = 4;
+
+        float max_speed = letterManager -> getMeanderingSpeed() * chase_factor;
+
+        float speedup = min(speed, max_speed) / speed;
+
+        this -> velocity = desired_velocity * speedup;
+            
         // Update angle to match where this letter is going.
         float angle = atan2(desired_velocity.y, desired_velocity.x);
         this -> angle = angle;
     }
 
+    
     // -- The Leader Meanders using the acceleration vector described in stepPoolA()
     if (free)
-    {
+    {       
+
         // dynamics has already applied the acceleration,
         // so all that remains is to clip the velocity to the meandering velocity.
 
         this -> velocity.normalize();
         this -> velocity *= letterManager -> getMeanderingSpeed();
 
+        // Speedup sentance leader movement?
+        if (combine_stage == SENTANCE)
+        {
+            //this -> velocity *= 2;
+        }
+
         // Update angle to match where this letter is going.
         float angle = atan2(velocity.y, velocity.x);
         this -> angle = angle;
+        
     }
+    
+
+    /*
+    // -- Make connected words rigid.
+    bool free;
+    ofVec2f target_position = this->getTargetPosition(&free);
+
+    if ((connected_left && driving == LEFT) ||
+        (connected_right && driving == RIGHT))
+    {
+        /*
+        // Assumed to be between 0 and 1.
+        float m_factor = letterManager -> getMagnetFactor();
+        float m_comp = 1.0 - m_factor;
+        */
+    /*
+        this->position = target_position*m_factor + this->position*m_comp;
+    }
+    */
 
 }
 
@@ -561,17 +619,6 @@ void Letter::stepPoolP(float dt)
 {
     dynamicsP(dt);
 
-    // -- Make connected words rigid.
-    bool free;
-    ofVec2f target_position = this -> getTargetPosition(&free);
-    if (connected_left && driving == LEFT) 
-    {
-        this -> position = target_position*.1 + this -> position*.9;
-    }
-    else if(connected_right && driving == RIGHT)
-    {
-        this -> position = target_position*.1 + this -> position*.9;
-    }
 }
 
 // Returns an appropriate position based on the stage.
@@ -632,6 +679,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
             return output;
         }
 
+        
         // Follow, connect, then demagnetize right.
         if (magnet_right)
         {
@@ -665,7 +713,9 @@ ofVec2f Letter::getTargetPosition(bool * free)
             letter_to_my_left -> combine_delay < 0)
         {
             setMagnet(LEFT, true);
-            letter_to_my_left -> setMagnet(RIGHT, true);
+
+            // We are no longer allowing right leaders.
+            //letter_to_my_left -> setMagnet(RIGHT, true);
             setDriving(LEFT);
             letter_to_my_left -> setDriving(RIGHT);
 
@@ -673,6 +723,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
             return output;
         }
 
+        /* We are no longer allowing right magnetization.
         // Magnetize right.
         if(combine_delay < 0 && !connected_right && pool_goto_left_of_right() &&
             this -> letter_to_my_right -> combine_delay < 0)
@@ -685,6 +736,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
             getOffsetPositionFromRight(&output);
             return output;
         }
+        */
 
         // Follow left connection.
         if (connected_left && driving == LEFT)
@@ -1279,4 +1331,66 @@ Letter * Letter::findEndOfSentance()
 
     // ASSUMPTION: search has a NULL left letter pointer.
     return search;
+}
+
+float Letter::y_bound_top()
+{
+    if (state == WATERFALL)
+    {
+        return 0;
+    }
+
+    if (state == POOL)
+    {
+        switch (combine_stage)
+        {
+            case PARTIAL_WORD:
+                return letterManager -> getPoolY();
+                break;
+            case PARTIAL_SENTANCE:
+                return letterManager -> getPoolY_d1();
+                break;
+            case SENTANCE:
+                return letterManager -> getPoolY_d2();
+                break;
+        }
+    }
+
+    if (state == TEXT_SCROLL)
+    {
+        return letterManager -> getScrollY();
+    }
+
+    cerr << "ERROR: Letter State: " << state << ", combine_stage: " << combine_stage << " unrecognized." << endl;
+}
+
+float Letter::y_bound_bottom()
+{
+    if (state == WATERFALL)
+    {
+        return letterManager -> getPoolY();
+    }
+
+    if (state == POOL)
+    {
+        switch (combine_stage)
+        {
+        case PARTIAL_WORD:
+            return letterManager -> getPoolY_d1();
+            break;
+        case PARTIAL_SENTANCE:
+            return letterManager -> getPoolY_d2();
+            break;
+        case SENTANCE:
+            return letterManager -> getScrollY();
+            break;
+        }
+    }
+
+    if (state == TEXT_SCROLL)
+    {
+        return letterManager -> getBottomY();
+    }
+
+    cerr << "ERROR: Letter State: " << state << ", combine_stage: " << combine_stage << " unrecognized." << endl;
 }

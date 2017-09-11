@@ -3,22 +3,34 @@
 
 LetterManager::LetterManager(Grid * grid, float time_per_scroll,
     float pool_y,
+    float pool_y_divider_1,
+    float pool_y_divider_2,
     float scroll_y,
+
     float meanderingDamping,
     float meanderingSpeed,
-    float scrollSpeed)
+    float scrollSpeed,
+    float magnet_factor)
 {
     this -> time_per_scroll = time_per_scroll;
     this -> grid = grid;
 
     this -> pool_y_coordinate = pool_y;
+    this -> pool_y_divider_1  = pool_y_divider_1;
+    this -> pool_y_divider_2  = pool_y_divider_2,
+
     this -> text_scroll_y_coordinate = scroll_y;
 
     this -> meanderingDamping  = meanderingDamping;
     this -> meanderingSpeed    = meanderingSpeed;
     this -> scrollSpeed        = scrollSpeed;
 
+    this -> magnet_factor = magnet_factor;
+
     this -> generatePoolBoundaries();
+
+    // The bottom of the world.
+    bottom_y = ofGetHeight() + 50;
 
 }
 
@@ -67,9 +79,24 @@ float LetterManager::getPoolY()
     return this -> pool_y_coordinate;
 }
 
+float LetterManager::getPoolY_d1()
+{
+    return this -> pool_y_divider_1;
+}
+
+float LetterManager::getPoolY_d2()
+{
+    return this -> pool_y_divider_2;
+}
+
 float LetterManager::getScrollY()
 {
     return this -> text_scroll_y_coordinate;
+}
+
+float LetterManager::getBottomY()
+{
+    return this -> bottom_y;
 }
 
 float LetterManager::getMeanderingDamping()
@@ -114,4 +141,9 @@ vector<LineSegment*> * LetterManager::getPoolBoundaries()
 const float LetterManager::getSpeedLimit()
 {
     return this -> speed_limit;
+}
+
+float LetterManager::getMagnetFactor()
+{
+    return this -> magnet_factor;
 }

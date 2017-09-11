@@ -104,6 +104,11 @@ private:
     float terminal_velocity = 80;
 
 
+    // Return the y bound for the current stage.
+    float y_bound_top();
+    float y_bound_bottom();
+
+
     // -- Pool behavior.
     void stepPoolA(float dt);
     void stepPoolV(float dt);
@@ -214,7 +219,7 @@ private:
     void connect_to_left();
     void connect_to_right();
 
-    // Text Scroll behaviour.
+    // -- Text Scroll behaviour.
     void stepTextScrollA(float dt);
     void stepTextScrollV(float dt);
     void stepTextScrollP(float dt);

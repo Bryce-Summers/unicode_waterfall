@@ -18,16 +18,26 @@ void ofApp::setup(){
 
     // NOTE: We make the time between scolls less than the input rate of sentances, because 
     // we don't want an unstable queueing scenario that grows unboundedly.
-    letter_manager = new LetterManager(grid, seconds_per_sentance * .5, pool_y, scroll_y,
+    letter_manager = new LetterManager(grid, seconds_per_sentance * .5,
+        pool_y,
+        pool_y1,
+        pool_y2,
+        scroll_y,
         meanderingDamping,
         meanderingSpeed,
-        scrollSpeed
+        scrollSpeed,
+        magnet_factor
     );
 
     int width  = ofGetWidth();
     int height = ofGetHeight();
     phase_1 = ofRectangle(0, 0, width, pool_y - 1);
-    phase_2 = ofRectangle(0, pool_y, width, scroll_y - pool_y - 1);
+
+    // 3 Pool Sections.
+    phase_2A = ofRectangle(0, pool_y,  width, pool_y1  - pool_y  - 1);
+    phase_2B = ofRectangle(0, pool_y1, width, pool_y2  - pool_y1 - 1);
+    phase_2C = ofRectangle(0, pool_y2, width, scroll_y - pool_y2 - 1);
+
     phase_3 = ofRectangle(0, scroll_y, width, height - scroll_y);
 
 }
@@ -375,7 +385,13 @@ void ofApp::draw()
     ofDrawRectangle(phase_1);
 
     ofSetColor(255, 127, 129); // red.
-    ofDrawRectangle(phase_2);
+    ofDrawRectangle(phase_2A);
+
+    ofSetColor(155, 255, 255); // blue.
+    ofDrawRectangle(phase_2B);
+
+    ofSetColor(255, 127, 129); // red.
+    ofDrawRectangle(phase_2C);
 
     ofSetColor(155, 255, 255); // blue.
     ofDrawRectangle(phase_3);

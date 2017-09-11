@@ -69,8 +69,13 @@ class ofApp : public ofBaseApp{
         // -- Parameters that can be tweaked.
 
         // These control where the barriers between the stages are.
-        float pool_y   = 400; // y coordinate where waterfall transforms into pool.
+        float pool_y   = 400; // y coordinate where waterfall transforms into pool.    
+
         float scroll_y = 800; // y coordinate where pool transforms into scroll.
+
+        // The dividers between stages in the pool.
+        float pool_y1 = pool_y*.66 + scroll_y*.33; // 1 third to scroll.
+        float pool_y2 = pool_y*.2  + scroll_y*.8; // 2 thirds to scroll.
 
         float sentances_per_second = .3; //.3;
         float seconds_per_sentance = 1.0 / sentances_per_second;
@@ -79,13 +84,19 @@ class ofApp : public ofBaseApp{
         float meanderingDamping = .5;
     
         // The constant speed that a pool word will meander at.
-        float meanderingSpeed = 100;
+        float meanderingSpeed = 50; // Pixels per second.
+
+        // 0 for no magnet, 1.0 for instant magnet.
+        // .1 is quite fast.
+        float magnet_factor = 0.01;
 
         // Rate at which sentances scroll down the screen in the Stage 3: text_scroll.
         float scrollSpeed = 40;
 
         ofRectangle phase_1;
-        ofRectangle phase_2;
+        ofRectangle phase_2A;
+        ofRectangle phase_2B;
+        ofRectangle phase_2C;
         ofRectangle phase_3;
 
         size_t ofApp::stringLength(string & str);
