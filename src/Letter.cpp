@@ -87,6 +87,7 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
     int height = glyph_bounds.getHeight();
     int char_height = char_bounds.getHeight();
 
+    
     // Allocate a large enough frame buffer object to hold 
     this -> fbo.allocate(width, height + 5, GL_RGBA);
 
@@ -95,6 +96,7 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
     // 2. The background may be set, but drawing the string doesn't seem to be working.
     // 3. drawString is the location of the base line.
 
+    
     this -> fbo.begin();
     ofClear(0, 0, 0, 0);
 
