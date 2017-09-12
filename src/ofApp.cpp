@@ -96,7 +96,7 @@ void ofApp::loadGridAndObstacles()
     // A grid spaced out over the window width in 100 by 100 equal locations.
     grid = new Grid(40, 40, ofGetWidth(), ofGetHeight());
 
-    /* We will focus on getting the other stages in working order first.
+    // We will focus on getting the other stages in working order first.
     ofPolyline p;
     for (int i = 0; i < 20; i++)
     {
@@ -127,7 +127,7 @@ void ofApp::loadGridAndObstacles()
     p3.addVertex(ofPoint(700, 225));
     obj = new Obstacle(p3, grid);
     obstacles.push_back(obj);
-    */
+    //*/
     
     // Construct some bounds for the sides of the view screen.
     /*
@@ -185,6 +185,11 @@ size_t ofApp::stringLength(string & str)
 
 //--------------------------------------------------------------
 void ofApp::update(){
+
+    std::stringstream strm;
+    strm << "fps: " << ofGetFrameRate();
+    ofSetWindowTitle(strm.str());
+
 
     // Handle time and differences.
     float new_time = ofGetElapsedTimef(); // Time in seconds.
@@ -334,13 +339,10 @@ void ofApp::update(){
         (*iter) -> move(dt);
     }
 
-    // Second pass, resolve collisions.
+    // Second pass, check for and resolve collisions.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
-
-        // If the letter encounters a collision, kill it off.
-        grid -> resolve_collisions(*iter);
-        
+        (*iter) -> resolve_collision(dt);
     }
 
     // Dead collection pass.
@@ -405,6 +407,8 @@ void ofApp::draw()
     {
         (**iter).draw();
     }
+
+    cout << letters.size() << endl;
 
     for (auto iter = obstacles.begin(); iter != obstacles.end(); iter++)
     {

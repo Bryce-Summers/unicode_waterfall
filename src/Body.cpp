@@ -44,7 +44,7 @@ void Body::resolve_collision(Body * other)
     // Used as the direction of collision.
     ofVec2f velocity = this -> getTranslationalVelocity();
 
-    if (this->position.x < 10)
+    if (this -> position.x < 10)
     {
         //cout << "left" << endl;
     }
@@ -57,7 +57,7 @@ void Body::resolve_collision(Body * other)
     // 1. separate, then update synch this body's position with the collidable.
     //c1 -> separateFromOther(c2, -movement_direction, separation_dist);
     //this -> revertToPrevious();
-    bool c1_moved = separatePenetratingBody(other);
+    //bool c1_moved = separatePenetratingBody(other);
 
     /*
     if(other -> isDynamic())
@@ -66,26 +66,46 @@ void Body::resolve_collision(Body * other)
     }
     */
 
-    this -> updatePositionFromCollidable();
+    //this -> updatePositionFromCollidable();
 
+    // Revert positions.
+
+    this  -> revertToPrevious();
+    other -> revertToPrevious();
+    
     // 2, 3.
     CollideInfo info;
+    /*
     if(c1_moved)
     {
         ofVec2f movement_direction = this -> velocity.normalized();
         c1 -> computeFuturePenetrationLocation(c2, movement_direction, &info);
         this -> moveBody(info.location1, info.location2 - movement_direction);
     }
-    else
+    //else
     {
+        // Compute theoretical point of collision.
         ofVec2f movement_direction = other -> velocity.normalized();
         c2 -> computeFuturePenetrationLocation(c1, movement_direction, &info);
-        other -> moveBody(info.location1, info.location2 - movement_direction);
-    }
+        //other -> moveBody(info.location1, info.location2 - movement_direction);
+    } */
 
-    // Udpates both body's dynamics.
+    ofVec2f movement_direction = this -> velocity.normalized();
+    c1 -> computeFuturePenetrationLocation(c2, movement_direction, &info);
+    
+
+    // Udates both body's dynamics.
     this -> updateDynamics(info, other);
+    
+    // Resolve any new collisions the other may be experiencing.
+    grid -> resolve_collisions(other);
 
+}
+
+void Body::revertToPrevious()
+{
+    this -> position = previous_position;
+    this -> angle    = previous_angle;
 }
 
 bool Body::separatePenetratingBody(Body * other)
@@ -189,6 +209,7 @@ void Body::solve1DRigidBodyCollision(Body * other, float * v1_in_out, float * v2
 
     *v1_in_out = v1;
     *v2_in_out = v2;
+
 }
 
 bool Body::isDynamic()
@@ -311,7 +332,7 @@ void Body::addRotationalVelocity(ofVec2f velocity, ofVec2f location)
     }
 
     angle_speed += delta_angular_speed;
-        
+
 }
 
 void Body::deactivateCollider()

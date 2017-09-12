@@ -37,13 +37,15 @@ protected:
     ofVec2f velocity; // Translational velocity at the center of mass.
     ofVec2f acceleration; // Translational acceleration at center of mass.
 
+    ofVec2f previous_position;
+    float   previous_angle;
+
     // -- Rotational Physics Dynamics.
 
     // Planar orientation in radians.
     float angle_speed;
     float angle;
     bool dynamic;
-
 
 public:
     bool isCollidable();
@@ -77,9 +79,9 @@ public:
     void addTranslationalVelocity(ofVec2f velocity);
     void addRotationalVelocity(ofVec2f velocity, ofVec2f location);
 
-    // Unpenetrates this body and changes its velocity based on 
-    // the current collision withthe given other body
     // ENSURES: does nothing if this is static, rather than dynamic.
+    // Update's this body's dynamics vectors.
+    // Reverts it to its previous position.
     void resolve_collision(Body * other);
 
     void updateDynamics(CollideInfo & info, Body * other);
@@ -90,8 +92,7 @@ public:
 
     // Reverts this body to its last position and angle.
     // Only required if the body is dynamic.
-    virtual void revertToPrevious() = 0;
-
+    void revertToPrevious();
     virtual void updateCollidableFromPosition() = 0;
 
 private:

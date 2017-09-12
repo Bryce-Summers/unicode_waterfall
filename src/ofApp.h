@@ -1,7 +1,7 @@
 #pragma once
 
 //#define DEBUG
-//#define FIXED_TIME Sets this to fixed time step mode.
+//#define FIXED_TIME //Sets this to fixed time step mode.
 
 #include "ofMain.h"
 #include "Letter.h"
@@ -84,7 +84,11 @@ class ofApp : public ofBaseApp{
         float meanderingDamping = .5;
     
         // The constant speed that a pool word will meander at.
-        float meanderingSpeed = 50; // Pixels per second.
+        // This should be faster if the pool is larger.
+        //float meanderingSpeed = 50; // Pixels per second.
+        float meanderingSpeed = 100;
+        // 50 works for 800 wide pool.
+        // 100 for 1920 wide pool.
 
         // 0 for no magnet, 1.0 for instant magnet.
         // .1 is quite fast.

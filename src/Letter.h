@@ -24,6 +24,7 @@ public:
     // -- Public Interface.
     void update(float dt); // Udpates internal state, but not position.
     void move(float dt);   // Second pass updates all of the positions.
+    void resolve_collision(float dt);
     void draw();
     bool isDead();
 
@@ -59,9 +60,16 @@ private:
     int sentance_index;
 
     bool collision_detection; // Controls whether the letter needs to avoid letters and obstacles.
+    void enable_collision_detection();
+    void disable_collision_detection();
+
 
     char character;
-    ofFbo fbo;
+    string str;
+    int char_width;
+    int char_height;
+    bool allocated = false; // Texture and collidable object have been allocated.
+    //ofFbo fbo; // 9.12.17 we will no longer be baking characters into textures.
     ofFloatColor background_color = ofFloatColor(1.0, 1.0, 1.0);
 
     ofTrueTypeFont * font;
@@ -82,8 +90,6 @@ private:
     // my x = letter_to_my_left x + width + spacing + kerning.
     // my x = left x + x_offset_from_left
     float x_offset_from_left;
-
-    float last_dt; // Sometimes used to revert a letter to its previous position.
 
     // -- Routing functions that call sub behavior functions based on 
     void stepAcceleration(float dt);
@@ -239,7 +245,5 @@ private:
     // Updates this body's position from its collidable object.
     virtual void updatePositionFromCollidable();
 
-    
-    virtual void revertToPrevious();
     virtual void updateCollidableFromPosition();
 };

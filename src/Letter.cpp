@@ -24,9 +24,11 @@ Letter::Letter(
 
     // Collision Detection Geometry will be created with the texture later.
     collidable = NULL;
+    collision_detection = true;
 
     // FIXME: Remove this once we are ready to retest collisions.
-    this -> deactivateCollider();
+    this -> enable_collision_detection();
+    //this -> disable_collision_detection();
 
     // State.
     this -> letter_to_my_left  = left;
@@ -42,8 +44,6 @@ Letter::Letter(
 
     this -> dynamic = true;
 
-    this -> last_dt = 0.0;
-
     this -> space_before = space_before;
 
     this -> sentance_index = sentance_index;
@@ -57,6 +57,8 @@ Letter::Letter(
     {
         setWordComplete();
     }
+
+
 }
 
 
@@ -76,18 +78,22 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
     this -> character = character;
 
     // Character to nul terminated string.
-    string s;
-    s.push_back(character);
-    s.push_back('\0');
+    
+    this -> str.push_back(character);
+    this -> str.push_back('\0');
 
     // Determine character size on screen.
-    ofRectangle char_bounds  = font -> getStringBoundingBox(s, this -> position.x, this -> position.y);
+    ofRectangle char_bounds  = font -> getStringBoundingBox(this -> str, this -> position.x, this -> position.y);
     ofRectangle glyph_bounds = font -> getGlyphBBox();
     int width  = char_bounds.getWidth();
     int height = glyph_bounds.getHeight();
     int char_height = char_bounds.getHeight();
 
+    this -> char_width  = width;
+    this -> char_height = height;
+
     
+    /*
     // Allocate a large enough frame buffer object to hold 
     this -> fbo.allocate(width, height + 5, GL_RGBA);
 
@@ -108,10 +114,15 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
     font -> drawString(s, 0, font -> getAscenderHeight());
     this -> fbo.end();
 
+    */
+
     ofDisableLighting();
+    
 
     // Initialize Oriented Bounding Box Collision Geometry.
     this -> collidable = new OBB(position.x, position.y, width/2, height/2, this -> angle);
+
+    allocated = true;
 
 }
 
@@ -123,8 +134,6 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
 
 void Letter::update(float dt)
 {
-    this -> last_dt = dt;
-
     // Safe guard against letters
     // FIXME: Remove this and solve it by gurantteeing that letters do not get stuck.
     time += dt;
@@ -136,6 +145,7 @@ void Letter::update(float dt)
         if (offset.length() > 300)
         {
             state = POOL;
+            disable_collision_detection();
             this -> position = center;
             this -> acceleration = ofVec2f(0, 0);
             this -> velocity = ofVec2f(0, 0);
@@ -185,17 +195,32 @@ void Letter::update(float dt)
         this -> velocity.normalize();
         this -> velocity *= letterManager -> getSpeedLimit();
     }
+
+    // Bound the maximum angle speed.
+    
+    float sign = angle_speed / abs(angle_speed);
+    float max_speed = PI/10;
+    if (abs(angle_speed) > max_speed)
+    {
+        angle_speed = sign*max_speed;
+    }
 }
 
 void Letter::move(float dt)
 {
+    // The current position is store so that it may be reinstated as necessary.
+    this -> previous_position = this->position;
+    this -> previous_angle = this -> angle;
 
     float y0 = this -> position.y;
 
     // Remove the old references to this object stored in the grid.
-    grid -> remove_from_collision_grid(this);
+    if (collision_detection)
+    {
+        grid -> remove_from_collision_grid(this);
+    }
 
-    angle += this->angle_speed*dt;
+    angle += this -> angle_speed*dt;
     this -> angle_speed *= .99; // Slow down the angle speed.
 
     stepPosition(dt);
@@ -205,6 +230,8 @@ void Letter::move(float dt)
     if (state == WATERFALL && position.y > pool_y)
     {
         state = POOL;
+
+        this -> angle_speed = 0;
 
         // Collisions are no longer used in stage 2.
         this -> deactivateCollider();
@@ -239,29 +266,30 @@ void Letter::move(float dt)
         position.y = y0 + diff;
     }
 
+    if(collision_detection)
+    {
+        updateCollidableFromPosition();
 
-    updateCollidableFromPosition();
+        // Add the new references to this object to the grid.
+        grid -> add_to_collision_grid(this);
+    }
+}
 
-    // Add the new references to this object to the grid.
-    grid -> add_to_collision_grid(this);
+void Letter::resolve_collision(float dt)
+{
+    // Grid will broadly detect colliding bodies.
+    // the body will rever the position to 'previous_position' if necessary.
+    this -> grid -> resolve_collisions(this);
 }
 
 void Letter::draw()
 {
 
     // Perform texture allocation here in the serial loop to prevent multiple binding problems.
-    if (this -> fbo.isAllocated() == false)
+    if (!allocated)
     {
         this -> init_texture(this -> character, this -> font);
     }
-
-    // For now we will draw circles to represent these letters on the screen.
-    ofSetColor(0, 0, 0);
-    ofFill();
-    //ofDrawCircle(this -> px, this -> py, this -> radius);
-
-    // FIXME: Draw textures Letters, instead of circles.
-    //this -> texture.draw(this -> px, this -> py);
 
     // We retrieve a snapshot of the values at this point in time, so that drawing is consistent.
     float x = position.x;
@@ -271,30 +299,26 @@ void Letter::draw()
     ofPushMatrix();//will isolate the transform
     ofTranslate(x, y); // Move the 0 coordinate to location (px, py)
     ofRotate(ofRadToDeg(angle));
-    //ofTranslate(px, py);
-    int w = fbo.getWidth();
-    int h = fbo.getHeight();
-
-    // Set Alpha to 255, without this line the fbo draws as black.
-    ofSetColor(255, 255, 255, 255);
+    int w = this -> char_width;  //fbo.getWidth();
+    int h = this -> char_height; //fbo.getHeight();
 
     // Draws this glyph with the origin at its center point.
     // draws in local space, because of ofTranslate call.
     // It is then automatically translated to world space.
     // This needs to be drawn aligned with the left border for text scrolling,
     // but the middle alignment works better for rotations.
-    this -> fbo.draw(0, -h/2);//-w/2
+    //this -> fbo.draw(0, -h/2);//-w/2 This is what I used when baking textures.
+    ofSetColor(0, 0, 0, 255); // Letters are black.
+    font -> drawString(this -> str, 0, font -> getAscenderHeight() - h/2);
 
-
-    //ofDrawCircle(this -> px, this -> py, this -> radius);
-    //ofDrawCircle(0, 0, this -> radius);
 
     ofPopMatrix();//will stop other things from being drawn rotated
 
-    //this -> fbo.draw(50, 50);
+    
     #ifdef DEBUG
-    this -> collidable -> draw(x, y, (angle));
+    this->collidable->draw(x, y, (angle));
     #endif
+    //this->collidable->draw(x, y, (angle));
 }
 
 bool Letter::isDead()
@@ -560,7 +584,7 @@ void Letter::stepPoolV(float dt)
 
         // Chasing letters, should be able to exceed the meander speed to catch up with the
         // word they want to connect to or follow.
-        float chase_factor = 4;
+        float chase_factor = 1;
 
         float max_speed = letterManager -> getMeanderingSpeed() * chase_factor;
 
@@ -583,6 +607,12 @@ void Letter::stepPoolV(float dt)
 
         this -> velocity.normalize();
         this -> velocity *= letterManager -> getMeanderingSpeed();
+
+        // Allow followers to catch up.
+        if (connected_left)
+        {
+            this -> velocity *= 2;
+        }
 
         // Speedup sentance leader movement?
         if (combine_stage == SENTANCE)
@@ -664,7 +694,8 @@ ofVec2f Letter::getTargetPosition(bool * free)
                 // same for symmetrical case below.
                 ofVec2f offset = output - this -> position;
                 float dist_sqr = offset.lengthSquared();
-                float threshold = 100;
+                float threshold = letterManager->getMeanderingSpeed() * 3;
+                threshold = threshold*threshold;
                 if (dist_sqr < threshold) // 10^2
                 {
                     setMagnet(LEFT, false);
@@ -691,7 +722,9 @@ ofVec2f Letter::getTargetPosition(bool * free)
             {
                 ofVec2f offset = output - this -> position;
                 float dist_sqr = offset.lengthSquared();
-                float threshold = 100;
+                float threshold = letterManager -> getMeanderingSpeed()*3;
+                threshold = threshold * threshold;
+
                 if (dist_sqr < threshold) // 10^2
                 {
                     setMagnet(RIGHT, false);
@@ -725,7 +758,8 @@ ofVec2f Letter::getTargetPosition(bool * free)
             return output;
         }
 
-        /* We are no longer allowing right magnetization.
+        /*
+        // We are no longer allowing right magnetization.
         // Magnetize right.
         if(combine_delay < 0 && !connected_right && pool_goto_left_of_right() &&
             this -> letter_to_my_right -> combine_delay < 0)
@@ -739,6 +773,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
             return output;
         }
         */
+
 
         // Follow left connection.
         if (connected_left && driving == LEFT)
@@ -1071,6 +1106,7 @@ void Letter::updatePositionFromCollidable()
     this -> position = collidable -> getCenterPoint();
 }
 
+/*
 void Letter::revertToPrevious()
 {
     // Rewind time.
@@ -1082,13 +1118,17 @@ void Letter::revertToPrevious()
     this -> updateCollidableFromPosition();
     grid -> add_to_collision_grid(this);
 
-}
+}*/
 
 void Letter::updateCollidableFromPosition()
 {   
     if(this -> collidable != NULL)
     {
-        this -> collidable -> updatePositionRotation(position.x, position.y, this -> angle);
+        float width_half = this->char_width / 2;
+        float dx = cos(this -> angle) * width_half;
+        float dy = sin(this -> angle) * width_half;
+
+        this -> collidable -> updatePositionRotation(position.x + dx, position.y + dy, this -> angle);
     }
 }
 
@@ -1395,4 +1435,28 @@ float Letter::y_bound_bottom()
     }
 
     cerr << "ERROR: Letter State: " << state << ", combine_stage: " << combine_stage << " unrecognized." << endl;
+}
+
+void Letter::enable_collision_detection()
+{
+    if(!collision_detection)
+    {
+        collision_detection = true;
+        grid -> add_to_collision_grid(this);
+
+        // From Body.h
+        this -> activateCollider();
+    }
+}
+
+void Letter::disable_collision_detection()
+{
+    if(collision_detection)
+    {
+        collision_detection = true;
+        grid -> remove_from_collision_grid(this);
+
+        // From body.h
+        this -> deactivateCollider();
+    }
 }
