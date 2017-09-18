@@ -134,6 +134,7 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
 
 void Letter::update(float dt)
 {
+    /*
     // Safe guard against letters
     // FIXME: Remove this and solve it by gurantteeing that letters do not get stuck.
     time += dt;
@@ -151,7 +152,7 @@ void Letter::update(float dt)
             this -> velocity = ofVec2f(0, 0);
         }
         
-    }
+    }*/
 
     if (state == POOL && combine_delay > 0)
     {
@@ -433,6 +434,12 @@ void Letter::stepWaterfallV(float dt)
 
 void Letter::stepWaterfallP(float dt)
 {
+    // Ensure that the letters keep moving.
+    if (this -> velocity.length() < 1)
+    {
+        this -> velocity.y += .01;
+        this -> velocity.normalize();
+    }
     dynamicsP(dt);
 }
 
@@ -576,15 +583,17 @@ void Letter::stepPoolV(float dt)
     bool free;
     ofVec2f target_position = this -> getTargetPosition(&free);
     
+    float turn_speed = 10;
+
     if (!free)
     {
-        ofVec2f desired_velocity = (target_position - this -> position);
+        ofVec2f desired_velocity = (target_position - this -> position) / dt;
 
         float speed = desired_velocity.length();
 
         // Chasing letters, should be able to exceed the meander speed to catch up with the
         // word they want to connect to or follow.
-        float chase_factor = 1;
+        float chase_factor = 2;
 
         float max_speed = letterManager -> getMeanderingSpeed() * chase_factor;
 
@@ -594,7 +603,10 @@ void Letter::stepPoolV(float dt)
             
         // Update angle to match where this letter is going.
         float angle = atan2(desired_velocity.y, desired_velocity.x);
-        this -> angle = angle;
+    
+        // Gradually alter the angle to desired.
+        setAngleSpeed(angle, turn_speed/dt);
+        //this -> angle_speed = angle;
     }
 
     
@@ -608,12 +620,6 @@ void Letter::stepPoolV(float dt)
         this -> velocity.normalize();
         this -> velocity *= letterManager -> getMeanderingSpeed();
 
-        // Allow followers to catch up.
-        if (connected_left)
-        {
-            this -> velocity *= 2;
-        }
-
         // Speedup sentance leader movement?
         if (combine_stage == SENTANCE)
         {
@@ -622,7 +628,8 @@ void Letter::stepPoolV(float dt)
 
         // Update angle to match where this letter is going.
         float angle = atan2(velocity.y, velocity.x);
-        this -> angle = angle;
+        //this -> angle = angle;
+        setAngleSpeed(angle, turn_speed/dt);
         
     }
     
@@ -1080,6 +1087,33 @@ void Letter::stepTextScrollV(float dt)
     }
 
     angle = 0;
+}
+
+// ASSUMPTIONS: target is positive and < 2*PI.
+// angle is positive and < 2*PI
+// percentage is between 0 and 1.
+void Letter::setAngleSpeed(float target, float percentage)
+{
+
+    // find both angular directions.
+    float angle_speed1 = abs(target - angle);
+    float angle_speed2 = 2*PI - angle_speed1;
+
+    float sign = 1;
+    if (target < angle)
+    {
+        sign = -1;
+    }
+
+    // Set angle speed to the direction with lowest absolute value.
+    if (angle_speed1 < angle_speed2)
+    {
+        this -> angle_speed = sign*angle_speed1*percentage;
+    }
+    else
+    {
+        this -> angle_speed = -sign*angle_speed2*percentage;
+    }
 }
 
 void Letter::stepTextScrollP(float dt)

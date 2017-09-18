@@ -234,6 +234,11 @@ private:
     float text_scroll_speed = 10;
     bool left_pool = false; // Signals whether a sentance has left the pool or not.
 
+
+    // Gracefully adapt the angle speed to the target angle.
+    void setAngleSpeed(float target, float percentage);
+
+
 // Collision Detection.
 private:
     LetterManager * letterManager;

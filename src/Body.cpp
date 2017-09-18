@@ -25,6 +25,13 @@ void Body::resolve_collision(Body * other)
         return;
     }
 
+    /*
+    // Ignore static collisions for now.
+    if(!other -> isDynamic())
+    {
+        return;
+    }*/
+
     /*ASSUMPTION: this body has moved along velocity and penetrated b2.
     * We resolve the collision as follows:
     *
@@ -72,6 +79,12 @@ void Body::resolve_collision(Body * other)
 
     this  -> revertToPrevious();
     other -> revertToPrevious();
+
+    /*
+    this  -> velocity = ofVec2f(0, 0);
+    other -> velocity = ofVec2f(0, 0);
+    */
+
     
     // 2, 3.
     CollideInfo info;
@@ -175,6 +188,19 @@ void Body::updateDynamics(CollideInfo & info, Body * body2)
     ofVec2f body2_away_from_body1 = -body1_away_from_body2;
     body1 -> addVelocityAtPt(-old_projected_velocity1 + new_projected_velocity1 + body1_away_from_body2, position1);
     body2 -> addVelocityAtPt(-old_projected_velocity2 + new_projected_velocity2 + body2_away_from_body1, position2);
+
+    /*
+    if (body1 -> velocity.length() < 10)
+    {
+        body1 -> velocity.normalize();
+        body1 -> velocity *= 100;
+    }
+
+    if (body2 -> velocity.length() < 10)
+    {
+        body2 -> velocity.normalize();
+        body2 -> velocity *= 100;
+    }*/
 
 }
 
