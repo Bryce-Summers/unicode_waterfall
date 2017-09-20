@@ -112,6 +112,9 @@ class ofApp : public ofBaseApp{
 
         ofxFloatSlider poolTurnSpeed = .1;
 
+        ofxFloatSlider gravity = 30;// pixels / time / time.
+        ofxFloatSlider terminal_velocity = 80;
+
         // -- GUI Sliders.        
 
         ofxPanel gui;

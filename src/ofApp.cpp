@@ -12,13 +12,16 @@ void ofApp::setup(){
     gui.add(pool_y1.setup("pool_y1", 500, 0, h));
     gui.add(pool_y2.setup("pool_y2", 600, 0, h));
     gui.add(scroll_y.setup("scroll_y", 800, h / 2, h));
-    gui.add(sentances_per_second.setup("sentances_per_second", .3, .1, 1));
+    gui.add(sentances_per_second.setup("sentances_per_second", .1, .1, 1));
     gui.add(meanderingDamping.setup("meanderingDamping", .5, 0, 1));
     gui.add(meanderingSpeed.setup("meanderingSpeed", 100, 0, 200));
     gui.add(magnet_factor.setup("magnet_factor", 0.01, 0, 1));
     gui.add(scrollSpeed.setup("scrollSpeed", 40, 20, 100));
     gui.add(poolTurnSpeed.setup("poolTurnSpeed", PI / 200, 0, PI/10));
     
+    gui.add(gravity.setup("gravity", 50, 20, 100));
+    gui.add(terminal_velocity.setup("terminal_velocity", 150, 70, 300));
+
 
     frame = 0;
 
@@ -46,7 +49,9 @@ void ofApp::setup(){
         &meanderingSpeed,
         &scrollSpeed,
         &magnet_factor,
-        &poolTurnSpeed
+        &poolTurnSpeed,
+        &gravity,
+        &terminal_velocity
    );
 
 }
@@ -239,6 +244,8 @@ void ofApp::update(){
         char last_char = ' ';
         const int margin = 20;       
 
+        float y0_height = margin * 10 / (this->sentances_per_second / .4);
+
         string accum;
 
         for(int char_index = 0; char_index < len; char_index++)
@@ -258,7 +265,9 @@ void ofApp::update(){
 
             // Blank space on the left and right sides of the screen where letters will not form.
             int x = margin + ofRandom(ofGetWidth() - margin*2);
-            int y = -20 - ofRandom(margin * 10);
+
+            // Height scaled to create the illusion of a continuous stream of letters.
+            int y = -20 - ofRandom(y0_height);
 
             // figure out the gap between this letter and the next one.
             int previous_to_this_distance = 0;
@@ -320,7 +329,7 @@ void ofApp::update(){
             while (grid -> detect_collision(l))
             {
                 int x = margin + ofRandom(ofGetWidth() - margin * 2);
-                int y = -20 - ofRandom(margin * 10);
+                int y = -20 - ofRandom(y0_height);
                 l -> setPosition(x, y);
             }
 

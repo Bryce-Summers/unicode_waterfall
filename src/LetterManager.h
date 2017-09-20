@@ -19,7 +19,9 @@ public:
                   ofxFloatSlider * meanderingSpeed,
                   ofxFloatSlider * scroll_speed,
                   ofxFloatSlider * magnet_factor,
-                  ofxFloatSlider * pool_turn_speed);
+                  ofxFloatSlider * pool_turn_speed,
+                  ofxFloatSlider * gravity,
+                  ofxFloatSlider * terminal_velocity);
     ~LetterManager();
 
 private:
@@ -64,6 +66,9 @@ public:
 
     ofxFloatSlider * turn_speed;
 
+    ofxFloatSlider * gravity;
+    ofxFloatSlider * terminal_velocity;
+
     float bottom_y;
 
 
@@ -87,5 +92,8 @@ public:
     const float getSpeedLimit();
 
     float getTurnSpeed();
+
+    float getGravity();
+    float getTerminalVelocity();
 
 };

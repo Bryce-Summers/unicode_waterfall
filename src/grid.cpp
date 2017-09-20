@@ -60,6 +60,15 @@ void Grid::createGrid(int numRows, int numColumns, int screen_w, int screen_h)
         cell.screen_x = gridX2screen*cell.grid_x;
         cell.screen_y = gridY2screen*cell.grid_y;
 
+        float tubluence = 0;
+        if (ofRandom(1) < .1)
+        {
+            tubluence = ofRandom(1);
+        }
+
+        // Initialize wind position to random cross wind.
+        cell.wind_velocity = ofVec2f(ofRandom(300) - 150, -tubluence);
+
         gridCells.push_back(cell);
     }
 
@@ -353,8 +362,18 @@ int Grid::line_side_test(ofVec2f a1, ofVec2f a2, ofVec2f c)
     return -1;
 }
 
- ///
- // Grid Cell.
+
+ofVec2f Grid::getWindVelocityAtPosition(ofVec2f position)
+{
+    int index = indexAtPoint(position);
+    GridCell * cell = &this -> gridCells[index];
+
+    return cell -> wind_velocity;
+}
+
+
+///
+// Grid Cell.
 ///
 
 void GridCell::addCollidable(Body * obj)

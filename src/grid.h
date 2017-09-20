@@ -20,13 +20,6 @@ class GridCell
 private:
     std::set<Body *> current_objects;
 
-    // Physics properties that are stored along the grid.
-    
-    // The Letters are requested to have the following behavior:
-    // buoyancy, weight of the particles, degree of turbulence, strength of the wind
-
-    ofVec2f wind_velocity;
-
 public:
 
     // The location of the grid cell.
@@ -45,6 +38,11 @@ public:
     void addAllCollidablesToSet(std::set<Body *> & collision_set);
 
     int size();
+
+    // -- Physics properties that are stored along the grid.
+    // The Letters are requested to have the following behavior:
+    // buoyancy, weight of the particles, degree of turbulence, strength of the wind
+    ofVec2f wind_velocity;
 };
 
 class Grid
@@ -85,6 +83,8 @@ public:
 
     // Detects whether the given body collides with any other objects in the grid.
     bool detect_collision(Body * obj);
+
+    ofVec2f getWindVelocityAtPosition(ofVec2f position);
 
 // Internal Functions that operate the grid.
 private:

@@ -110,10 +110,6 @@ private:
     void stepWaterfallV(float dt);
     void stepWaterfallP(float dt);
 
-    float gravity = 30;// pixels / time / time.
-    float terminal_velocity = 80;
-
-
     // Return the y bound for the current stage.
     float y_bound_top();
     float y_bound_bottom();

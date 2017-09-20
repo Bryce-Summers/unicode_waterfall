@@ -12,7 +12,9 @@ LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * meanderingSpeed,
     ofxFloatSlider * scrollSpeed,
     ofxFloatSlider * magnet_factor,
-    ofxFloatSlider * pool_turn_speed)
+    ofxFloatSlider * pool_turn_speed,
+    ofxFloatSlider * gravity,
+    ofxFloatSlider * terminal_velocity)
 {
 
     this -> sentances_per_second = sentances_per_second;
@@ -38,6 +40,8 @@ LetterManager::LetterManager(Grid * grid,
 
     this -> turn_speed = pool_turn_speed;
 
+    this -> gravity = gravity;
+    this -> terminal_velocity = terminal_velocity;
 }
 
 
@@ -75,7 +79,7 @@ void LetterManager::next_scroll()
     scroll_ready = false;
     
     // As of 9.8.17 4:32 pm, we are triggering this as soon as a sentance leaves the pool.
-    time_till_next_scroll = 1.0 / *sentances_per_second * .5;
+    time_till_next_scroll = 1.0 / *sentances_per_second * .25;
 }
 
 
@@ -157,4 +161,14 @@ float LetterManager::getMagnetFactor()
 float LetterManager::getTurnSpeed()
 {
     return *this -> turn_speed;
+}
+
+float LetterManager::getGravity()
+{
+    return *this -> gravity;
+}
+
+float LetterManager::getTerminalVelocity()
+{
+    return *this -> terminal_velocity;
 }
