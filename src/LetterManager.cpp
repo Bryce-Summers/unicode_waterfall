@@ -11,7 +11,8 @@ LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * meanderingDamping,
     ofxFloatSlider * meanderingSpeed,
     ofxFloatSlider * scrollSpeed,
-    ofxFloatSlider * magnet_factor)
+    ofxFloatSlider * magnet_factor,
+    ofxFloatSlider * pool_turn_speed)
 {
 
     this -> sentances_per_second = sentances_per_second;
@@ -34,6 +35,8 @@ LetterManager::LetterManager(Grid * grid,
 
     // The bottom of the world.
     bottom_y = ofGetHeight() + 50;
+
+    this -> turn_speed = pool_turn_speed;
 
 }
 
@@ -149,4 +152,9 @@ const float LetterManager::getSpeedLimit()
 float LetterManager::getMagnetFactor()
 {
     return *this -> magnet_factor;
+}
+
+float LetterManager::getTurnSpeed()
+{
+    return *this -> turn_speed;
 }

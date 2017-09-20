@@ -18,7 +18,8 @@ public:
                   ofxFloatSlider * meanderingDamping,
                   ofxFloatSlider * meanderingSpeed,
                   ofxFloatSlider * scroll_speed,
-                  ofxFloatSlider * magnet_factor);
+                  ofxFloatSlider * magnet_factor,
+                  ofxFloatSlider * pool_turn_speed);
     ~LetterManager();
 
 private:
@@ -61,6 +62,8 @@ public:
 
     ofxFloatSlider * text_scroll_y_coordinate;
 
+    ofxFloatSlider * turn_speed;
+
     float bottom_y;
 
 
@@ -82,5 +85,7 @@ public:
     float getMagnetFactor();
 
     const float getSpeedLimit();
+
+    float getTurnSpeed();
 
 };

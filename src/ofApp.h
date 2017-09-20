@@ -110,6 +110,7 @@ class ofApp : public ofBaseApp{
         // Rate at which sentances scroll down the screen in the Stage 3: text_scroll.
         ofxFloatSlider scrollSpeed = 40;
 
+        ofxFloatSlider poolTurnSpeed = .1;
 
         // -- GUI Sliders.        
 

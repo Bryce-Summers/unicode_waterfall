@@ -9,14 +9,15 @@ void ofApp::setup(){
     // Initialize all of the sliders.
     gui.setup();
     gui.add(pool_y.setup("pool_y", 400, 0, h/2));
-    gui.add(scroll_y.setup("scroll_y", 800, h/2, h));
     gui.add(pool_y1.setup("pool_y1", 500, 0, h));
     gui.add(pool_y2.setup("pool_y2", 600, 0, h));
+    gui.add(scroll_y.setup("scroll_y", 800, h / 2, h));
     gui.add(sentances_per_second.setup("sentances_per_second", .3, .1, 1));
     gui.add(meanderingDamping.setup("meanderingDamping", .5, 0, 1));
     gui.add(meanderingSpeed.setup("meanderingSpeed", 100, 0, 200));
     gui.add(magnet_factor.setup("magnet_factor", 0.01, 0, 1));
     gui.add(scrollSpeed.setup("scrollSpeed", 40, 20, 100));
+    gui.add(poolTurnSpeed.setup("poolTurnSpeed", PI / 200, 0, PI/10));
     
 
     frame = 0;
@@ -44,7 +45,8 @@ void ofApp::setup(){
         &meanderingDamping,
         &meanderingSpeed,
         &scrollSpeed,
-        &magnet_factor
+        &magnet_factor,
+        &poolTurnSpeed
    );
 
 }
@@ -225,7 +227,7 @@ void ofApp::update(){
         }
         
         // Cause this to generate only the first sentance for debugging purposes.
-        bogus = true;
+        //bogus = true;
     
         // Create a sentance of letters.
         //int letters_per_sentance = 5;

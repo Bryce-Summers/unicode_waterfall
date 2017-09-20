@@ -52,12 +52,6 @@ Letter::Letter(
     float angular_velocity_variance = PI*5;
     this -> angle_speed = ofRandom(angular_velocity_variance) - angular_velocity_variance / 2;
 
-    // Handle words of length 1.
-    if (isStartOfWord() && isEndOfWord())
-    {
-        setWordComplete();
-    }
-
     this -> init_texture(character, font);
 
 }
@@ -164,7 +158,26 @@ void Letter::update(float dt)
 
     if (state == POOL && combine_delay > 0)
     {
+        // Handle words of length 1.
+        if (isStartOfWord() && isEndOfWord())
+        {
+            setWordComplete();
+        }
+
         combine_delay -= dt;
+    }
+
+    if (state == POOL && sentance_combine_delay > 0)
+    {
+        sentance_combine_delay -= dt;        
+        if (sentance_combine_delay <= 0)
+        {
+            if(combine_stage == PARTIAL_SENTANCE)
+            {
+                combine_stage = SENTANCE;
+                sentance_combine_delay = time_delay_between_sentance_combines;
+            }
+        }
     }
 
     // Bounce off side walls.
@@ -208,7 +221,7 @@ void Letter::update(float dt)
     // Bound the maximum angle speed.
     
     float sign = angle_speed / abs(angle_speed);
-    float max_speed = PI/10;
+    float max_speed = PI/10/dt;
     if (abs(angle_speed) > max_speed)
     {
         angle_speed = sign*max_speed;
@@ -261,6 +274,7 @@ void Letter::move(float dt)
         letterManager -> isScrollReady() &&
         this -> sentance_index == letterManager -> get_scroll_index())
     {
+        
         this -> setGroupState(TEXT_SCROLL);
 
         cout << "Index scrolled = " << this -> sentance_index << endl;
@@ -578,7 +592,7 @@ void Letter::stepPoolA(float dt)
 
         // Current direction the letter is heading in.
         angle = atan2(velocity.y, velocity.x);
-        angle += ofRandom(far_dist / 20000);
+        angle += ofRandom(letterManager -> getTurnSpeed());//far_dist / 20000);
         dx = cos(angle);
         dy = sin(angle);
         direction = ofVec2f(dx, dy);
@@ -600,7 +614,7 @@ void Letter::stepPoolV(float dt)
     bool free;
     ofVec2f target_position = this -> getTargetPosition(&free);
     
-    float turn_speed = 100;
+    float turn_speed = this -> letterManager -> getTurnSpeed();
 
     if (!free)
     {
@@ -691,99 +705,105 @@ ofVec2f Letter::getTargetPosition(bool * free)
         *free = true;
         return this -> position;
     }
-    
-    ofVec2f output;
 
-    if (state == POOL)
+ofVec2f output;
+
+if (state == POOL)
+{
+
+    // -- Handle Magnet logic.
+    /* The algorithm tries out 4 discrete results as follows:
+     *  1. Move magnetized letters towards each other,
+     *     connect them when they are close enough.
+     *  2. Magnetize unconnected unmagnetized groups of letters that fullfill the connection requirements.
+     *     i.e. letters attract neighbors in their word, complete words attract each other.
+     *  3. Connected letters follow their group in the driving direction.
+     *  4. Set driving ends to free motion.
+     */
+
+
+     // -- Magnets attract towards their opposite.
+
+     // Follow, connect, then demagnetize left.
+    if (magnet_left)
+    {
+        getOffsetPositionFromLeft(&output);
+
+        if (!connected_left)
+        {
+            // NOTE: We don't need dist_sqr if connected_left is already true.
+            // same for symmetrical case below.
+            ofVec2f offset = output - this->position;
+            float dist_sqr = offset.lengthSquared();
+            float threshold = letterManager->getMeanderingSpeed() * 3;
+            threshold = threshold*threshold;
+            if (dist_sqr < threshold) // 10^2
+            {
+                setMagnet(LEFT, false);
+                letter_to_my_left->setMagnet(RIGHT, false);
+
+                connect_to_left(); // Update letter, word, and sentance connectivity values.
+
+                setDriving(LEFT);
+                combine_delay = time_delay_between_combines;
+                letter_to_my_left->combine_delay = time_delay_between_combines;
+            }
+        }
+
+        return output;
+    }
+
+
+    // Follow, connect, then demagnetize right.
+    if (magnet_right)
+    {
+        getOffsetPositionFromRight(&output);
+
+        if (!connected_right)
+        {
+            ofVec2f offset = output - this->position;
+            float dist_sqr = offset.lengthSquared();
+            float threshold = letterManager->getMeanderingSpeed() * 3;
+            threshold = threshold * threshold;
+
+            if (dist_sqr < threshold) // 10^2
+            {
+                setMagnet(RIGHT, false);
+                letter_to_my_right->setMagnet(LEFT, false);
+
+                connect_to_right(); // Update letter, word, and sentance connectivity values.
+                setDriving(LEFT);
+                combine_delay = time_delay_between_combines;
+                letter_to_my_right->combine_delay = time_delay_between_combines;
+            }
+        }
+
+        return output;
+    }
+
+    // -- Magnetize letters if they meet the requirements for connection.
+    // but delay combines to allow for proper circulation.
+
+    // Magnetize left.
+    if (combine_delay < 0 && !connected_left && pool_goto_right_of_left() &&
+        letter_to_my_left->combine_delay < 0)// Words only. zzz
     {
 
-        // -- Handle Magnet logic.
-        /* The algorithm tries out 4 discrete results as follows:
-         *  1. Move magnetized letters towards each other,
-         *     connect them when they are close enough.
-         *  2. Magnetize unconnected unmagnetized groups of letters that fullfill the connection requirements.
-         *     i.e. letters attract neighbors in their word, complete words attract each other.
-         *  3. Connected letters follow their group in the driving direction.
-         *  4. Set driving ends to free motion.
-         */
-
-
-        // -- Magnets attract towards their opposite.
-        
-        // Follow, connect, then demagnetize left.
-        if (magnet_left)
-        {
-            getOffsetPositionFromLeft(&output);
-
-            if(!connected_left)
-            {
-                // NOTE: We don't need dist_sqr if connected_left is already true.
-                // same for symmetrical case below.
-                ofVec2f offset = output - this -> position;
-                float dist_sqr = offset.lengthSquared();
-                float threshold = letterManager->getMeanderingSpeed() * 3;
-                threshold = threshold*threshold;
-                if (dist_sqr < threshold) // 10^2
-                {
-                    setMagnet(LEFT, false);
-                    letter_to_my_left -> setMagnet(RIGHT, false);
-
-                    connect_to_left(); // Update letter, word, and sentance connectivity values.
-                
-                    setDriving(LEFT);
-                    combine_delay = time_delay_between_combines;
-                    letter_to_my_left -> combine_delay = time_delay_between_combines;
-                }
-            }
-
-            return output;
-        }
-
-        
-        // Follow, connect, then demagnetize right.
-        if (magnet_right)
-        {
-            getOffsetPositionFromRight(&output);
-
-            if (!connected_right)
-            {
-                ofVec2f offset = output - this -> position;
-                float dist_sqr = offset.lengthSquared();
-                float threshold = letterManager -> getMeanderingSpeed()*3;
-                threshold = threshold * threshold;
-
-                if (dist_sqr < threshold) // 10^2
-                {
-                    setMagnet(RIGHT, false);
-                    letter_to_my_right -> setMagnet(LEFT, false);
-
-                    connect_to_right(); // Update letter, word, and sentance connectivity values.
-                    setDriving(LEFT);
-                    combine_delay = time_delay_between_combines;
-                    letter_to_my_right -> combine_delay = time_delay_between_combines;
-                }
-            }
-
-            return output;
-        }
-
-        // -- Magnetize letters if they meet the requirements for connection.
-        // but delay combines to allow for proper circulation.
-
-        // Magnetize left.
-        if (combine_delay < 0 && !connected_left && pool_goto_right_of_left() &&
-            letter_to_my_left -> combine_delay < 0 && !isStartOfWord())// Words only. zzz
+        // Combine all words, but sentances after a delay.
+        if (!isStartOfWord() || sentance_combine_delay <= .1)
         {
             setMagnet(LEFT, true);
 
             // We are no longer allowing right leaders.
             //letter_to_my_left -> setMagnet(RIGHT, true);
             setDriving(LEFT);
-            letter_to_my_left -> setDriving(RIGHT);
+            letter_to_my_left->setDriving(RIGHT);
 
             getOffsetPositionFromLeft(&output);
             return output;
         }
+    }
+
 
         /*
         // We are no longer allowing right magnetization.
@@ -1245,6 +1265,8 @@ void Letter::setWordComplete()
         search -> word_complete = true;
         search -> combine_stage = PARTIAL_SENTANCE;
         //cout << search -> character;
+
+        search -> sentance_combine_delay = time_delay_between_sentance_combines;
 
         // Iterate.
         search = search -> letter_to_my_right;
