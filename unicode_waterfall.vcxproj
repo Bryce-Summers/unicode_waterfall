@@ -95,7 +95,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
@@ -114,7 +114,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -133,7 +133,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -155,7 +155,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
@@ -184,7 +184,14 @@
     <ClCompile Include="src\OBB.cpp" />
     <ClCompile Include="src\Obstacle.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
-    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.cpp" />
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxBaseGui.cpp" />
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxButton.cpp" />
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxGuiGroup.cpp" />
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxLabel.cpp" />
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxPanel.cpp" />
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSlider.cpp" />
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSliderGroup.cpp" />
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxToggle.cpp" />
     <ClCompile Include="src\OrientedHyperplane.cpp" />
     <ClCompile Include="src\Ray.cpp" />
     <ClCompile Include="src\Useful.cpp" />
@@ -203,7 +210,15 @@
     <ClInclude Include="src\OBB.h" />
     <ClInclude Include="src\Obstacle.h" />
     <ClInclude Include="src\ofApp.h" />
-    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.h" />
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxBaseGui.h" />
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxButton.h" />
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxGui.h" />
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxGuiGroup.h" />
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxLabel.h" />
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxPanel.h" />
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSlider.h" />
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSliderGroup.h" />
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxToggle.h" />
     <ClInclude Include="src\OrientedHyperplane.h" />
     <ClInclude Include="src\Ray.h" />
     <ClInclude Include="src\Useful.h" />

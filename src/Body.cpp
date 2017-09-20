@@ -77,9 +77,6 @@ void Body::resolve_collision(Body * other)
 
     // Revert positions.
 
-    this  -> revertToPrevious();
-    other -> revertToPrevious();
-
     /*
     this  -> velocity = ofVec2f(0, 0);
     other -> velocity = ofVec2f(0, 0);
@@ -103,8 +100,39 @@ void Body::resolve_collision(Body * other)
         //other -> moveBody(info.location1, info.location2 - movement_direction);
     } */
 
+    this -> revertToPrevious();
+
     ofVec2f movement_direction = this -> velocity.normalized();
-    c1 -> computeFuturePenetrationLocation(c2, movement_direction, &info);
+    bool penetration_found = c1 -> computeFuturePenetrationLocation(c2, movement_direction, &info);
+
+    other -> revertToPrevious();
+ 
+    
+    // Try the second one.
+    if(!penetration_found)
+    {
+        // Revert back to test for collisions the other way around.
+        this -> revertToPrevious();
+        movement_direction = other -> velocity.normalized();
+        penetration_found = c2 -> computeFuturePenetrationLocation(c1, movement_direction, &info);
+        this -> revertToPrevious();
+    }
+
+    
+
+    /* This is not working.
+    // If everything fails, use a default collision specification.
+    if (!penetration_found)
+    {
+        info.location1 = this -> position;
+        info.location2 = other -> position;
+    
+        info.collision_normal = info.location2 - info.location1;
+        info.time_till_collision = info.collision_normal.length();
+        info.collision_normal /= info.time_till_collision;
+        cout << "Third Option" << endl;
+    }
+    */
     
 
     // Udates both body's dynamics.
@@ -117,8 +145,14 @@ void Body::resolve_collision(Body * other)
 
 void Body::revertToPrevious()
 {
-    this -> position = previous_position;
-    this -> angle    = previous_angle;
+    ofVec2f pp = previous_position;
+    float pa = previous_angle;
+
+    previous_position = this -> position;
+    previous_angle    = previous_angle;
+
+    this -> position = pp;
+    this -> angle    = pa;
 }
 
 bool Body::separatePenetratingBody(Body * other)
@@ -188,19 +222,27 @@ void Body::updateDynamics(CollideInfo & info, Body * body2)
     ofVec2f body2_away_from_body1 = -body1_away_from_body2;
     body1 -> addVelocityAtPt(-old_projected_velocity1 + new_projected_velocity1 + body1_away_from_body2, position1);
     body2 -> addVelocityAtPt(-old_projected_velocity2 + new_projected_velocity2 + body2_away_from_body1, position2);
-
-    /*
+    
+    body1 -> velocity.x += ofRandom(30) - 15;
+    
+    if (!body2 -> isDynamic() && body1 -> velocity.y < 0)
+    {
+        float y_half = body1 -> velocity.y/2;
+        body1 -> velocity.x += y_half;
+        body1 -> velocity.y -= y_half;
+    }
+    
     if (body1 -> velocity.length() < 10)
     {
         body1 -> velocity.normalize();
         body1 -> velocity *= 100;
     }
 
-    if (body2 -> velocity.length() < 10)
+    if (body2 -> isDynamic() && body2 -> velocity.length() < 10)
     {
         body2 -> velocity.normalize();
         body2 -> velocity *= 100;
-    }*/
+    }
 
 }
 

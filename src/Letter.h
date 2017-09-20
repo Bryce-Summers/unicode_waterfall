@@ -37,6 +37,10 @@ public:
     // Sets the letter to my right field.
     void setRightLetter(Letter * right);
 
+    // Set to a new position, especially when initializing to non-collision location.
+    // The teleporting is permanant without allowing for reverting.
+    void setPosition(float x, float y);
+
 // Init functions
 private:
 

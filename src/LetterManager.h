@@ -1,7 +1,7 @@
 #pragma once
 
 #include "grid.h"
-//#include "Letter.h"
+#include "ofxGui.h"
 
 class LetterManager
 {
@@ -10,31 +10,31 @@ public:
     // NOTE: scroll_delay should be no greater than the sentance generation time,
     //       else the number of letters will monototically increase.
     LetterManager(Grid * grid,
-                  float scroll_delay,
-                  float pool_y,
-                  float pool_y_divider_1,
-                  float pool_y_divider_2,
-                  float scroll_y,
-                  float meanderingDamping,
-                  float meanderingSpeed,
-                  float scroll_speed,
-                  float magnet_factor);
+                  ofxFloatSlider * sentances_per_second,
+                  ofxFloatSlider * pool_y,
+                  ofxFloatSlider * pool_y_divider_1,
+                  ofxFloatSlider * pool_y_divider_2,
+                  ofxFloatSlider * scroll_y,
+                  ofxFloatSlider * meanderingDamping,
+                  ofxFloatSlider * meanderingSpeed,
+                  ofxFloatSlider * scroll_speed,
+                  ofxFloatSlider * magnet_factor);
     ~LetterManager();
 
 private:
     // -- Fields.
     int next_index = 0;
-    float time_per_scroll = 1.0; // Time in Seconds.
+    ofxFloatSlider * sentances_per_second; // Time in Seconds.
     bool scroll_ready = true;    // true iff enough time has passed to allow the next sentance
                                  // into the scroll field.
     float time_till_next_scroll;
     vector<LineSegment *> pool_boundaries;
 
-    float meanderingDamping;
-    float meanderingSpeed;
-    float scrollSpeed;
+    ofxFloatSlider * meanderingDamping;
+    ofxFloatSlider * meanderingSpeed;
+    ofxFloatSlider * scrollSpeed;
 
-    float magnet_factor;
+    ofxFloatSlider * magnet_factor;
 
     const float speed_limit = 300;
 
@@ -54,12 +54,12 @@ public:
 
     float top_y = 0;
 
-    float pool_y_coordinate;
+    ofxFloatSlider * pool_y_coordinate;
 
-    float pool_y_divider_1;
-    float pool_y_divider_2;
+    ofxFloatSlider * pool_y_divider_1;
+    ofxFloatSlider * pool_y_divider_2;
 
-    float text_scroll_y_coordinate;
+    ofxFloatSlider * text_scroll_y_coordinate;
 
     float bottom_y;
 

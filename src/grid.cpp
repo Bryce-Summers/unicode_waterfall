@@ -182,6 +182,62 @@ bool Grid::resolve_collisions(Body * dynamic_obj)
     return resolution_happened;
 }
 
+bool Grid::detect_collision(Body * obj)
+{
+    // Nothing needs doing if the input object is not dynamic.
+    
+    Collidable * collidable = obj -> getCollidable();
+    if (collidable == NULL)
+    {
+        return false;
+    }
+
+    // Look up all candidates minus the object itself.
+    ofRectangle aabb = obj -> getCollidable() -> getBoundingBox();
+
+    std::set<Body *> candidates;
+    this -> lookupBodiesInBox(aabb, candidates);
+
+    candidates.erase(obj);
+
+    // If there are no other bodies, then there was no collision.
+    if (candidates.size() == 0)
+    {
+        return false;
+    }
+
+    // Otherwise search for the existance of a collision.
+    Collidable * c1 = obj -> getCollidable();
+
+    for (Body * other : candidates)
+    {
+        // Ignore collisions with bodies that are deactivated.
+        if (!other -> isCollidable())
+        {
+            continue;
+        }
+
+        // NOTE: if a null access exception gets thrown here,
+        // it probably means that there is some portion of the code that
+        // modifies the position or orientation of a body without removing it
+        // from the broad phase collision grid and redding it in its modified state.
+        Collidable * c2 = other -> getCollidable();
+
+        // No collidable -> no collision can be determined.
+        if (c2 == NULL)
+        {
+            continue;
+        }
+
+        if (c1 -> detect_collision_convex(c2))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // Utility functions
 void Grid::populate_grid_bounds(Collidable * obj, 
     int * r0,

@@ -2,6 +2,23 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+
+    float w = ofGetWidth();
+    float h = ofGetHeight();
+
+    // Initialize all of the sliders.
+    gui.setup();
+    gui.add(pool_y.setup("pool_y", 400, 0, h/2));
+    gui.add(scroll_y.setup("scroll_y", 800, h/2, h));
+    gui.add(pool_y1.setup("pool_y1", 500, 0, h));
+    gui.add(pool_y2.setup("pool_y2", 600, 0, h));
+    gui.add(sentances_per_second.setup("sentances_per_second", .3, .1, 1));
+    gui.add(meanderingDamping.setup("meanderingDamping", .5, 0, 1));
+    gui.add(meanderingSpeed.setup("meanderingSpeed", 100, 0, 200));
+    gui.add(magnet_factor.setup("magnet_factor", 0.01, 0, 1));
+    gui.add(scrollSpeed.setup("scrollSpeed", 40, 20, 100));
+    
+
     frame = 0;
 
     //string unicode_test = "Testing «ταБЬℓσ» : 1<2 & 4 + 1>3, now 20 % off!";
@@ -18,27 +35,17 @@ void ofApp::setup(){
 
     // NOTE: We make the time between scolls less than the input rate of sentances, because 
     // we don't want an unstable queueing scenario that grows unboundedly.
-    letter_manager = new LetterManager(grid, seconds_per_sentance * .5,
-        pool_y,
-        pool_y1,
-        pool_y2,
-        scroll_y,
-        meanderingDamping,
-        meanderingSpeed,
-        scrollSpeed,
-        magnet_factor
-    );
-
-    int width  = ofGetWidth();
-    int height = ofGetHeight();
-    phase_1 = ofRectangle(0, 0, width, pool_y - 1);
-
-    // 3 Pool Sections.
-    phase_2A = ofRectangle(0, pool_y,  width, pool_y1  - pool_y  - 1);
-    phase_2B = ofRectangle(0, pool_y1, width, pool_y2  - pool_y1 - 1);
-    phase_2C = ofRectangle(0, pool_y2, width, scroll_y - pool_y2 - 1);
-
-    phase_3 = ofRectangle(0, scroll_y, width, height - scroll_y);
+    letter_manager = new LetterManager(grid,
+        &sentances_per_second,
+        &pool_y,
+        &pool_y1,
+        &pool_y2,
+        &scroll_y,
+        &meanderingDamping,
+        &meanderingSpeed,
+        &scrollSpeed,
+        &magnet_factor
+   );
 
 }
 
@@ -206,9 +213,10 @@ void ofApp::update(){
     time_accum += dt;
 
     // Test String.
-    if (time_accum > this -> seconds_per_sentance && line_index < input.size())
+    if (time_accum > 1.0 / this -> sentances_per_second && line_index < input.size())
     {
         time_accum = 0;//-= this -> seconds_per_frame;
+
 
         // Remove me.
         if(bogus)
@@ -217,7 +225,7 @@ void ofApp::update(){
         }
         
         // Cause this to generate only the first sentance for debugging purposes.
-        //bogus = true;
+        bogus = true;
     
         // Create a sentance of letters.
         //int letters_per_sentance = 5;
@@ -230,7 +238,6 @@ void ofApp::update(){
         const int margin = 20;       
 
         string accum;
-
 
         for(int char_index = 0; char_index < len; char_index++)
         {
@@ -307,6 +314,14 @@ void ofApp::update(){
                 last_was_a_space,
                 line_index - 1); // last_was_a_space used to delliminate words.
             
+
+            while (grid -> detect_collision(l))
+            {
+                int x = margin + ofRandom(ofGetWidth() - margin * 2);
+                int y = -20 - ofRandom(margin * 10);
+                l -> setPosition(x, y);
+            }
+
             letters.push_back(l);
             if(previous_letter != NULL)
             {
@@ -383,6 +398,17 @@ void ofApp::draw()
     // Hexadecimal color could be used form here maybe?
     // http://wiki.frankiezafe.org/index.php?title=Programmation:Hexadecimal_color_in_openframeworks
 
+    int width = ofGetWidth();
+    int height = ofGetHeight();
+    phase_1 = ofRectangle(0, 0, width, pool_y - 1);
+
+    // 3 Pool Sections.
+    phase_2A = ofRectangle(0, pool_y, width, pool_y1 - pool_y - 1);
+    phase_2B = ofRectangle(0, pool_y1, width, pool_y2 - pool_y1 - 1);
+    phase_2C = ofRectangle(0, pool_y2, width, scroll_y - pool_y2 - 1);
+
+    phase_3 = ofRectangle(0, scroll_y, width, height - scroll_y);
+
     ofSetColor(155, 255, 255); // blue.
     ofDrawRectangle(phase_1);
 
@@ -431,6 +457,7 @@ void ofApp::draw()
     //font.drawString("Thy self thy foe, to thy sweet self too cruel:", 0, 400);
     */
     
+    gui.draw();
 }
 
 //--------------------------------------------------------------

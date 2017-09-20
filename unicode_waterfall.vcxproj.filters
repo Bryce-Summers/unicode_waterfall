@@ -7,49 +7,70 @@
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.cpp">
-      <Filter>addons\ofxTrueTypeFontUC\src</Filter>
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxBaseGui.cpp">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxButton.cpp">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxGuiGroup.cpp">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxLabel.cpp">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxPanel.cpp">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSlider.cpp">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSliderGroup.cpp">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxToggle.cpp">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AABB.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Body.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Collidable.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CollideInfo.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ConvexHull.cpp">
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\grid.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Collidable.cpp">
-      <Filter>src\Collision_Geometries</Filter>
-    </ClCompile>
-    <ClCompile Include="src\OBB.cpp">
-      <Filter>src\Collision_Geometries</Filter>
-    </ClCompile>
     <ClCompile Include="src\Letter.cpp">
-      <Filter>src\Bodies</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Obstacle.cpp">
-      <Filter>src\Bodies</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Body.cpp">
-      <Filter>src\Bodies</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ConvexHull.cpp">
-      <Filter>src\Collision_Geometries</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AABB.cpp">
-      <Filter>src\Collision_Geometries</Filter>
-    </ClCompile>
-    <ClCompile Include="src\OrientedHyperplane.cpp">
-      <Filter>src\Hyperplanes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\LineSegment.cpp">
-      <Filter>src\Hyperplanes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Ray.cpp">
-      <Filter>src\Hyperplanes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CollideInfo.cpp">
-      <Filter>src\Collision_Geometries</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Useful.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\LetterManager.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LineSegment.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OBB.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Obstacle.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OrientedHyperplane.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Ray.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Useful.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -60,75 +81,90 @@
     <Filter Include="addons">
       <UniqueIdentifier>{71834F65-F3A9-211E-73B8-DC85}</UniqueIdentifier>
     </Filter>
-    <Filter Include="addons\ofxTrueTypeFontUC">
-      <UniqueIdentifier>{5652952C-1675-EFF8-8E62-5D8C}</UniqueIdentifier>
+    <Filter Include="addons\ofxGui">
+      <UniqueIdentifier>{4F2A59AF-5F4E-704B-D067-EC13}</UniqueIdentifier>
     </Filter>
-    <Filter Include="addons\ofxTrueTypeFontUC\src">
-      <UniqueIdentifier>{7E369600-03BF-EEFC-FA92-F38A}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Bodies">
-      <UniqueIdentifier>{46ee976c-b57e-46a0-b8f8-c1570e4e740b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Collision_Geometries">
-      <UniqueIdentifier>{f9fbc295-9e33-48eb-a016-22b35cefcaf7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Hyperplanes">
-      <UniqueIdentifier>{01a0d5b9-0304-4a44-9a30-1091cda5dea5}</UniqueIdentifier>
+    <Filter Include="addons\ofxGui\src">
+      <UniqueIdentifier>{645E9533-4DCD-6179-1CDF-CB65}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ofApp.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxTrueTypeFontUC\src\ofxTrueTypeFontUC.h">
-      <Filter>addons\ofxTrueTypeFontUC\src</Filter>
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxBaseGui.h">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxButton.h">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxGui.h">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxGuiGroup.h">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxLabel.h">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxPanel.h">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSlider.h">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxSliderGroup.h">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\of_v0.9.8_vs_release\of_v0.9.8_vs_release\addons\ofxGui\src\ofxToggle.h">
+      <Filter>addons\ofxGui\src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AABB.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Body.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Collidable.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CollideHeaders.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CollideInfo.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ConvexHull.h">
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\grid.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Collidable.h">
-      <Filter>src\Collision_Geometries</Filter>
-    </ClInclude>
-    <ClInclude Include="src\OBB.h">
-      <Filter>src\Collision_Geometries</Filter>
-    </ClInclude>
     <ClInclude Include="src\Letter.h">
-      <Filter>src\Bodies</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Obstacle.h">
-      <Filter>src\Bodies</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Body.h">
-      <Filter>src\Bodies</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ConvexHull.h">
-      <Filter>src\Collision_Geometries</Filter>
-    </ClInclude>
-    <ClInclude Include="src\UWF.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\AABB.h">
-      <Filter>src\Collision_Geometries</Filter>
-    </ClInclude>
-    <ClInclude Include="src\OrientedHyperplane.h">
-      <Filter>src\Hyperplanes</Filter>
+    <ClInclude Include="src\LetterManager.h">
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\LineSegment.h">
-      <Filter>src\Hyperplanes</Filter>
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\OBB.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Obstacle.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\OrientedHyperplane.h">
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Ray.h">
-      <Filter>src\Hyperplanes</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CollideInfo.h">
-      <Filter>src\Collision_Geometries</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CollideHeaders.h">
-      <Filter>src\Collision_Geometries</Filter>
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Useful.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\LetterManager.h">
+    <ClInclude Include="src\UWF.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

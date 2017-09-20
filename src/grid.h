@@ -83,6 +83,9 @@ public:
     // RETURNS true iff collisions were detected and resolved.
     bool resolve_collisions(Body * dynamic_obj);
 
+    // Detects whether the given body collides with any other objects in the grid.
+    bool detect_collision(Body * obj);
+
 // Internal Functions that operate the grid.
 private:
     

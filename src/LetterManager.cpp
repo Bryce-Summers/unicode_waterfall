@@ -1,18 +1,21 @@
 #include "LetterManager.h"
 
 
-LetterManager::LetterManager(Grid * grid, float time_per_scroll,
-    float pool_y,
-    float pool_y_divider_1,
-    float pool_y_divider_2,
-    float scroll_y,
+LetterManager::LetterManager(Grid * grid,
+    ofxFloatSlider * sentances_per_second,
+    ofxFloatSlider * pool_y,
+    ofxFloatSlider * pool_y_divider_1,
+    ofxFloatSlider * pool_y_divider_2,
+    ofxFloatSlider * scroll_y,
 
-    float meanderingDamping,
-    float meanderingSpeed,
-    float scrollSpeed,
-    float magnet_factor)
+    ofxFloatSlider * meanderingDamping,
+    ofxFloatSlider * meanderingSpeed,
+    ofxFloatSlider * scrollSpeed,
+    ofxFloatSlider * magnet_factor)
 {
-    this -> time_per_scroll = time_per_scroll;
+
+    this -> sentances_per_second = sentances_per_second;
+
     this -> grid = grid;
 
     this -> pool_y_coordinate = pool_y;
@@ -69,29 +72,29 @@ void LetterManager::next_scroll()
     scroll_ready = false;
     
     // As of 9.8.17 4:32 pm, we are triggering this as soon as a sentance leaves the pool.
-    time_till_next_scroll = time_per_scroll;
+    time_till_next_scroll = 1.0 / *sentances_per_second * .5;
 }
 
 
 // Get y coordinates of the horizontal lines that demarcate the three regions.
 float LetterManager::getPoolY()
 {
-    return this -> pool_y_coordinate;
+    return *this -> pool_y_coordinate;
 }
 
 float LetterManager::getPoolY_d1()
 {
-    return this -> pool_y_divider_1;
+    return *this -> pool_y_divider_1;
 }
 
 float LetterManager::getPoolY_d2()
 {
-    return this -> pool_y_divider_2;
+    return *this -> pool_y_divider_2;
 }
 
 float LetterManager::getScrollY()
 {
-    return this -> text_scroll_y_coordinate;
+    return *this -> text_scroll_y_coordinate;
 }
 
 float LetterManager::getBottomY()
@@ -101,20 +104,20 @@ float LetterManager::getBottomY()
 
 float LetterManager::getMeanderingDamping()
 {
-    return this -> meanderingDamping;
+    return *this -> meanderingDamping;
 }
 
 float LetterManager::getMeanderingSpeed()
 {
-    return this -> meanderingSpeed;
+    return *this -> meanderingSpeed;
 }
 
 void LetterManager::generatePoolBoundaries()
 {
     float x0 = 0;
     float x1 = ofGetWidth();
-    float y0 = pool_y_coordinate;
-    float y1 = text_scroll_y_coordinate;
+    float y0 = *pool_y_coordinate;
+    float y1 = *text_scroll_y_coordinate;
 
     ofVec2f xy00 = ofVec2f(x0, y0);
     ofVec2f xy01 = ofVec2f(x0, y1);
@@ -145,5 +148,5 @@ const float LetterManager::getSpeedLimit()
 
 float LetterManager::getMagnetFactor()
 {
-    return this -> magnet_factor;
+    return *this -> magnet_factor;
 }

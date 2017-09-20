@@ -19,6 +19,9 @@ public:
     // Geometric Information.
     ofVec2f location1;
     ofVec2f location2;
+
+    // The direction of the 1 dimension the collision occurs on.
+    // This direction is perpendicular to a theoretical separating axis for a collision.
     ofVec2f collision_normal;
 
     float time_till_collision;

@@ -58,6 +58,7 @@ Letter::Letter(
         setWordComplete();
     }
 
+    this -> init_texture(character, font);
 
 }
 
@@ -65,6 +66,17 @@ Letter::Letter(
 Letter::~Letter()
 {
     delete collidable;
+}
+
+// Firmly teleports the letter.
+void Letter::setPosition(float x, float y)
+{
+    grid -> remove_from_collision_grid(this);
+    this -> position.x = x;
+    this -> position.y = y;
+    this -> previous_position = this->position;
+    this -> updateCollidableFromPosition();
+    grid -> add_to_collision_grid(this);
 }
 
 /*
@@ -134,25 +146,21 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
 
 void Letter::update(float dt)
 {
-    /*
-    // Safe guard against letters
+    
+    // Safe guard against letters that don't make it to the pool.
     // FIXME: Remove this and solve it by gurantteeing that letters do not get stuck.
     time += dt;
-    if (state == WATERFALL && time > 10)
+    if (state == WATERFALL && time > 20)
     {
-        ofVec2f center = ofVec2f(960, 500);
-        ofVec2f offset = this -> position - center;
-
-        if (offset.length() > 300)
-        {
-            state = POOL;
-            disable_collision_detection();
-            this -> position = center;
-            this -> acceleration = ofVec2f(0, 0);
-            this -> velocity = ofVec2f(0, 0);
-        }
+        ofVec2f center = ofVec2f(30, this -> letterManager -> getPoolY()  +30);
         
-    }*/
+        state = POOL;
+        disable_collision_detection();
+        this -> position = center;
+        this -> acceleration = ofVec2f(0, 0);
+        this -> velocity = ofVec2f(0, 0);
+        
+    }
 
     if (state == POOL && combine_delay > 0)
     {
@@ -209,6 +217,14 @@ void Letter::update(float dt)
 
 void Letter::move(float dt)
 {
+
+    if (isnan(this->position.x))
+    {
+        this -> revertToPrevious();
+        this -> velocity = ofVec2f(0, 0);
+        angle_speed = 0;
+    }
+
     // The current position is store so that it may be reinstated as necessary.
     this -> previous_position = this->position;
     this -> previous_angle = this -> angle;
@@ -502,19 +518,8 @@ void Letter::stepPoolA(float dt)
          */
 
         // Try just rotating the angle by counter - clockwise by a random amount.
-        float angle = atan2(velocity.y, velocity.x);
-        angle += ofRandom(PI/2000);
-
-        float dx = cos(angle);
-        float dy = sin(angle);
-        ofVec2f direction = ofVec2f(dx, dy);
-
-        velocity = direction;
-        acceleration = ofVec2f(0, 0);
-        return;
+        //float angle = atan2(velocity.y, velocity.x);
     
-        
-        /*
         // First we obtain a list of relevant linesegments to cast the ray upon.
         vector<LineSegment*> * segments = letterManager -> getPoolBoundaries();
 
@@ -566,11 +571,23 @@ void Letter::stepPoolA(float dt)
         // bounded region (no gaps).
         // and our letter will not be travelling outside of this region.
 
+        /*
         // Now we compute the acceleration vector.
         this -> acceleration = (far_point - this -> position)*letterManager -> getMeanderingDamping();
+        */
+
+        // Current direction the letter is heading in.
+        angle = atan2(velocity.y, velocity.x);
+        angle += ofRandom(far_dist / 20000);
+        dx = cos(angle);
+        dy = sin(angle);
+        direction = ofVec2f(dx, dy);
+
+        velocity = direction;
+        acceleration = ofVec2f(0, 0);
 
         // The acceleration vector will be applied in stepPoolV().
-        */
+        
     }
 }
 
@@ -583,7 +600,7 @@ void Letter::stepPoolV(float dt)
     bool free;
     ofVec2f target_position = this -> getTargetPosition(&free);
     
-    float turn_speed = 10;
+    float turn_speed = 100;
 
     if (!free)
     {
@@ -591,22 +608,25 @@ void Letter::stepPoolV(float dt)
 
         float speed = desired_velocity.length();
 
-        // Chasing letters, should be able to exceed the meander speed to catch up with the
-        // word they want to connect to or follow.
-        float chase_factor = 2;
+        if(speed > .001)
+        {
+            // Chasing letters, should be able to exceed the meander speed to catch up with the
+            // word they want to connect to or follow.
+            float chase_factor = 2;
 
-        float max_speed = letterManager -> getMeanderingSpeed() * chase_factor;
+            float max_speed = letterManager -> getMeanderingSpeed() * chase_factor;
 
-        float speedup = min(speed, max_speed) / speed;
+            float speedup = min(speed, max_speed) / speed;
 
-        this -> velocity = desired_velocity * speedup;
+            this -> velocity = desired_velocity * speedup;
             
-        // Update angle to match where this letter is going.
-        float angle = atan2(desired_velocity.y, desired_velocity.x);
+            // Update angle to match where this letter is going.
+            float angle = atan2(desired_velocity.y, desired_velocity.x);
     
-        // Gradually alter the angle to desired.
-        setAngleSpeed(angle, turn_speed/dt);
-        //this -> angle_speed = angle;
+            // Gradually alter the angle to desired.
+            setAngleSpeed(angle, turn_speed/dt);
+            //this -> angle_speed = angle;
+        }
     }
 
     
@@ -752,7 +772,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
 
         // Magnetize left.
         if (combine_delay < 0 && !connected_left && pool_goto_right_of_left() &&
-            letter_to_my_left -> combine_delay < 0)
+            letter_to_my_left -> combine_delay < 0 && !isStartOfWord())// Words only. zzz
         {
             setMagnet(LEFT, true);
 
