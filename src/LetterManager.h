@@ -37,7 +37,7 @@ private:
     ofxFloatSlider * meanderingSpeed;
     ofxFloatSlider * scrollSpeed;
 
-    ofxFloatSlider * magnet_factor;
+    ofxFloatSlider * wind_factor;
 
     const float speed_limit = 300;
 
@@ -95,5 +95,11 @@ public:
 
     float getGravity();
     float getTerminalVelocity();
+
+    float getTextScrollSpeed();
+
+    float getSentancesPerSecond();
+
+    float getWindFactor();
 
 };

@@ -52,6 +52,8 @@ Letter::Letter(
 
     this -> init_texture(character, font);
 
+    this -> scroll_delay = 1.0 / this -> letterManager -> getSentancesPerSecond();
+
 }
 
 
@@ -67,8 +69,12 @@ void Letter::setPosition(float x, float y)
     this -> position.x = x;
     this -> position.y = y;
     this -> previous_position = this->position;
-    this -> updateCollidableFromPosition();
-    grid -> add_to_collision_grid(this);
+
+    if(this -> collision_detection && this -> position.y > 0)
+    {
+        this -> updateCollidableFromPosition();
+        grid -> add_to_collision_grid(this);
+    }
 }
 
 /*
@@ -138,6 +144,12 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
 
 void Letter::update(float dt)
 {
+
+    if (this -> position.y < 0 && this -> velocity.y < 0)
+    {
+        this -> velocity.y *= -1;
+        this -> position.y += 1;
+    }
     
     // Safe guard against letters that don't make it to the pool.
     // FIXME: Remove this and solve it by gurantteeing that letters do not get stuck.
@@ -237,7 +249,7 @@ void Letter::move(float dt)
     }
 
     // The current position is store so that it may be reinstated as necessary.
-    this -> previous_position = this->position;
+    this -> previous_position = this -> position;
     this -> previous_angle = this -> angle;
 
     float y0 = this -> position.y;
@@ -262,21 +274,29 @@ void Letter::move(float dt)
         this -> angle_speed = 0;
 
         // Collisions are no longer used in stage 2.
-        this -> deactivateCollider();
         //vy *= -1; // Bounce letters off of the line.
+        this -> disable_collision_detection();
     }
 
     // Transition to text scrolling.
     if (state == POOL &&
-        this -> sentance_complete == true &&
         letterManager -> isScrollReady() &&
         this -> sentance_index == letterManager -> get_scroll_index())
-    {
-        
-        this -> setGroupState(TEXT_SCROLL);
+    {        
+        // Scroll if ready or if we have waited too long.
+        if(this -> sentance_complete == true || (scroll_delay < 0) && this -> sentance_index > 0)
+        {
+            this -> setGroupState(TEXT_SCROLL);
+            cout << "Index scrolled = " << this -> sentance_index << endl;
+        }
+        else
+        {
+            scroll_delay -= dt;
+        }
 
-        cout << "Index scrolled = " << this -> sentance_index << endl;
-    }  
+        
+
+    }
 
     // -- bound the movement, to avoid letters escaping velocity.
     if (position.x < 0)
@@ -295,7 +315,7 @@ void Letter::move(float dt)
         position.y = y0 + diff;
     }
 
-    if(collision_detection)
+    if(collision_detection && this -> position.y > 0)
     {
         updateCollidableFromPosition();
 
@@ -459,7 +479,7 @@ void Letter::stepWaterfallA(float dt)
 
     // Add wind.
     ofVec2f wind = this -> grid -> getWindVelocityAtPosition(this->position);
-    //this -> acceleration += wind;
+    this -> acceleration += wind * this -> letterManager -> getWindFactor();
 
     dynamicsA(dt);
 }
@@ -515,6 +535,10 @@ void Letter::stepPoolA(float dt)
         acceleration = desired_velocity - this -> velocity;
         acceleration *= 50;
         */
+
+        ofVec2f velocity = grid -> getMeanderVelocityAtPosition(this -> position);
+        this -> acceleration = velocity * this -> letterManager -> getMeanderingDamping();
+
     }
 
     // letter is free roaming or the leader of a word.
@@ -534,6 +558,14 @@ void Letter::stepPoolA(float dt)
         */
 
         // Meandering behavior.
+
+        // Simply move the letter along a divergence - free vector field 
+        // with no slip conditions on the boundaries.
+        ofVec2f velocity = grid -> getMeanderVelocityAtPosition(this -> position);
+        this -> acceleration = velocity * this -> letterManager -> getMeanderingDamping();
+
+
+
         /* To meander the word should maintain a constant velocity,
          * perhaps slower as the word gets longer.
          * 
@@ -543,6 +575,7 @@ void Letter::stepPoolA(float dt)
          * found.
          */
 
+        /*
         // Try just rotating the angle by counter - clockwise by a random amount.
         //float angle = atan2(velocity.y, velocity.x);
     
@@ -602,6 +635,7 @@ void Letter::stepPoolA(float dt)
         this -> acceleration = (far_point - this -> position)*letterManager -> getMeanderingDamping();
         */
 
+        /*
         // Current direction the letter is heading in.
         angle = atan2(velocity.y, velocity.x);
         angle += ofRandom(letterManager -> getTurnSpeed());//far_dist / 20000);
@@ -613,7 +647,7 @@ void Letter::stepPoolA(float dt)
         acceleration = ofVec2f(0, 0);
 
         // The acceleration vector will be applied in stepPoolV().
-        
+        */
     }
 }
 
@@ -638,13 +672,13 @@ void Letter::stepPoolV(float dt)
         {
             // Chasing letters, should be able to exceed the meander speed to catch up with the
             // word they want to connect to or follow.
-            float chase_factor = 2;
+            float chase_factor = 1.5;
 
             float max_speed = letterManager -> getMeanderingSpeed() * chase_factor;
 
             float speedup = min(speed, max_speed) / speed;
 
-            this -> velocity = desired_velocity * speedup;
+            this -> velocity = desired_velocity * speedup + this -> acceleration * dt;
             
             // Update angle to match where this letter is going.
             float angle = atan2(desired_velocity.y, desired_velocity.x);
@@ -795,6 +829,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
 
         // -- Magnetize letters if they meet the requirements for connection.
         // but delay combines to allow for proper circulation.
+
 
         // Magnetize left.
         if (combine_delay < 0 && !connected_left && pool_goto_right_of_left() &&
@@ -1107,7 +1142,7 @@ void Letter::stepTextScrollA(float dt)
 void Letter::stepTextScrollV(float dt)
 {
     velocity.x = 0;
-    velocity.y = text_scroll_speed;
+    velocity.y = this -> letterManager -> getTextScrollSpeed();
 
     bool free;
     velocity += (getTargetPosition(&free) - this -> position)*move_to_left;
@@ -1533,7 +1568,7 @@ void Letter::enable_collision_detection()
     if(!collision_detection)
     {
         collision_detection = true;
-        grid -> add_to_collision_grid(this);
+        //grid -> add_to_collision_grid(this);
 
         // From Body.h
         this -> activateCollider();
@@ -1544,7 +1579,7 @@ void Letter::disable_collision_detection()
 {
     if(collision_detection)
     {
-        collision_detection = true;
+        collision_detection = false;
         grid -> remove_from_collision_grid(this);
 
         // From body.h

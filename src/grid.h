@@ -43,6 +43,9 @@ public:
     // The Letters are requested to have the following behavior:
     // buoyancy, weight of the particles, degree of turbulence, strength of the wind
     ofVec2f wind_velocity;
+
+    ofVec2f meander_velocity;
+    ofVec2f temp;
 };
 
 class Grid
@@ -85,6 +88,8 @@ public:
     bool detect_collision(Body * obj);
 
     ofVec2f getWindVelocityAtPosition(ofVec2f position);
+
+    ofVec2f getMeanderVelocityAtPosition(ofVec2f position);
 
 // Internal Functions that operate the grid.
 private:

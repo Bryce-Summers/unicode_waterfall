@@ -178,12 +178,13 @@ private:
     Combine_Stage combine_stage = PARTIAL_WORD;
 
     // 3 seconds.
-    float time_delay_between_combines = 3;
+    float time_delay_between_combines = 1;
     float combine_delay = time_delay_between_combines;
 
-    float time_delay_between_sentance_combines = 5;
+    float time_delay_between_sentance_combines = 1;
     float sentance_combine_delay = 0;
 
+    float scroll_delay = 10;
 
     // FIXME: ensure that the complete sentances are scrolled in the correct order.
     //int my_sentance_index;

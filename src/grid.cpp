@@ -69,7 +69,71 @@ void Grid::createGrid(int numRows, int numColumns, int screen_w, int screen_h)
         // Initialize wind position to random cross wind.
         cell.wind_velocity = ofVec2f(ofRandom(300) - 150, -tubluence);
 
+        cell.meander_velocity = ofVec2f(ofRandom(300) - 150, ofRandom(300) - 150);
+
         gridCells.push_back(cell);
+    }
+
+    // Convert the velocity field into a divergence free field.
+
+    for(int iter = 0; iter < 5; iter++)
+    {
+
+        // Set boundary to no slip.
+        for (int c = 0; c < numCols; c++)
+        {
+            // top.
+            int index = indexAtRowColumn(0, c);
+            GridCell * cell = &gridCells[index];
+            cell -> meander_velocity.y = MAX(0, cell -> meander_velocity.y);
+
+            index = indexAtRowColumn(numRows - 1, c);
+            cell = &gridCells[index];
+            cell -> meander_velocity.y = MIN(0, cell -> meander_velocity.y);
+        }
+
+        // Set the left and right row.
+        for (int r = 0; r < numRows; r++)
+        {
+            // top.
+            int index = indexAtRowColumn(r, 0);
+            GridCell * cell = &gridCells[index];
+            cell -> meander_velocity.x = MAX(0, cell -> meander_velocity.x);
+
+            index = indexAtRowColumn(r, numCols - 1);
+            cell = &gridCells[index];
+            cell -> meander_velocity.x = MIN(0, cell -> meander_velocity.x);
+        }
+
+        // Remove Gradient.
+        for (int i = 0; i < len; i++)
+        {
+            int row = index2Row(i);
+            int col = index2Col(i);
+
+            int i_top    = indexAtRowColumn(row - 1, col);
+            int i_left   = indexAtRowColumn(row, col - 1);
+            int i_right  = indexAtRowColumn(row, col + 1);
+            int i_bottom = indexAtRowColumn(row + 1, col);
+
+            GridCell * top    = &gridCells[i_top];
+            GridCell * left   = &gridCells[i_left];
+            GridCell * right  = &gridCells[i_right];
+            GridCell * bottom = &gridCells[i_bottom];        
+
+            ofVec2f grad = right -> meander_velocity - left -> meander_velocity;
+            grad += bottom -> meander_velocity - top -> meander_velocity;
+
+            GridCell * center = &gridCells[i];
+            center -> temp = center -> meander_velocity - grad;
+        }
+
+        for (int i = 0; i < len; i++)
+        {
+            GridCell * center = &gridCells[i];
+            center -> meander_velocity = center -> temp;
+        }
+
     }
 
     return;
@@ -299,6 +363,13 @@ int Grid::indexAtPoint(ofPoint pt)
 
 inline int Grid::indexAtRowColumn(int row, int col)
 {
+    if(row < 0) { row = 0; }
+    if(col < 0) { col = 0; }
+
+    if(row >= numRows) {row = numRows - 1;}
+    if(col >= numCols) {col = numCols - 1;}
+    
+
     return row*this -> numCols + col;
 }
 
@@ -369,6 +440,14 @@ ofVec2f Grid::getWindVelocityAtPosition(ofVec2f position)
     GridCell * cell = &this -> gridCells[index];
 
     return cell -> wind_velocity;
+}
+
+ofVec2f Grid::getMeanderVelocityAtPosition(ofVec2f position)
+{
+    int index = indexAtPoint(position);
+    GridCell * cell = &this->gridCells[index];
+
+    return cell -> meander_velocity;
 }
 
 

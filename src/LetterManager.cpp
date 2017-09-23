@@ -11,7 +11,7 @@ LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * meanderingDamping,
     ofxFloatSlider * meanderingSpeed,
     ofxFloatSlider * scrollSpeed,
-    ofxFloatSlider * magnet_factor,
+    ofxFloatSlider * wind_factor,
     ofxFloatSlider * pool_turn_speed,
     ofxFloatSlider * gravity,
     ofxFloatSlider * terminal_velocity)
@@ -31,7 +31,7 @@ LetterManager::LetterManager(Grid * grid,
     this -> meanderingSpeed    = meanderingSpeed;
     this -> scrollSpeed        = scrollSpeed;
 
-    this -> magnet_factor = magnet_factor;
+    this -> wind_factor = wind_factor;
 
     this -> generatePoolBoundaries();
 
@@ -153,11 +153,6 @@ const float LetterManager::getSpeedLimit()
     return this -> speed_limit;
 }
 
-float LetterManager::getMagnetFactor()
-{
-    return *this -> magnet_factor;
-}
-
 float LetterManager::getTurnSpeed()
 {
     return *this -> turn_speed;
@@ -171,4 +166,19 @@ float LetterManager::getGravity()
 float LetterManager::getTerminalVelocity()
 {
     return *this -> terminal_velocity;
+}
+
+float LetterManager::getTextScrollSpeed()
+{
+    return *this -> scrollSpeed;
+}
+
+float LetterManager::getSentancesPerSecond()
+{
+    return *this -> sentances_per_second;
+}
+
+float LetterManager::getWindFactor()
+{
+    return *this -> wind_factor;
 }

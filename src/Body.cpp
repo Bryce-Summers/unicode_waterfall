@@ -118,7 +118,10 @@ void Body::resolve_collision(Body * other)
         this -> revertToPrevious();
     }
 
-    
+    // this eliiminates elements that double reverse into restricted areas.
+    this  -> erasePrevious();
+    other -> erasePrevious();
+
 
     /* This is not working.
     // If everything fails, use a default collision specification.
@@ -148,11 +151,19 @@ void Body::revertToPrevious()
     ofVec2f pp = previous_position;
     float pa = previous_angle;
 
+    // -- We swap the previous information,
+    //    so that we can do bidirectional collision casting.
     previous_position = this -> position;
     previous_angle    = previous_angle;
 
     this -> position = pp;
     this -> angle    = pa;
+}
+
+void Body::erasePrevious()
+{
+    this -> previous_position = this -> position;
+    this -> previous_angle    = this -> angle;
 }
 
 bool Body::separatePenetratingBody(Body * other)
@@ -193,9 +204,10 @@ void Body::moveBody(ofVec2f old_location, ofVec2f new_location)
 
 void Body::updateDynamics(CollideInfo & info, Body * body2)
 {
-
+    
     Body * body1 = this;
     
+
     // Extract all relevant quantities,
     // Then convert this into a single dimensional collision problem.
     ofVec2f position1 = info.location1;
@@ -224,21 +236,34 @@ void Body::updateDynamics(CollideInfo & info, Body * body2)
     body2 -> addVelocityAtPt(-old_projected_velocity2 + new_projected_velocity2 + body2_away_from_body1, position2);
     
     body1 -> velocity.x *=10;
+
+    // body 1 to second body.
+    ofVec2f offset = position2 - position1;
+    offset.normalize();
+
+    body1 -> position -= offset*2;
+
+    //offset *= 200;
+
+    // Apply forces directly against the bodies.
+    //body1 -> velocity -= offset;
+    //body2 -> velocity +=  offset;
     
-    if (!body2 -> isDynamic() && body1 -> velocity.y < 0)
+    
+
+        
+    if (!body2 -> isDynamic())
     {
-        float y_half = body1 -> velocity.y/2;
-        body1 -> velocity.x += y_half;
-        body1 -> velocity.y -= y_half;
+       //body1 -> position.y -= 1;
     }
     
-    if (body1 -> velocity.length() < 10)
+    if (body1 -> velocity.length() < 100)
     {
         body1 -> velocity.normalize();
         body1 -> velocity *= 100;
     }
 
-    if (body2 -> isDynamic() && body2 -> velocity.length() < 10)
+    if (body2 -> isDynamic() && body2 -> velocity.length() < 100)
     {
         body2 -> velocity.normalize();
         body2 -> velocity *= 100;

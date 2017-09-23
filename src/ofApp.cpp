@@ -1,5 +1,8 @@
 #include "ofApp.h"
 
+#include <chrono>
+typedef std::chrono::high_resolution_clock Clock;
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 
@@ -12,15 +15,15 @@ void ofApp::setup(){
     gui.add(pool_y1.setup("pool_y1", 500, 0, h));
     gui.add(pool_y2.setup("pool_y2", 600, 0, h));
     gui.add(scroll_y.setup("scroll_y", 800, h / 2, h));
-    gui.add(sentances_per_second.setup("sentances_per_second", .1, .1, 1));
-    gui.add(meanderingDamping.setup("meanderingDamping", .5, 0, 1));
+    gui.add(sentances_per_second.setup("sentances_per_second", .2, .1, 1));
+    gui.add(meanderingDamping.setup("meanderingDamping", .009, 0, .1));
     gui.add(meanderingSpeed.setup("meanderingSpeed", 100, 0, 200));
-    gui.add(magnet_factor.setup("magnet_factor", 0.01, 0, 1));
+    gui.add(magnet_factor.setup("wind_factor", 0.01, 0, 1));
     gui.add(scrollSpeed.setup("scrollSpeed", 40, 20, 100));
     gui.add(poolTurnSpeed.setup("poolTurnSpeed", PI / 200, 0, PI/10));
     
-    gui.add(gravity.setup("gravity", 50, 20, 100));
-    gui.add(terminal_velocity.setup("terminal_velocity", 150, 70, 300));
+    gui.add(gravity.setup("gravity", 85, 20, 100));
+    gui.add(terminal_velocity.setup("terminal_velocity", 300, 70, 300));
 
 
     frame = 0;
@@ -99,7 +102,7 @@ void ofApp::loadFonts()
     for (int i = 0; i < len + 1; i++)
     {
         int length = font.stringWidth(accum);
-        cout << length << endl;
+        //cout << length << endl; // Number of letters.
         char c = str[i];
         accum.push_back(c);
     }
@@ -108,7 +111,7 @@ void ofApp::loadFonts()
 void ofApp::loadGridAndObstacles()
 {
     // A grid spaced out over the window width in 100 by 100 equal locations.
-    grid = new Grid(40, 40, ofGetWidth(), ofGetHeight());
+    grid = new Grid(20, 20, ofGetWidth(), ofGetHeight());
 
     // We will focus on getting the other stages in working order first.
     ofPolyline p;
@@ -200,10 +203,13 @@ size_t ofApp::stringLength(string & str)
 //--------------------------------------------------------------
 void ofApp::update(){
 
-    std::stringstream strm;
-    strm << "fps: " << ofGetFrameRate();
-    ofSetWindowTitle(strm.str());
+    timing++;
+    if (timing > 15)
+    {
+        timing = 0;
+    }
 
+    auto t1 = Clock::now();
 
     // Handle time and differences.
     float new_time = ofGetElapsedTimef(); // Time in seconds.
@@ -325,8 +331,9 @@ void ofApp::update(){
                 last_was_a_space,
                 line_index - 1); // last_was_a_space used to delliminate words.
             
-
-            while (grid -> detect_collision(l))
+            // Try 100 locations for a collision free.
+            int tries = 10;
+            while (grid -> detect_collision(l) && tries-- > 0)
             {
                 int x = margin + ofRandom(ofGetWidth() - margin * 2);
                 int y = -20 - ofRandom(y0_height);
@@ -348,6 +355,14 @@ void ofApp::update(){
         
     }
 
+    auto t2 = Clock::now();
+    // Letter Creation.
+    if(timing == 0)
+    std::cout << "Letter Creation: "
+        << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+        << " milliseconds" << std::endl;
+
+
     letter_manager -> update(dt);
 
     // We use a set to determine dead letters without duplication.
@@ -359,17 +374,35 @@ void ofApp::update(){
         (*iter) -> update(dt);
     }
 
+    auto t3 = Clock::now();
+    if (timing == 0)
+        std::cout << "letter updates: "
+        << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count()
+        << " milliseconds" << std::endl;
+
     // Second pass, update position.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
         (*iter) -> move(dt);
     }
 
+    auto t4 = Clock::now();
+    if (timing == 0)
+        std::cout << "letter moves: "
+        << std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count()
+        << " milliseconds" << std::endl;
+
     // Second pass, check for and resolve collisions.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
         (*iter) -> resolve_collision(dt);
     }
+
+    auto t5 = Clock::now();
+    if (timing == 0)
+        std::cout << "Resolving Collisions. "
+        << std::chrono::duration_cast<std::chrono::milliseconds>(t5 - t4).count()
+        << " milliseconds" << std::endl;
 
     // Dead collection pass.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
@@ -399,11 +432,24 @@ void ofApp::update(){
 
         // FIXME: Deposit this letter into a standbye repository of letters to save time allocating.
     }
+
+    // End of update.
+    auto t6 = Clock::now();
+    if (timing == 0)
+    std::cout << "Update: "
+        << std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count()
+        << " milliseconds" << std::endl;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw()
 {
+    auto t1 = Clock::now();
+
+    std::stringstream strm;
+    strm << "fps: " << ofGetFrameRate() << ", n = " << letters.size();
+    ofSetWindowTitle(strm.str());
+
     ofBackground(ofColor(255));
 
     // Hexadecimal color could be used form here maybe?
@@ -411,6 +457,8 @@ void ofApp::draw()
 
     int width = ofGetWidth();
     int height = ofGetHeight();
+
+    #ifdef DEBUG
     phase_1 = ofRectangle(0, 0, width, pool_y - 1);
 
     // 3 Pool Sections.
@@ -435,7 +483,6 @@ void ofApp::draw()
     ofSetColor(155, 255, 255); // blue.
     ofDrawRectangle(phase_3);
 
-    #ifdef DEBUG
     grid -> draw();
     #endif
 
@@ -445,7 +492,7 @@ void ofApp::draw()
         (**iter).draw();
     }
 
-    cout << letters.size() << endl;
+    //cout << letters.size() << endl;
 
     for (auto iter = obstacles.begin(); iter != obstacles.end(); iter++)
     {
@@ -467,7 +514,15 @@ void ofApp::draw()
 
     //font.drawString("Thy self thy foe, to thy sweet self too cruel:", 0, 400);
     */
-    
+
+    // End of draw.
+    auto t2 = Clock::now();
+
+    if(ofRandom(1) < .01)
+    std::cout << "Draw: "
+        << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+        << " milliseconds" << std::endl;
+
     gui.draw();
 }
 

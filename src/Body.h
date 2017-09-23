@@ -93,6 +93,9 @@ public:
     // Reverts this body to its last position and angle.
     // Only required if the body is dynamic.
     void revertToPrevious();
+
+    // In order to prevent a false reverting, we erase the false previous information.
+    void erasePrevious();
     virtual void updateCollidableFromPosition() = 0;
 
 private:

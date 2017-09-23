@@ -119,4 +119,6 @@ class ofApp : public ofBaseApp{
 
         ofxPanel gui;
 
+        int timing = 0;
+
 };
