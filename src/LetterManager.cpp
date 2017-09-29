@@ -8,13 +8,23 @@ LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * pool_y_divider_2,
     ofxFloatSlider * scroll_y,
 
-    ofxFloatSlider * meanderingDamping,
-    ofxFloatSlider * meanderingSpeed,
+    ofxFloatSlider * meanderingDamping_letters,
+    ofxFloatSlider * meanderingSpeed_letters,
+    ofxFloatSlider * meanderingDamping_words,
+    ofxFloatSlider * meanderingSpeed_words,
+    ofxFloatSlider * meanderingDamping_sentances,
+    ofxFloatSlider * meanderingSpeed_sentances,
+
+
     ofxFloatSlider * scrollSpeed,
     ofxFloatSlider * wind_factor,
     ofxFloatSlider * pool_turn_speed,
     ofxFloatSlider * gravity,
-    ofxFloatSlider * terminal_velocity)
+    ofxFloatSlider * terminal_velocity,
+
+    ofxFloatSlider * combine_delay_letters,
+    ofxFloatSlider * combine_delay_sentances,
+    ofxFloatSlider * max_time_between_scrolls)
 {
 
     this -> sentances_per_second = sentances_per_second;
@@ -27,8 +37,15 @@ LetterManager::LetterManager(Grid * grid,
 
     this -> text_scroll_y_coordinate = scroll_y;
 
-    this -> meanderingDamping  = meanderingDamping;
-    this -> meanderingSpeed    = meanderingSpeed;
+    this -> meanderingDamping_letters   = meanderingDamping_letters;
+    this -> meanderingSpeed_letters     = meanderingSpeed_letters;
+    this -> meanderingDamping_words     = meanderingDamping_words;
+    this -> meanderingSpeed_words       = meanderingSpeed_words;
+    this -> meanderingDamping_sentances = meanderingDamping_sentances;
+    this -> meanderingSpeed_sentances   = meanderingSpeed_sentances;
+
+
+
     this -> scrollSpeed        = scrollSpeed;
 
     this -> wind_factor = wind_factor;
@@ -42,6 +59,10 @@ LetterManager::LetterManager(Grid * grid,
 
     this -> gravity = gravity;
     this -> terminal_velocity = terminal_velocity;
+
+    this -> combine_delay_letters    = combine_delay_letters;
+    this -> combine_delay_sentances  = combine_delay_sentances;
+    this -> max_time_between_scrolls = max_time_between_scrolls;
 }
 
 
@@ -109,15 +130,31 @@ float LetterManager::getBottomY()
     return this -> bottom_y;
 }
 
-float LetterManager::getMeanderingDamping()
+float LetterManager::getMeanderingDamping(Combine_Stage stage)
 {
-    return *this -> meanderingDamping;
+    switch(stage)
+    {
+        case PARTIAL_WORD: return *this -> meanderingDamping_letters;
+        case PARTIAL_SENTANCE: return *this -> meanderingDamping_words;
+        case SENTANCE:
+        default:
+            return *this -> meanderingDamping_sentances;
+    }
+    
 }
 
-float LetterManager::getMeanderingSpeed()
+float LetterManager::getMeanderingSpeed(Combine_Stage stage)
 {
-    return *this -> meanderingSpeed;
+    switch (stage)
+    {
+        case PARTIAL_WORD:     return *this -> meanderingSpeed_letters;
+        case PARTIAL_SENTANCE: return *this -> meanderingSpeed_words;
+        case SENTANCE:
+        default:
+            return *this -> meanderingSpeed_sentances;
+    }
 }
+
 
 void LetterManager::generatePoolBoundaries()
 {
@@ -181,4 +218,19 @@ float LetterManager::getSentancesPerSecond()
 float LetterManager::getWindFactor()
 {
     return *this -> wind_factor;
+}
+
+float LetterManager::get_combine_delay_letters()
+{
+    return *this -> combine_delay_letters;
+}
+
+float LetterManager::get_combine_delay_sentances()
+{
+    return *this -> combine_delay_sentances;
+}
+
+float LetterManager::get_max_time_between_scrolls()
+{
+    return *this -> max_time_between_scrolls;
 }

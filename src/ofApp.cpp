@@ -11,19 +11,29 @@ void ofApp::setup(){
 
     // Initialize all of the sliders.
     gui.setup();
+
+
     gui.add(pool_y.setup("pool_y", 400, 0, h/2));
     gui.add(pool_y1.setup("pool_y1", 500, 0, h));
     gui.add(pool_y2.setup("pool_y2", 600, 0, h));
     gui.add(scroll_y.setup("scroll_y", 800, h / 2, h));
-    gui.add(sentances_per_second.setup("sentances_per_second", .2, .1, 1));
-    gui.add(meanderingDamping.setup("meanderingDamping", .009, 0, .1));
-    gui.add(meanderingSpeed.setup("meanderingSpeed", 100, 0, 200));
-    gui.add(magnet_factor.setup("wind_factor", 0.01, 0, 1));
+    gui.add(sentances_per_second.setup("sentances_per_second", .4555, .1, 1));
+    gui.add(gravity.setup("gravity", 5.455, 5, 100));
+    gui.add(terminal_velocity.setup("terminal_velocity", 82.65, 70, 300));
+
+    gui.add(meanderingDamping_letters.setup("curl_letters", .009, 0, .1));
+    gui.add(meanderingSpeed_letters.setup("m_speed_letters", 100, 0, 200));
+    gui.add(meanderingDamping_words.setup("curl_words", .009, 0, .1));
+    gui.add(meanderingSpeed_words.setup("m_speed_words", 100, 0, 200));
+    gui.add(meanderingDamping_sentances.setup("curl_sentances", .009, 0, .1));
+    gui.add(meanderingSpeed_sentances.setup("m_speed_sentances", 100, 0, 200));
+    gui.add(wind_factor.setup("wind_factor", 0.01, 0, 1));
     gui.add(scrollSpeed.setup("scrollSpeed", 40, 20, 100));
-    gui.add(poolTurnSpeed.setup("poolTurnSpeed", PI / 200, 0, PI/10));
-    
-    gui.add(gravity.setup("gravity", 85, 20, 100));
-    gui.add(terminal_velocity.setup("terminal_velocity", 300, 70, 300));
+    gui.add(poolTurnSpeed.setup("poolTurnSpeed", 0.015708, 0, PI/10));
+
+    gui.add(combine_delay_letters.setup("c_delay_letters", 1, 0.01, 10));
+    gui.add(combine_delay_sentances.setup("c_delay_sentances", 1, 0.01, 10));
+    gui.add(max_scroll_delay.setup("max_scroll_delay", 5, 1, 10));
 
 
     frame = 0;
@@ -48,13 +58,20 @@ void ofApp::setup(){
         &pool_y1,
         &pool_y2,
         &scroll_y,
-        &meanderingDamping,
-        &meanderingSpeed,
+        &meanderingDamping_letters,
+        &meanderingSpeed_letters,
+        &meanderingDamping_words,
+        &meanderingSpeed_words,
+        &meanderingDamping_sentances,
+        &meanderingSpeed_sentances,
         &scrollSpeed,
-        &magnet_factor,
+        &wind_factor,
         &poolTurnSpeed,
         &gravity,
-        &terminal_velocity
+        &terminal_velocity,
+        &combine_delay_letters,
+        &combine_delay_sentances,
+        &max_scroll_delay
    );
 
 }
@@ -447,7 +464,7 @@ void ofApp::draw()
     auto t1 = Clock::now();
 
     std::stringstream strm;
-    strm << "fps: " << ofGetFrameRate() << ", n = " << letters.size();
+    strm << "fps: " << floor(ofGetFrameRate()) << ", n = " << letters.size();
     ofSetWindowTitle(strm.str());
 
     ofBackground(ofColor(255));

@@ -3,6 +3,17 @@
 #include "grid.h"
 #include "ofxGui.h"
 
+enum Combine_Stage {
+    // Letters.
+    PARTIAL_WORD, // A group of letters that are not yet a full word.
+
+    // Words.
+    PARTIAL_SENTANCE, // A group of full words that is not yet an entire sentance.
+
+    // Sentances.
+    SENTANCE
+};
+
 class LetterManager
 {
 public:
@@ -15,13 +26,24 @@ public:
                   ofxFloatSlider * pool_y_divider_1,
                   ofxFloatSlider * pool_y_divider_2,
                   ofxFloatSlider * scroll_y,
-                  ofxFloatSlider * meanderingDamping,
-                  ofxFloatSlider * meanderingSpeed,
+
+                  ofxFloatSlider * meanderingDamping_letters,
+                  ofxFloatSlider * meanderingSpeed_letters,
+                  ofxFloatSlider * meanderingDamping_words,
+                  ofxFloatSlider * meanderingSpeed_words,
+                  ofxFloatSlider * meanderingDamping_sentances,
+                  ofxFloatSlider * meanderingSpeed_sentances,
+
                   ofxFloatSlider * scroll_speed,
                   ofxFloatSlider * magnet_factor,
                   ofxFloatSlider * pool_turn_speed,
                   ofxFloatSlider * gravity,
-                  ofxFloatSlider * terminal_velocity);
+                  ofxFloatSlider * terminal_velocity,
+
+                    ofxFloatSlider * combine_delay_letters,
+                    ofxFloatSlider * combine_delay_sentances,
+                    ofxFloatSlider * max_time_between_scrolls
+);
     ~LetterManager();
 
 private:
@@ -33,8 +55,20 @@ private:
     float time_till_next_scroll;
     vector<LineSegment *> pool_boundaries;
 
-    ofxFloatSlider * meanderingDamping;
-    ofxFloatSlider * meanderingSpeed;
+
+    ofxFloatSlider * meanderingDamping_letters;
+    ofxFloatSlider * meanderingSpeed_letters;
+    ofxFloatSlider * meanderingDamping_words;
+    ofxFloatSlider * meanderingSpeed_words;
+    ofxFloatSlider * meanderingDamping_sentances;
+    ofxFloatSlider * meanderingSpeed_sentances;
+
+
+    ofxFloatSlider * combine_delay_letters;
+    ofxFloatSlider * combine_delay_sentances;
+    ofxFloatSlider * max_time_between_scrolls;
+
+
     ofxFloatSlider * scrollSpeed;
 
     ofxFloatSlider * wind_factor;
@@ -85,9 +119,9 @@ public:
     // The user may neither modify the returned vector of the line segments inside.
     vector<LineSegment*> * getPoolBoundaries();
 
-    float getMeanderingDamping();
-    float getMeanderingSpeed();
-    float getMagnetFactor();
+    float getMeanderingDamping(Combine_Stage stage);
+    float getMeanderingSpeed(Combine_Stage stage);
+
 
     const float getSpeedLimit();
 
@@ -101,5 +135,10 @@ public:
     float getSentancesPerSecond();
 
     float getWindFactor();
+
+
+    float get_combine_delay_letters();
+    float get_combine_delay_sentances();
+    float get_max_time_between_scrolls();
 
 };

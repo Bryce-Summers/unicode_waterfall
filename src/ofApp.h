@@ -94,18 +94,29 @@ class ofApp : public ofBaseApp{
         ofxFloatSlider sentances_per_second = .3; //.3;
 
         // Amount that a given accelaration is damped for altering meandering direction.
-        ofxFloatSlider meanderingDamping = .5;
+        ofxFloatSlider meanderingDamping_letters = .5;
 
         // The constant speed that a pool word will meander at.
         // This should be faster if the pool is larger.
         //float meanderingSpeed = 50; // Pixels per second.
-        ofxFloatSlider meanderingSpeed = 100;
+        ofxFloatSlider meanderingSpeed_letters = 100;
         // 50 works for 800 wide pool.
         // 100 for 1920 wide pool.
 
-        // 0 for no magnet, 1.0 for instant magnet.
-        // .1 is quite fast.
-        ofxFloatSlider magnet_factor = 0.01;
+
+        // -- More meandering Sliders for each phase.
+        ofxFloatSlider meanderingDamping_words     =  .5;
+        ofxFloatSlider meanderingSpeed_words       = 100;
+        ofxFloatSlider meanderingDamping_sentances =  .5;
+        ofxFloatSlider meanderingSpeed_sentances   = 100;
+
+        ofxFloatSlider combine_delay_letters   = 1;
+        ofxFloatSlider combine_delay_sentances = 1;
+        ofxFloatSlider max_scroll_delay  = 1;
+
+
+        // How much the wind affects the letters.
+        ofxFloatSlider wind_factor = 0.01;
 
         // Rate at which sentances scroll down the screen in the Stage 3: text_scroll.
         ofxFloatSlider scrollSpeed = 40;

@@ -50,8 +50,11 @@ private:
 
 private:
 
-    float time = 0;
+    // Determines how much a letter is affected by wind.
+    float mass;
 
+
+    float time = 0;
 
     bool dead = false;
     enum State{WATERFALL, POOL, TEXT_SCROLL};
@@ -166,22 +169,15 @@ private:
 
     void setGroupState(State state);
     
-    enum Combine_Stage {
-        // Letters.
-        PARTIAL_WORD, // A group of letters that are not yet a full word.
 
-        // Words.
-        PARTIAL_SENTANCE, // A group of full words that is not yet an entire sentance.
-
-        // Sentances.
-        SENTANCE};
+    // Defined in LetterManager.h
     Combine_Stage combine_stage = PARTIAL_WORD;
+   
+    // local countdown time delay before letters combine into words.
+    float letter_combine_delay = 0;
 
-    // 3 seconds.
-    float time_delay_between_combines = 1;
-    float combine_delay = time_delay_between_combines;
-
-    float time_delay_between_sentance_combines = 1;
+    // Time delay before words combine into sentances.
+    // I use the word 'sentance, because this applies to word - word and word - sentance.
     float sentance_combine_delay = 0;
 
     float scroll_delay = 10;
@@ -243,6 +239,10 @@ private:
     void setAngleSpeed(float target, float percentage);
 
 
+    // This value should be used to steer letter away from singularities.
+    ofVec2f average_position;
+
+
 // Collision Detection.
 private:
     LetterManager * letterManager;
@@ -255,4 +255,6 @@ private:
     virtual void updatePositionFromCollidable();
 
     virtual void updateCollidableFromPosition();
+
+    void transitionToPool();
 };

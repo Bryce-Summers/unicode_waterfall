@@ -235,7 +235,8 @@ void Body::updateDynamics(CollideInfo & info, Body * body2)
     body1 -> addVelocityAtPt(-old_projected_velocity1 + new_projected_velocity1 + body1_away_from_body2, position1);
     body2 -> addVelocityAtPt(-old_projected_velocity2 + new_projected_velocity2 + body2_away_from_body1, position2);
     
-    body1 -> velocity.x *=10;
+    // Increase velocity to get letters away from the obstacle.
+    //body1 -> velocity.x *=2;
 
     // body 1 to second body.
     ofVec2f offset = position2 - position1;
