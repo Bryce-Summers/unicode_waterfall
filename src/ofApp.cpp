@@ -189,18 +189,27 @@ void ofApp::loadInputText()
     line_index = 0;
 
     ifstream fin; //declare a file stream  
-    fin.open(ofToDataPath("input.txt").c_str()); //open your text file  
 
-    string str; //declare a string for storage  
-    while(getline(fin, str))
+    //some path, may be absolute or relative to bin/data
+    string path = "./inputs/";
+    ofDirectory dir(path);
+    //only show png files
+    dir.allowExt("txt");
+    //populate the directory object
+    dir.listDir();
+
+    //go through and print out all the paths
+    for (int i = 0; i < dir.size(); i++)
     {
-        input.push_back(str); //push the string onto a vector of strings  
-    }
-    fin.close();
-    
-    for (int i = 0; i < input.size(); i++)
-    {
-        cout << input[i] << endl;
+        ofLogNotice(dir.getPath(i));
+        fin.open(ofToDataPath(dir.getPath(i)).c_str()); //open your text file  
+
+        string str; //declare a string for storage  
+        while(getline(fin, str))
+        {
+            input.push_back(str); //push the string onto a vector of strings  
+        }
+        fin.close();
     }
 
 }
@@ -243,7 +252,7 @@ void ofApp::update(){
     time_accum += dt;
 
     // Test String.
-    if (time_accum > 1.0 / this -> sentances_per_second && line_index < input.size())
+    if (time_accum > 1.0 / this -> sentances_per_second)
     {
         time_accum = 0;//-= this -> seconds_per_frame;
 
@@ -262,6 +271,13 @@ void ofApp::update(){
         Letter * previous_letter = NULL;
         //for(int i = 0; i < letters_per_sentance; i++)
         string line = input[line_index++];
+
+        // Cycle back to the first file and first line if the text runs out.
+        if (line_index >= input.size())
+        {
+            line_index = 0;
+        }
+
         bool last_was_a_space = false;
         int len = line.length();
         char last_char = ' ';

@@ -1,4 +1,16 @@
 <group>
 	<radius>256.5</radius>
 <group/>
+<pool_y>400</pool_y>
+	<pool_y1>500</pool_y1>
+	<pool_y2>600</pool_y2>
+	<scroll_y>800</scroll_y>
+	<sentances_per_second>0.1</sentances_per_second>
+	<meanderingDamping>0</meanderingDamping>
+	<meanderingSpeed>81</meanderingSpeed>
+	<magnet_factor>0.01</magnet_factor>
+	<scrollSpeed>100</scrollSpeed>
+	<poolTurnSpeed>0.015708</poolTurnSpeed>
+	<gravity>50</gravity>
+	<terminal_velocity>232.15</terminal_velocity>
 </group>
