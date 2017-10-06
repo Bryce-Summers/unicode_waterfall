@@ -4,6 +4,8 @@
 #include "ofxGui.h"
 
 enum Combine_Stage {
+    ALONE,
+
     // Letters.
     PARTIAL_WORD, // A group of letters that are not yet a full word.
 
@@ -25,7 +27,8 @@ public:
                   ofxFloatSlider * pool_y,
                   ofxFloatSlider * pool_y_divider_1,
                   ofxFloatSlider * pool_y_divider_2,
-                  ofxFloatSlider * scroll_y,
+                  ofxFloatSlider * scroll_y_start,
+                  ofxFloatSlider * scroll_y_end,
 
                   ofxFloatSlider * meanderingDamping_letters,
                   ofxFloatSlider * meanderingSpeed_letters,
@@ -41,6 +44,7 @@ public:
                   ofxFloatSlider * terminal_velocity,
 
                     ofxFloatSlider * combine_delay_letters,
+                    ofxFloatSlider * combine_delay_words,
                     ofxFloatSlider * combine_delay_sentances,
                     ofxFloatSlider * max_time_between_scrolls
 );
@@ -65,6 +69,7 @@ private:
 
 
     ofxFloatSlider * combine_delay_letters;
+    ofxFloatSlider * combine_delay_words;
     ofxFloatSlider * combine_delay_sentances;
     ofxFloatSlider * max_time_between_scrolls;
 
@@ -96,7 +101,8 @@ public:
     ofxFloatSlider * pool_y_divider_1;
     ofxFloatSlider * pool_y_divider_2;
 
-    ofxFloatSlider * text_scroll_y_coordinate;
+    ofxFloatSlider * text_scroll_y_coordinate_start;
+    ofxFloatSlider * text_scroll_y_coordinate_end;
 
     ofxFloatSlider * turn_speed;
 
@@ -110,7 +116,8 @@ public:
     float getPoolY();    // Divides waterfall and pool stages.
     float getPoolY_d1(); // Divider between letter and words pool sections.
     float getPoolY_d2(); // Divider between words and sentances sections.
-    float getScrollY();  // Divides pool and text scrolling stages.
+    float getScrollYStart();  // Divides pool and text scrolling stages.
+    float getScrollYEnd();  // Divides sentance formation from sentance scroll.
     
     float getBottomY(); // Bottom y coordinate for the world.
 
@@ -138,6 +145,7 @@ public:
 
 
     float get_combine_delay_letters();
+    float get_combine_delay_words();
     float get_combine_delay_sentances();
     float get_max_time_between_scrolls();
 

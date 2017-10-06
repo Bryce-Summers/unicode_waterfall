@@ -16,7 +16,8 @@ void ofApp::setup(){
     gui.add(pool_y.setup("pool_y", 400, 0, h/2));
     gui.add(pool_y1.setup("pool_y1", 500, 0, h));
     gui.add(pool_y2.setup("pool_y2", 600, 0, h));
-    gui.add(scroll_y.setup("scroll_y", 800, h / 2, h));
+    gui.add(scroll_y_start.setup("scroll_y_start", 800, h / 2, h));
+    gui.add(scroll_y_end.setup("scroll_y_end", 850, h / 2, h));
     gui.add(sentances_per_second.setup("sentances_per_second", .4555, .1, 1));
     gui.add(gravity.setup("gravity", 5.455, 5, 100));
     gui.add(terminal_velocity.setup("terminal_velocity", 82.65, 70, 300));
@@ -32,6 +33,7 @@ void ofApp::setup(){
     gui.add(poolTurnSpeed.setup("poolTurnSpeed", 0.015708, 0, PI/10));
 
     gui.add(combine_delay_letters.setup("c_delay_letters", 1, 0.01, 10));
+    gui.add(combine_delay_words.setup("c_delay_words", 1, 0.01, 10));
     gui.add(combine_delay_sentances.setup("c_delay_sentances", 1, 0.01, 10));
     gui.add(max_scroll_delay.setup("max_scroll_delay", 5, 1, 10));
 
@@ -57,7 +59,8 @@ void ofApp::setup(){
         &pool_y,
         &pool_y1,
         &pool_y2,
-        &scroll_y,
+        &scroll_y_start,
+        &scroll_y_end,
         &meanderingDamping_letters,
         &meanderingSpeed_letters,
         &meanderingDamping_words,
@@ -70,6 +73,7 @@ void ofApp::setup(){
         &gravity,
         &terminal_velocity,
         &combine_delay_letters,
+        &combine_delay_words,
         &combine_delay_sentances,
         &max_scroll_delay
    );
@@ -497,9 +501,10 @@ void ofApp::draw()
     // 3 Pool Sections.
     phase_2A = ofRectangle(0, pool_y, width, pool_y1 - pool_y - 1);
     phase_2B = ofRectangle(0, pool_y1, width, pool_y2 - pool_y1 - 1);
-    phase_2C = ofRectangle(0, pool_y2, width, scroll_y - pool_y2 - 1);
+    phase_2C = ofRectangle(0, pool_y2, width, scroll_y_start - pool_y2 - 1);
 
-    phase_3 = ofRectangle(0, scroll_y, width, height - scroll_y);
+    phase_3A = ofRectangle(0, scroll_y_start, width, scroll_y_end - scroll_y_start);
+    phase_3B = ofRectangle(0, scroll_y_end, width, height - scroll_y_start);
 
     ofSetColor(155, 255, 255); // blue.
     ofDrawRectangle(phase_1);
@@ -514,7 +519,10 @@ void ofApp::draw()
     ofDrawRectangle(phase_2C);
 
     ofSetColor(155, 255, 255); // blue.
-    ofDrawRectangle(phase_3);
+    ofDrawRectangle(phase_3A);
+
+    ofSetColor(255, 127, 129); // red.
+    ofDrawRectangle(phase_3B);
 
     grid -> draw();
     #endif

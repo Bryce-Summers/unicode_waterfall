@@ -168,29 +168,36 @@ void Letter::update(float dt)
         this -> position = center;       
     }*/
 
-    if (state == POOL && letter_combine_delay > 0)
+    if (state == POOL && combine_delay > 0)
     {
         // Handle words of length 1.
-        if (isStartOfWord() && isEndOfWord())
+        if (!word_complete && isStartOfWord() && isEndOfWord())
         {
             setWordComplete();
         }
 
-        letter_combine_delay -= dt;
-    }
+        combine_delay -= dt;
 
-    if (state == POOL && sentance_combine_delay > 0)
+        if (combine_stage == ALONE && combine_delay <= 0)
+        {
+            combine_stage = PARTIAL_WORD;
+            combine_delay = getStageDelay();
+        }
+
+    }
+    /*
+    else if (state == POOL && combine_delay > 0)
     {
-        sentance_combine_delay -= dt;        
-        if (sentance_combine_delay <= 0)
+        combine_delay -= dt;
+        if (combine_delay <= 0)
         {
             if(combine_stage == PARTIAL_SENTANCE)
             {
                 combine_stage = SENTANCE;
-                sentance_combine_delay = this -> letterManager -> get_combine_delay_sentances();
+                combine_delay = getStageDelay();
             }
         }
-    }
+    }*/
 
     // Bounce off side walls.
     if ((position.x < 10 && velocity.x < 0) || 
@@ -199,45 +206,50 @@ void Letter::update(float dt)
         velocity.x *= -1;
     }
 
+    stepAcceleration(dt);
+    stepVelocity(dt);
+
     // bounce off pool walls.
     if (state == POOL)
     {
-        float top    = this -> y_bound_top();
-        float bottom = this -> y_bound_bottom();
+        float top = this->y_bound_top();
+        float bottom = this->y_bound_bottom();
 
-        if (position.y < top && velocity.y < 0 ||
-            position.y > bottom && velocity.y > 0)
+        if ((position.y < top && velocity.y < 0) ||
+            (position.y > bottom && velocity.y > 0))
         {
             velocity.y *= -1;
         }
     }
 
-    stepAcceleration(dt);
-    stepVelocity(dt);
-
-    float mag = this -> acceleration.length();
-    if (mag > this -> letterManager -> getSpeedLimit())
+    // Bound the dynamics in the waterfall to avoid over energizing the letters.
+    if (state == WATERFALL)
     {
-        this -> acceleration.normalize();
-        this -> acceleration *= letterManager -> getSpeedLimit();
-    }
+        float mag = this -> acceleration.length();
+        if (mag > this -> letterManager -> getSpeedLimit())
+        {
+            this -> acceleration.normalize();
+            this -> acceleration *= letterManager -> getSpeedLimit();
+        }
 
-    // Now for velocity.
-    mag = this -> velocity.length();
-    if (mag > this -> letterManager -> getSpeedLimit())
-    {
-        this -> velocity.normalize();
-        this -> velocity *= letterManager -> getSpeedLimit();
-    }
+        // Now for velocity.
+        mag = this -> velocity.length();
+        if (mag > this -> letterManager -> getSpeedLimit())
+        {
+            this -> velocity.normalize();
+            this -> velocity *= letterManager -> getSpeedLimit();
+        }
 
-    // Bound the maximum angle speed.
+        // Bound the maximum angle speed.
     
-    float sign = angle_speed / abs(angle_speed);
-    float max_speed = PI/10/dt;
-    if (abs(angle_speed) > max_speed)
-    {
-        angle_speed = sign*max_speed;
+        float sign = angle_speed / abs(angle_speed);
+        float max_speed = PI/10/dt;
+        if (abs(angle_speed) > max_speed)
+        {
+            angle_speed = sign*max_speed;
+        }
     }
+
 }
 
 void Letter::move(float dt)
@@ -282,8 +294,10 @@ void Letter::move(float dt)
         this -> sentance_index == letterManager -> get_scroll_index())
     {        
         // Scroll if ready or if we have waited too long.
-        if(this -> sentance_complete == true || (scroll_delay < 0) && this -> sentance_index > 0)
+        if((this -> sentance_complete == true && combine_delay < 0) || ((scroll_delay < 0) && this -> sentance_index > 0))
         {
+            // We need to artificially combine the words if they haven't yet merged.
+            this -> setSentanceComplete();
             this -> setGroupState(TEXT_SCROLL);
             cout << "Index scrolled = " << this -> sentance_index << endl;
         }
@@ -522,20 +536,32 @@ void Letter::stepPoolA(float dt)
 {
 
 
-    ofVec2f velocity = grid->getMeanderVelocityAtPosition(this->position);
-    this->acceleration = velocity * this->letterManager->getMeanderingDamping(combine_stage);
+    ofVec2f velocity = grid -> getMeanderVelocityAtPosition(this -> position);
+    this -> acceleration = velocity * this -> letterManager -> getMeanderingDamping(combine_stage);
 
-    // Accelerate letters away from singularities.
-    ofVec2f singularity_avoidance = this->position - this->average_position;
-    float len = singularity_avoidance.length();
+    bool free;
+    ofVec2f target_position = this -> getTargetPosition(&free);
 
-    len = MAX(.01, len);
+    // Apply singularity for the leader.
+    if (free)
+    {
+        // Accelerate letters away from singularities.
+        ofVec2f singularity_avoidance = this->position - this->average_position;
+        float len = singularity_avoidance.length();
 
-    float mag = this->letterManager->getMeanderingSpeed(combine_stage) *
-        this->letterManager->getMeanderingDamping(combine_stage) / len / len;
-    singularity_avoidance *= mag;
+        len = MAX(.01, len);
 
-    this -> acceleration += singularity_avoidance;
+        float mag = this -> letterManager -> getMeanderingSpeed(combine_stage) *
+            this -> letterManager -> getMeanderingDamping(combine_stage) / len / len;
+        singularity_avoidance *= mag;
+
+        this -> acceleration += singularity_avoidance;
+    }
+    else
+    {
+        this -> acceleration += this->letterManager->getMeanderingSpeed(combine_stage) /this -> position.y - y_bound_top();
+    }
+    
     return;
 
 
@@ -550,8 +576,8 @@ void Letter::stepPoolA(float dt)
     // Interpolate the velocity to the pool speed.
 
     // Move the letter closer towards the center.
-    bool free;
-    ofVec2f target_position = this -> getTargetPosition(&free);
+
+    target_position = this -> getTargetPosition(&free);
 
     // Letter is in a sentance. i.e. not free.
     if (!free)
@@ -722,7 +748,7 @@ void Letter::stepPoolV(float dt)
             this -> velocity = this -> velocity * .1 + desired_velocity*speedup * .9;
             
             // Update angle to match where this letter is going.
-            float angle = atan2(desired_velocity.y, abs(desired_velocity.x));
+            float angle = getGlyphAngle(desired_velocity);
     
             // Gradually alter the angle to desired.
             setAngleSpeed(angle, turn_speed/dt);
@@ -748,7 +774,7 @@ void Letter::stepPoolV(float dt)
         }
 
         // Update angle to match where this letter is going.
-        float angle = atan2(velocity.y, abs(velocity.x));
+        float angle = getGlyphAngle(velocity);
         //this -> angle = angle;
         setAngleSpeed(angle, turn_speed/dt);
         
@@ -779,8 +805,8 @@ void Letter::stepPoolP(float dt)
 {
     dynamicsP(dt);
     
-    this -> position.x += ofRandom(2) - 1;
-    this -> position.y += ofRandom(2) - 1;
+    //this -> position.x += ofRandom(2) - 1;
+    //this -> position.y += ofRandom(2) - 1;
 }
 
 // Returns an appropriate position based on the stage.
@@ -824,7 +850,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
                 // same for symmetrical case below.
                 ofVec2f offset = output - this->position;
                 float dist_sqr = offset.lengthSquared();
-                float threshold = letterManager->getMeanderingSpeed(combine_stage);
+                float threshold = letterManager -> getMeanderingSpeed(combine_stage);
                 threshold = threshold*threshold;
                 if (dist_sqr < threshold) // 10^2
                 {
@@ -834,8 +860,9 @@ ofVec2f Letter::getTargetPosition(bool * free)
                     connect_to_left(); // Update letter, word, and sentance connectivity values.
 
                     setDriving(LEFT);
-                    letter_combine_delay = this -> letterManager -> get_combine_delay_letters();
-                    letter_to_my_left -> letter_combine_delay = letter_combine_delay;
+
+                    combine_delay = getStageDelay();
+                    letter_to_my_left -> combine_delay = combine_delay;
                     // FIXME: shoudl the letter to the right have a combine delay as well.
                 }
             }
@@ -853,7 +880,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
             {
                 ofVec2f offset = output - this -> position;
                 float dist_sqr = offset.lengthSquared();
-                float threshold = letterManager -> getMeanderingSpeed(combine_stage) * 3;
+                float threshold = letterManager -> getMeanderingSpeed(combine_stage);
                 threshold = threshold * threshold;
 
                 if (dist_sqr < threshold) // 10^2
@@ -863,8 +890,8 @@ ofVec2f Letter::getTargetPosition(bool * free)
 
                     connect_to_right(); // Update letter, word, and sentance connectivity values.
                     setDriving(LEFT);
-                    letter_combine_delay = this -> letterManager -> get_combine_delay_letters();
-                    letter_to_my_right -> letter_combine_delay = letter_combine_delay;
+                    combine_delay = getStageDelay();
+                    letter_to_my_right -> combine_delay = combine_delay;
                 }
             }
 
@@ -875,27 +902,27 @@ ofVec2f Letter::getTargetPosition(bool * free)
         // but delay combines to allow for proper circulation.
 
 
-        // Magnetize left.
-        if (letter_combine_delay < 0 && !connected_left && pool_goto_right_of_left() &&
-            letter_to_my_left -> letter_combine_delay < 0 &&
-            letter_to_my_left -> position.y > this -> y_bound_top())
+        // Magnetize left if the delays are proper and the object is in the correct pool.
+        if (!isStartOfSentance() &&
+            combine_delay < 0 && !connected_left && //&& pool_goto_right_of_left() &&
+            letter_to_my_left -> combine_delay < 0 &&
+            letter_to_my_left -> position.y > this -> y_bound_top() &&
+            letter_to_my_left -> position.y < this -> y_bound_bottom() &&
+            this -> position.y > this -> y_bound_top() &&
+            this -> position.y < this -> y_bound_bottom() &&
+            letter_to_my_left -> combine_stage == combine_stage)
         {
+            setMagnet(LEFT, true);
 
-            // Combine all words, but sentances after a delay.
-            if (!isStartOfWord() || sentance_combine_delay <= .1)
-            {
-                setMagnet(LEFT, true);
+            // We are no longer allowing right leaders.
+            //letter_to_my_left -> setMagnet(RIGHT, true);
+            setDriving(LEFT);
 
-                // We are no longer allowing right leaders.
-                //letter_to_my_left -> setMagnet(RIGHT, true);
-                setDriving(LEFT);
+            // Don't drive right, because it is broken.
+            //letter_to_my_left->setDriving(RIGHT);
 
-                // Don't drive right, because it is broken.
-                //letter_to_my_left->setDriving(RIGHT);
-
-                getOffsetPositionFromLeft(&output);
-                return output;
-            }
+            getOffsetPositionFromLeft(&output);
+            return output;
         }
 
 
@@ -940,7 +967,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
     {
         if (state == TEXT_SCROLL)
         {
-            return ofVec2f(left_scroll_margin, this -> position.y + text_scroll_speed);
+            return ofVec2f(left_scroll_margin, this -> position.y);
         }
 
         return this -> position;
@@ -1017,8 +1044,28 @@ void Letter::setGroupState(State state)
     } while (last_search -> connected_right);
 }
 
+void Letter::setGroupCombineStage(Combine_Stage stage)
+{
+    Letter * search = findStartOfConnectedGroup();
+    Letter * last_search;
+
+    // Set elements from left to right.
+    do
+    {
+        last_search = search;
+        search -> combine_stage = stage;
+        search = search -> letter_to_my_right;
+    } while (last_search -> connected_right);
+}
+
 inline bool Letter::pool_goto_right_of_left()
 {
+
+    if (combine_stage == ALONE)
+    {
+        return false;
+    }
+
     if (this -> letter_to_my_left == NULL)
     {
         return false;
@@ -1195,18 +1242,42 @@ void Letter::stepTextScrollV(float dt)
     velocity.x = 0;
     velocity.y = this -> letterManager -> getTextScrollSpeed();
 
+    ofVec2f leader_position = this -> findStartOfSentance() -> position;
+
+    if (leader_position.y > letterManager -> getScrollYStart())
+    {
+        // Interpolate based on progress of the leader.
+        float y_dist = leader_position.y - letterManager -> getScrollYStart();
+        float offset = letterManager->getScrollYEnd() - letterManager->getScrollYStart();
+
+        float percentage_x = MAX(0, MIN(y_dist / offset, 1));
+        float percentage_y = MAX(0, MIN(y_dist/offset, 1));
+
+        bool free;
+
+        ofVec2f target = getTargetPosition(&free);
+
+        velocity.x += (target.x - this -> position.x)/dt*(percentage_x*percentage_x*percentage_x);
+        velocity.y += (target.y - this -> position.y)/dt*percentage_y;
+
+        // We want the sentance to gradually interpolate by the time it reaches the to scroll stage.
+
+    }
+
+    /* // Uniform travel to the left.
     bool free;
-    velocity += (getTargetPosition(&free) - this -> position)*move_to_left;
+    velocity = (getTargetPosition(&free) - this -> position)*move_to_left;
+    */
 
     // Quickly eject the sentance form the pool, then scroll at constant scroll speed.
-    float dist_to_pool_end_y = this -> letterManager -> getScrollY() - this -> position.y;
+    float dist_to_pool_end_y = this -> letterManager -> getScrollYStart() - this -> position.y;
 
     if (dist_to_pool_end_y > 0)
     {
         velocity.y *= 3;
     }
     // Next scroll once per sentance.
-    else if(!left_pool && letter_to_my_left == NULL)
+    else if(!left_pool && isStartOfSentance())
     {
         // Let the letter Manager scoll another sentance.
         this -> letterManager -> next_scroll();
@@ -1323,14 +1394,34 @@ bool Letter::inPool()
 
 void Letter::connect_to_left()
 {
+    if (combine_stage == ALONE)
+    {
+        combine_stage = PARTIAL_WORD;
+    }
+    if (letter_to_my_left -> combine_stage == ALONE)
+    {
+        combine_stage = PARTIAL_WORD;
+    }
+    
+
     connected_left = true;
     letter_to_my_left -> connected_right = true;
     update_word_sentance_connectivity();
+
     return;
 }
 
 void Letter::connect_to_right()
 {
+    if (combine_stage == ALONE)
+    {
+        combine_stage = PARTIAL_WORD;
+    }
+    if (letter_to_my_right -> combine_stage == ALONE)
+    {
+        combine_stage = PARTIAL_WORD;
+    }
+
     connected_right = true;
     letter_to_my_right -> connected_left = true;
     update_word_sentance_connectivity();
@@ -1367,7 +1458,7 @@ void Letter::setWordComplete()
         search -> combine_stage = PARTIAL_SENTANCE;
         //cout << search -> character;
 
-        search -> sentance_combine_delay = this -> letterManager -> get_combine_delay_sentances();
+        search -> combine_delay = getStageDelay();
 
 
         // Iterate.
@@ -1390,6 +1481,7 @@ void Letter::setSentanceComplete()
         latest_search = search;
         search -> sentance_complete = true;
         search -> combine_stage = SENTANCE;
+        search -> combine_delay = getStageDelay();
 
         // Iterate.
         search = search -> letter_to_my_left;
@@ -1401,6 +1493,7 @@ void Letter::setSentanceComplete()
     {
         latest_search = search;
         search -> sentance_complete = true;
+        search -> combine_delay = getStageDelay();
 
         // Iterate.
         search = search -> letter_to_my_right;
@@ -1564,12 +1657,13 @@ float Letter::y_bound_top()
     {
         switch (combine_stage)
         {
-            case PARTIAL_WORD:
+            case ALONE:
                 return letterManager -> getPoolY();
                 break;
-            case PARTIAL_SENTANCE:
+            case PARTIAL_WORD:
                 return letterManager -> getPoolY_d1();
                 break;
+            case PARTIAL_SENTANCE:
             case SENTANCE:
                 return letterManager -> getPoolY_d2();
                 break;
@@ -1578,7 +1672,7 @@ float Letter::y_bound_top()
 
     if (state == TEXT_SCROLL)
     {
-        return letterManager -> getScrollY();
+        return letterManager -> getScrollYStart();
     }
 
     cerr << "ERROR: Letter State: " << state << ", combine_stage: " << combine_stage << " unrecognized." << endl;
@@ -1593,16 +1687,18 @@ float Letter::y_bound_bottom()
 
     if (state == POOL)
     {
+
         switch (combine_stage)
         {
-        case PARTIAL_WORD:
+        case ALONE:
             return letterManager -> getPoolY_d1();
             break;
-        case PARTIAL_SENTANCE:
+        case PARTIAL_WORD:
             return letterManager -> getPoolY_d2();
             break;
+        case PARTIAL_SENTANCE:
         case SENTANCE:
-            return letterManager -> getScrollY();
+            return letterManager -> getScrollYStart();
             break;
         }
     }
@@ -1643,8 +1739,7 @@ void Letter::transitionToPool()
 {
     state = POOL;
 
-    letter_combine_delay = this->letterManager->get_combine_delay_letters();
-    sentance_combine_delay = this->letterManager->get_combine_delay_sentances();
+    combine_delay = this -> getStageDelay();// ALONE.
 
     // Letters in the pool no longer care about collision detection.
     disable_collision_detection();
@@ -1653,4 +1748,29 @@ void Letter::transitionToPool()
     this -> velocity = ofVec2f(0, 0);
 
     this -> angle_speed = 0;
+}
+
+float Letter::getStageDelay()
+{
+    switch (combine_stage)
+    {
+        case ALONE:        return letterManager -> get_combine_delay_letters();
+        case PARTIAL_WORD: return letterManager -> get_combine_delay_words();
+        case PARTIAL_SENTANCE: return letterManager -> get_combine_delay_sentances();
+        case SENTANCE: return letterManager -> get_max_time_between_scrolls();
+    }
+}
+
+float Letter::getGlyphAngle(ofVec2f & desired_velocity)
+{
+    // Update angle to match where this letter is going.
+    float angle_x = desired_velocity.x;
+    float angle_y = desired_velocity.y;
+    if (angle_x < 0)
+    {
+        angle_x *= -1;
+        angle_y *= -1;
+    }
+    float angle = atan2(angle_y, angle_x);
+    return angle;
 }

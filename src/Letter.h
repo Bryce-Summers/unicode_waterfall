@@ -171,14 +171,10 @@ private:
     
 
     // Defined in LetterManager.h
-    Combine_Stage combine_stage = PARTIAL_WORD;
+    Combine_Stage combine_stage = ALONE;
    
-    // local countdown time delay before letters combine into words.
-    float letter_combine_delay = 0;
-
-    // Time delay before words combine into sentances.
-    // I use the word 'sentance, because this applies to word - word and word - sentance.
-    float sentance_combine_delay = 0;
+    // countdown before letters move on to the next combine or stage.
+    float combine_delay = 0;
 
     float scroll_delay = 10;
 
@@ -199,6 +195,8 @@ private:
 
     // Returns a pointer to the first letter in the sentance.
     Letter * findEndOfSentance();
+
+    void setGroupCombineStage(Combine_Stage stage);
 
 
     // Calculate the target position based on the left letter.
@@ -257,4 +255,8 @@ private:
     virtual void updateCollidableFromPosition();
 
     void transitionToPool();
+
+    float getStageDelay();
+
+    float getGlyphAngle(ofVec2f & desired_velocity);
 };

@@ -6,7 +6,8 @@ LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * pool_y,
     ofxFloatSlider * pool_y_divider_1,
     ofxFloatSlider * pool_y_divider_2,
-    ofxFloatSlider * scroll_y,
+    ofxFloatSlider * scroll_y_start,
+    ofxFloatSlider * scroll_y_end,
 
     ofxFloatSlider * meanderingDamping_letters,
     ofxFloatSlider * meanderingSpeed_letters,
@@ -23,6 +24,7 @@ LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * terminal_velocity,
 
     ofxFloatSlider * combine_delay_letters,
+    ofxFloatSlider * combine_delay_words,
     ofxFloatSlider * combine_delay_sentances,
     ofxFloatSlider * max_time_between_scrolls)
 {
@@ -35,7 +37,8 @@ LetterManager::LetterManager(Grid * grid,
     this -> pool_y_divider_1  = pool_y_divider_1;
     this -> pool_y_divider_2  = pool_y_divider_2,
 
-    this -> text_scroll_y_coordinate = scroll_y;
+    this -> text_scroll_y_coordinate_start = scroll_y_start;
+    this -> text_scroll_y_coordinate_end   = scroll_y_end;
 
     this -> meanderingDamping_letters   = meanderingDamping_letters;
     this -> meanderingSpeed_letters     = meanderingSpeed_letters;
@@ -61,6 +64,7 @@ LetterManager::LetterManager(Grid * grid,
     this -> terminal_velocity = terminal_velocity;
 
     this -> combine_delay_letters    = combine_delay_letters;
+    this -> combine_delay_words      = combine_delay_words;
     this -> combine_delay_sentances  = combine_delay_sentances;
     this -> max_time_between_scrolls = max_time_between_scrolls;
 }
@@ -120,9 +124,14 @@ float LetterManager::getPoolY_d2()
     return *this -> pool_y_divider_2;
 }
 
-float LetterManager::getScrollY()
+float LetterManager::getScrollYStart()
 {
-    return *this -> text_scroll_y_coordinate;
+    return *this -> text_scroll_y_coordinate_start;
+}
+
+float LetterManager::getScrollYEnd()
+{
+    return *this -> text_scroll_y_coordinate_end;
 }
 
 float LetterManager::getBottomY()
@@ -147,6 +156,7 @@ float LetterManager::getMeanderingSpeed(Combine_Stage stage)
 {
     switch (stage)
     {
+        case ALONE:            return *this -> meanderingSpeed_letters;
         case PARTIAL_WORD:     return *this -> meanderingSpeed_letters;
         case PARTIAL_SENTANCE: return *this -> meanderingSpeed_words;
         case SENTANCE:
@@ -161,7 +171,7 @@ void LetterManager::generatePoolBoundaries()
     float x0 = 0;
     float x1 = ofGetWidth();
     float y0 = *pool_y_coordinate;
-    float y1 = *text_scroll_y_coordinate;
+    float y1 = *text_scroll_y_coordinate_start;
 
     ofVec2f xy00 = ofVec2f(x0, y0);
     ofVec2f xy01 = ofVec2f(x0, y1);
@@ -223,6 +233,11 @@ float LetterManager::getWindFactor()
 float LetterManager::get_combine_delay_letters()
 {
     return *this -> combine_delay_letters;
+}
+
+float LetterManager::get_combine_delay_words()
+{
+    return *this -> combine_delay_words;
 }
 
 float LetterManager::get_combine_delay_sentances()
