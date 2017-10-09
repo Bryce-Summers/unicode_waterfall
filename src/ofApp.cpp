@@ -19,10 +19,10 @@ void ofApp::setup(){
     gui.add(scroll_y_start.setup("scroll_y_start", 800, h / 2, h));
     gui.add(scroll_y_end.setup("scroll_y_end", 850, h / 2, h));
     gui.add(sentances_per_second.setup("sentances_per_second", .4555, .1, 1));
-    gui.add(gravity.setup("gravity", 5.455, 5, 100));
-    gui.add(terminal_velocity.setup("terminal_velocity", 82.65, 70, 300));
+    gui.add(gravity.setup("gravity", 5.455, 5, 100)); // accelartion
+    gui.add(terminal_velocity.setup("terminal_velocity", 82.65, 70, 300)); // max speed
 
-    gui.add(meanderingDamping_letters.setup("curl_letters", .009, 0, .1));
+    gui.add(meanderingDamping_letters.setup("curl_letters", .009, 0, .1)); // rate of which they wurrle. 0= linear
     gui.add(meanderingSpeed_letters.setup("m_speed_letters", 100, 0, 200));
     gui.add(meanderingDamping_words.setup("curl_words", .009, 0, .1));
     gui.add(meanderingSpeed_words.setup("m_speed_words", 100, 0, 200));
@@ -32,12 +32,13 @@ void ofApp::setup(){
     gui.add(scrollSpeed.setup("scrollSpeed", 40, 20, 100));
     gui.add(poolTurnSpeed.setup("poolTurnSpeed", 0.015708, 0, PI/10));
 
-    gui.add(combine_delay_letters.setup("c_delay_letters", 1, 0.01, 10));
-    gui.add(combine_delay_words.setup("c_delay_words", 1, 0.01, 10));
+    gui.add(combine_delay_letters.setup("c_delay_letters", 1, 0.01, 10)); // how long to wait until going to next zone
+    gui.add(combine_delay_words.setup("c_delay_words", 1, 0.01, 10)); //how long do partial words wait before looking for neighbours
     gui.add(combine_delay_sentances.setup("c_delay_sentances", 1, 0.01, 10));
     gui.add(max_scroll_delay.setup("max_scroll_delay", 5, 1, 10));
 
-
+ gui.loadFromFile("gui.xml");
+    
     frame = 0;
 
     //string unicode_test = "Testing «ταБЬℓσ» : 1<2 & 4 + 1>3, now 20 % off!";
@@ -495,7 +496,7 @@ void ofApp::draw()
     int width = ofGetWidth();
     int height = ofGetHeight();
 
-    #ifdef DEBUG
+//    #ifdef DEBUG
     phase_1 = ofRectangle(0, 0, width, pool_y - 1);
 
     // 3 Pool Sections.
@@ -524,8 +525,8 @@ void ofApp::draw()
     ofSetColor(255, 127, 129); // red.
     ofDrawRectangle(phase_3B);
 
-    grid -> draw();
-    #endif
+//    grid -> draw();
+//    #endif
 
     // Draw all of the letters to the screen.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
@@ -569,7 +570,7 @@ void ofApp::draw()
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
+if(key == 'g')  gui.saveToFile("gui.xml");
 }
 
 //--------------------------------------------------------------
