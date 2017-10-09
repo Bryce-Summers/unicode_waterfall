@@ -1,0 +1,24 @@
+<group>
+	<pool_y>335</pool_y>
+	<pool_y1>445</pool_y1>
+	<pool_y2>620</pool_y2>
+	<scroll_y_start>790</scroll_y_start>
+	<scroll_y_end>857</scroll_y_end>
+	<sentances_per_second>0.3</sentances_per_second>
+	<gravity>30</gravity>
+	<terminal_velocity>80</terminal_velocity>
+	<curl_letters>0.0635</curl_letters>
+	<m_speed_letters>67</m_speed_letters>
+	<curl_words>0.0645</curl_words>
+	<m_speed_words>50</m_speed_words>
+	<curl_sentances>0.062</curl_sentances>
+	<m_speed_sentances>181</m_speed_sentances>
+	<wind_factor>0.425</wind_factor>
+	<scrollSpeed>28</scrollSpeed>
+	<poolTurnSpeed>0.0596903</poolTurnSpeed>
+	<c_delay_letters>5</c_delay_letters>
+	<c_delay_words>1</c_delay_words>
+	<c_delay_sentances>1</c_delay_sentances>
+	<max_scroll_delay>3.88</max_scroll_delay>
+<group/>
+</group>
