@@ -25,12 +25,12 @@ void Body::resolve_collision(Body * other)
         return;
     }
 
-    /*
-    // Ignore static collisions for now.
-    if(!other -> isDynamic())
+    if (other -> isDynamic())
     {
         return;
-    }*/
+    }
+
+    // ASSUMPTION: This is a dynamic object and other is static.
 
     /*ASSUMPTION: this body has moved along velocity and penetrated b2.
     * We resolve the collision as follows:

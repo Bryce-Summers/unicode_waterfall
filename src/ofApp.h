@@ -46,12 +46,6 @@ class ofApp : public ofBaseApp{
         bool bFirst;
         string typeStr;
 
-        ofTrueTypeFont  franklinBook14;
-        ofTrueTypeFont	verdana14;
-        ofTrueTypeFont	verdana30;
-
-        ofTrueTypeFont  franklinBook14A;
-        ofTrueTypeFont	verdana14A;
 
         ofTrueTypeFont font;
 
@@ -127,6 +121,9 @@ class ofApp : public ofBaseApp{
     
     ofxFloatSlider gravity;// = 30;// pixels / time / time.
     ofxFloatSlider terminal_velocity;// = 80;
+
+    ofxFloatSlider dead_zone_height;
+    ofxFloatSlider wordToSentancePoolDelay;
     
         // -- Parameters that can be tweaked.
 

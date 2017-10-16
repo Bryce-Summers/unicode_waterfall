@@ -46,7 +46,9 @@ public:
                     ofxFloatSlider * combine_delay_letters,
                     ofxFloatSlider * combine_delay_words,
                     ofxFloatSlider * combine_delay_sentances,
-                    ofxFloatSlider * max_time_between_scrolls
+                    ofxFloatSlider * max_time_between_scrolls,
+                    ofxFloatSlider * getDeadZoneHeight,
+                    ofxFloatSlider * getWordToSentancePoolDelay
 );
     ~LetterManager();
 
@@ -109,6 +111,9 @@ public:
     ofxFloatSlider * gravity;
     ofxFloatSlider * terminal_velocity;
 
+    ofxFloatSlider * deadZoneHeight;
+    ofxFloatSlider * wordToSentancePoolDelay;
+
     float bottom_y;
 
 
@@ -149,4 +154,7 @@ public:
     float get_combine_delay_sentances();
     float get_max_time_between_scrolls();
 
+    
+    float getDeadZoneHeight();
+    float getWordToSentancePoolDelay();
 };

@@ -26,7 +26,9 @@ LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * combine_delay_letters,
     ofxFloatSlider * combine_delay_words,
     ofxFloatSlider * combine_delay_sentances,
-    ofxFloatSlider * max_time_between_scrolls)
+    ofxFloatSlider * max_time_between_scrolls,
+    ofxFloatSlider * deadZoneHeight,
+    ofxFloatSlider * wordToSentancePoolDelay)
 {
 
     this -> sentances_per_second = sentances_per_second;
@@ -67,6 +69,10 @@ LetterManager::LetterManager(Grid * grid,
     this -> combine_delay_words      = combine_delay_words;
     this -> combine_delay_sentances  = combine_delay_sentances;
     this -> max_time_between_scrolls = max_time_between_scrolls;
+
+    this -> deadZoneHeight          = deadZoneHeight;
+    this -> wordToSentancePoolDelay = wordToSentancePoolDelay;
+    
 }
 
 
@@ -143,6 +149,7 @@ float LetterManager::getMeanderingDamping(Combine_Stage stage)
 {
     switch(stage)
     {
+        case ALONE: return *this -> meanderingDamping_letters;
         case PARTIAL_WORD: return *this -> meanderingDamping_letters;
         case PARTIAL_SENTANCE: return *this -> meanderingDamping_words;
         case SENTANCE:
@@ -248,4 +255,14 @@ float LetterManager::get_combine_delay_sentances()
 float LetterManager::get_max_time_between_scrolls()
 {
     return *this -> max_time_between_scrolls;
+}
+
+float LetterManager::getDeadZoneHeight()
+{
+    return *this -> deadZoneHeight;
+}
+
+float LetterManager::getWordToSentancePoolDelay()
+{
+    return *this -> wordToSentancePoolDelay;
 }

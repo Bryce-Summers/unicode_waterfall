@@ -57,8 +57,18 @@ private:
     float time = 0;
 
     bool dead = false;
-    enum State{WATERFALL, POOL, TEXT_SCROLL};
+    enum State{WATERFALL, POOL, COMBINE, TEXT_SCROLL};
     State state;
+
+    // Note: Behavior is a combination of state and and combine_state.
+    // Their are three main stages: Letters, Words, and Sentances.
+    // Each of these states has three parts:
+    // 1. The structures form at the top.
+    // 2. The structures fall through the middle.
+    // 3. The strucutres pool at the bottom,
+    //    waiting for all of the neighbor structures to also be in the pool.
+    // The structures then move into the forming pool at the top of the next screen.
+
 
     // 1.0 is fast, 0.0 is not at all.
     float move_to_left = 1.0;
@@ -77,6 +87,7 @@ private:
     int char_height;
     bool allocated = false; // Texture and collidable object have been allocated.
     //ofFbo fbo; // 9.12.17 we will no longer be baking characters into textures.
+               
     ofFloatColor background_color = ofFloatColor(1.0, 1.0, 1.0);
 
     ofTrueTypeFont * font;
@@ -175,8 +186,8 @@ private:
    
     // countdown before letters move on to the next combine or stage.
     float combine_delay = 0;
-
     float scroll_delay = 10;
+    float sentance_pooling_delay = 0;
 
     // FIXME: ensure that the complete sentances are scrolled in the correct order.
     //int my_sentance_index;

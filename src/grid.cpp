@@ -23,13 +23,16 @@ void Grid::draw()
         // Ignore cells with no obstacles in them.
         if (cell.size() <= 0)
         {
-            continue;
+            //continue;
         }
 
         ofSetColor(0);
         ofNoFill();
-        ofRect(cell.screen_x, cell.screen_y, gridX2screen, gridY2screen);
-        ofDrawBitmapString(cell.size(), cell.screen_x, cell.screen_y + 20);
+        //ofRect(cell.screen_x, cell.screen_y, gridX2screen, gridY2screen);
+        //ofDrawBitmapString(cell.size(), cell.screen_x, cell.screen_y + 20);
+
+        ofVec2f position = ofVec2f(cell.screen_x, cell.screen_y);
+        ofDrawLine(position, position + cell.meander_velocity/1000);
     }
 
 }
@@ -257,6 +260,7 @@ bool Grid::resolve_collisions(Body * dynamic_obj)
 
 bool Grid::detect_collision(Body * obj)
 {
+
     // Nothing needs doing if the input object is not dynamic.
     
     Collidable * collidable = obj -> getCollidable();
@@ -298,6 +302,11 @@ bool Grid::detect_collision(Body * obj)
 
         // No collidable -> no collision can be determined.
         if (c2 == NULL)
+        {
+            continue;
+        }
+
+        if (other -> isDynamic())
         {
             continue;
         }

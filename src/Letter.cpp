@@ -27,8 +27,8 @@ Letter::Letter(
     collidable = NULL;
     collision_detection = true;
 
-    this -> enable_collision_detection();
-    //this -> disable_collision_detection();// FIXME: Remove this once we are ready to retest collisions.
+    //this -> enable_collision_detection();
+    this -> disable_collision_detection();// FIXME: Remove this once we are ready to retest collisions.
 
     // State.
     this -> letter_to_my_left  = left;
@@ -125,13 +125,11 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
     ofSetColor(0, 0, 0, 255);
 
     // We draw the string at the ascender height to make the glpyhs level with each other.
-    font -> drawString(s, 0, font -> getAscenderHeight());
+    font -> drawString(str, 0, font -> getAscenderHeight());
     this -> fbo.end();
 
-    */
-
     ofDisableLighting();
-    
+    */
 
     // Initialize Oriented Bounding Box Collision Geometry.
     this -> collidable = new OBB(position.x, position.y, width/2, height/2, this -> angle);
@@ -250,6 +248,14 @@ void Letter::update(float dt)
         }
     }
 
+    if (sentance_pooling_delay > 0 && combine_stage == PARTIAL_WORD)
+    {
+        sentance_pooling_delay -= dt;
+        if(sentance_pooling_delay <= 0)
+        {
+            setGroupCombineStage(PARTIAL_SENTANCE);
+        }
+    }
 }
 
 void Letter::move(float dt)
@@ -346,6 +352,21 @@ void Letter::move(float dt)
 
     average_position = this -> position * .01 + .99*average_position;
 
+    // Handle letters without a place.
+    if (position.y < -10*char_height)
+    {
+        int tries = 10;
+  
+        const int margin = 20;
+        float y0_height = margin * 10;
+        while (grid -> detect_collision(this) && tries-- > 0)
+        {
+            int x = margin + ofRandom(ofGetWidth() - margin * 2);
+            int y = -20 - ofRandom(y0_height);
+            this -> setPosition(x, y);
+        }
+    }
+
 }
 
 void Letter::resolve_collision(float dt)
@@ -369,11 +390,14 @@ void Letter::draw()
     float y = position.y;
     float angle = this -> angle;
 
+    /*
     ofPushMatrix();//will isolate the transform
     ofTranslate(x, y); // Move the 0 coordinate to location (px, py)
     ofRotate(ofRadToDeg(angle));
     int w = this -> char_width;  //fbo.getWidth();
     int h = this -> char_height; //fbo.getHeight();
+    */
+    int h = this->char_height; //fbo.getHeight();
 
     // Draws this glyph with the origin at its center point.
     // draws in local space, because of ofTranslate call.
@@ -381,11 +405,24 @@ void Letter::draw()
     // This needs to be drawn aligned with the left border for text scrolling,
     // but the middle alignment works better for rotations.
     //this -> fbo.draw(0, -h/2);//-w/2 This is what I used when baking textures.
-    ofSetColor(0, 0, 0, 255); // Letters are black.
-    font -> drawString(this -> str, 0, font -> getAscenderHeight() - h/2);
 
+    //this -> fbo.draw(x, y -h / 2);
+    
 
+    // -- With matrices is too slow.
+    //font -> drawString(this -> str, 0, font -> getAscenderHeight() - h/2);
+
+    // Without matrices is too slow.
+    font -> drawString(this->str, x, y + font->getAscenderHeight() - h / 2);
+
+    // Bitmap string is too slow.
+    //ofDrawBitmapString(this->str, x, y + font->getAscenderHeight() - h / 2);
+
+    //ofDrawCircle(ofVec2f(x, y), 5);
+
+    /*
     ofPopMatrix();//will stop other things from being drawn rotated
+    */
 
     
     #ifdef DEBUG
@@ -538,6 +575,14 @@ void Letter::stepPoolA(float dt)
 
     ofVec2f velocity = grid -> getMeanderVelocityAtPosition(this -> position);
     this -> acceleration = velocity * this -> letterManager -> getMeanderingDamping(combine_stage);
+    
+    // Don't accelerate the letter if we are near a dead zone.
+    float dead_zone = letterManager -> getDeadZoneHeight();
+    if (abs(this->position.y - y_bound_top()) < dead_zone ||
+        abs(this->position.y - y_bound_bottom()) < dead_zone)
+    {
+        this -> acceleration = ofVec2f(0, 0);
+    }
 
     bool free;
     ofVec2f target_position = this -> getTargetPosition(&free);
@@ -557,10 +602,8 @@ void Letter::stepPoolA(float dt)
 
         this -> acceleration += singularity_avoidance;
     }
-    else
-    {
-        this -> acceleration += this->letterManager->getMeanderingSpeed(combine_stage) /this -> position.y - y_bound_top();
-    }
+
+    // Special boundary avoidance could be put here, but it has created mysterious bugs in the past.
     
     return;
 
@@ -850,7 +893,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
                 // same for symmetrical case below.
                 ofVec2f offset = output - this->position;
                 float dist_sqr = offset.lengthSquared();
-                float threshold = letterManager -> getMeanderingSpeed(combine_stage);
+                float threshold = this -> char_height*2;
                 threshold = threshold*threshold;
                 if (dist_sqr < threshold) // 10^2
                 {
@@ -903,14 +946,14 @@ ofVec2f Letter::getTargetPosition(bool * free)
 
 
         // Magnetize left if the delays are proper and the object is in the correct pool.
-        if (!isStartOfSentance() &&
+        if (!isStartOfSentance() && !(isStartOfWord() && combine_stage == PARTIAL_WORD) &&
             combine_delay < 0 && !connected_left && //&& pool_goto_right_of_left() &&
             letter_to_my_left -> combine_delay < 0 &&
             letter_to_my_left -> position.y > this -> y_bound_top() &&
             letter_to_my_left -> position.y < this -> y_bound_bottom() &&
             this -> position.y > this -> y_bound_top() &&
             this -> position.y < this -> y_bound_bottom() &&
-            letter_to_my_left -> combine_stage == combine_stage)
+            letter_to_my_left -> combine_stage == this -> combine_stage)
         {
             setMagnet(LEFT, true);
 
@@ -944,7 +987,9 @@ ofVec2f Letter::getTargetPosition(bool * free)
 
 
         // Follow left connection.
-        if (connected_left && driving == LEFT)
+        if (connected_left && driving == LEFT &&
+            letter_to_my_left -> position.y > this -> y_bound_top() &&
+            letter_to_my_left -> position.y < this -> y_bound_bottom())
         {
             getOffsetPositionFromLeft(&output);
             return output;
@@ -1433,6 +1478,7 @@ void Letter::update_word_sentance_connectivity()
     if (!word_complete && isWordComplete())
     {
         setWordComplete();
+        
     }
 
     if (word_complete && !sentance_complete && isSentanceComplete())
@@ -1455,11 +1501,15 @@ void Letter::setWordComplete()
     {
         latest_search = search;
         search -> word_complete = true;
-        search -> combine_stage = PARTIAL_SENTANCE;
+        //search -> combine_stage = PARTIAL_SENTANCE;
+        search -> sentance_pooling_delay = letterManager -> getWordToSentancePoolDelay();
         //cout << search -> character;
 
         search -> combine_delay = getStageDelay();
 
+        // Demagnetize all of the elements, so that the word flows to the sentance phase before continuing to combine.
+        search -> magnet_left = false;
+        search -> magnet_right = false;
 
         // Iterate.
         search = search -> letter_to_my_right;
@@ -1483,9 +1533,19 @@ void Letter::setSentanceComplete()
         search -> combine_stage = SENTANCE;
         search -> combine_delay = getStageDelay();
 
+        if(search -> letter_to_my_left != NULL)
+        {
+            search -> connected_left  = true;
+        }
+        if(search-> letter_to_my_right != NULL)
+        {
+            search -> connected_right = true;
+        }
+
         // Iterate.
         search = search -> letter_to_my_left;
     } while (latest_search -> isStartOfSentance() == false);
+
 
     // Forwards.
     search = this;
@@ -1494,6 +1554,15 @@ void Letter::setSentanceComplete()
         latest_search = search;
         search -> sentance_complete = true;
         search -> combine_delay = getStageDelay();
+
+        if (search-> letter_to_my_left != NULL)
+        {
+            search -> connected_left  = true;
+        }
+        if (search -> letter_to_my_right != NULL)
+        {
+            search -> connected_right = true;
+        }
 
         // Iterate.
         search = search -> letter_to_my_right;

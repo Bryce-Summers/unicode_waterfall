@@ -37,7 +37,10 @@ void ofApp::setup(){
     gui.add(combine_delay_sentances.setup("c_delay_sentances", 1, 0.01, 10));
     gui.add(max_scroll_delay.setup("max_scroll_delay", 5, 1, 10));
 
- gui.loadFromFile("gui.xml");
+    gui.add(dead_zone_height.setup("dead_zone_height", 5, 5, 100));
+    gui.add(wordToSentancePoolDelay.setup("w_2_s_delay", 0, 1, 10));// Time in seconds that it a complete word will wait in the word pool.
+    
+    gui.loadFromFile("gui.xml");
     
     frame = 0;
 
@@ -76,7 +79,9 @@ void ofApp::setup(){
         &combine_delay_letters,
         &combine_delay_words,
         &combine_delay_sentances,
-        &max_scroll_delay
+        &max_scroll_delay,
+        &dead_zone_height,
+        &wordToSentancePoolDelay
    );
 
 }
@@ -93,6 +98,7 @@ void ofApp::loadFonts()
     font.setLineHeight(18.0f);
     font.setLetterSpacing(1.037);
 
+    /*
     verdana14.load("verdana.ttf", 14, true, true);
     verdana14.setLineHeight(18.0f);
     verdana14.setLetterSpacing(1.037);
@@ -112,6 +118,7 @@ void ofApp::loadFonts()
     franklinBook14A.load("frabk.ttf", 14, false);
     franklinBook14A.setLineHeight(18.0f);
     franklinBook14A.setLetterSpacing(1.037);
+    */
 
     bFirst = true;
     typeStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789,:&!?";
@@ -288,7 +295,7 @@ void ofApp::update(){
         char last_char = ' ';
         const int margin = 20;       
 
-        float y0_height = margin * 10 / (this->sentances_per_second / .4);
+        float y0_height = margin * 10;
 
         string accum;
 
@@ -363,7 +370,7 @@ void ofApp::update(){
                 x, y,
                 previous_letter,
                 c,
-                &verdana14,
+                &font,
                 letter_manager,
                 previous_to_this_distance,
                 last_was_a_space,
@@ -376,6 +383,13 @@ void ofApp::update(){
                 int x = margin + ofRandom(ofGetWidth() - margin * 2);
                 int y = -20 - ofRandom(y0_height);
                 l -> setPosition(x, y);
+            }
+            
+            if (tries == 0)
+            {
+                cout << "ERROR: Density of incoming letters is too much!" << endl;
+                cout << "ERROR: Please lower sentances per second" << endl;
+                cout << "ERROR: or increase gravity and terminal velocity." << endl;
             }
 
             letters.push_back(l);
@@ -525,10 +539,11 @@ void ofApp::draw()
     ofSetColor(255, 127, 129); // red.
     ofDrawRectangle(phase_3B);
 
-//    grid -> draw();
+    //grid -> draw();
 //    #endif
 
     // Draw all of the letters to the screen.
+    ofSetColor(0, 0, 0, 255); // Letters are black.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
         (**iter).draw();
