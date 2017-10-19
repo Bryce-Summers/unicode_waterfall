@@ -24,11 +24,8 @@ public:
     //       else the number of letters will monototically increase.
     LetterManager(Grid * grid,
                   ofxFloatSlider * sentances_per_second,
-                  ofxFloatSlider * pool_y,
-                  ofxFloatSlider * pool_y_divider_1,
-                  ofxFloatSlider * pool_y_divider_2,
-                  ofxFloatSlider * scroll_y_start,
-                  ofxFloatSlider * scroll_y_end,
+
+                  vector<ofxFloatSlider *> * y_dividers,
 
                   ofxFloatSlider * meanderingDamping_letters,
                   ofxFloatSlider * meanderingSpeed_letters,
@@ -43,12 +40,14 @@ public:
                   ofxFloatSlider * gravity,
                   ofxFloatSlider * terminal_velocity,
 
-                    ofxFloatSlider * combine_delay_letters,
-                    ofxFloatSlider * combine_delay_words,
-                    ofxFloatSlider * combine_delay_sentances,
-                    ofxFloatSlider * max_time_between_scrolls,
-                    ofxFloatSlider * getDeadZoneHeight,
-                    ofxFloatSlider * getWordToSentancePoolDelay
+                  ofxFloatSlider * combine_delay_letters,
+                  ofxFloatSlider * combine_delay_words,
+                  ofxFloatSlider * combine_delay_sentances,
+                  ofxFloatSlider * max_time_between_scrolls,
+                  ofxFloatSlider * getDeadZoneHeight,
+                  ofxFloatSlider * getWordToSentancePoolDelay,
+                  ofTrueTypeFont * font
+                 
 );
     ~LetterManager();
 
@@ -80,6 +79,8 @@ private:
 
     ofxFloatSlider * wind_factor;
 
+    ofTrueTypeFont * font;
+
     const float speed_limit = 300;
 
 public:
@@ -98,13 +99,7 @@ public:
 
     float top_y = 0;
 
-    ofxFloatSlider * pool_y_coordinate;
-
-    ofxFloatSlider * pool_y_divider_1;
-    ofxFloatSlider * pool_y_divider_2;
-
-    ofxFloatSlider * text_scroll_y_coordinate_start;
-    ofxFloatSlider * text_scroll_y_coordinate_end;
+    vector<ofxFloatSlider *> * y_dividers;
 
     ofxFloatSlider * turn_speed;
 
@@ -118,12 +113,9 @@ public:
 
 
     // Get y coordinates of the horizontal lines that demarcate the three regions.
-    float getPoolY();    // Divides waterfall and pool stages.
-    float getPoolY_d1(); // Divider between letter and words pool sections.
-    float getPoolY_d2(); // Divider between words and sentances sections.
-    float getScrollYStart();  // Divides pool and text scrolling stages.
-    float getScrollYEnd();  // Divides sentance formation from sentance scroll.
-    
+    float getYDivider(int index);
+
+    float getTopY();
     float getBottomY(); // Bottom y coordinate for the world.
 
     void generatePoolBoundaries();
@@ -157,4 +149,6 @@ public:
     
     float getDeadZoneHeight();
     float getWordToSentancePoolDelay();
+
+    ofTrueTypeFont * getFont();
 };

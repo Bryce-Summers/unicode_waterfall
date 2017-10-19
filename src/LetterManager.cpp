@@ -3,11 +3,7 @@
 
 LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * sentances_per_second,
-    ofxFloatSlider * pool_y,
-    ofxFloatSlider * pool_y_divider_1,
-    ofxFloatSlider * pool_y_divider_2,
-    ofxFloatSlider * scroll_y_start,
-    ofxFloatSlider * scroll_y_end,
+    vector<ofxFloatSlider *> * y_dividers,
 
     ofxFloatSlider * meanderingDamping_letters,
     ofxFloatSlider * meanderingSpeed_letters,
@@ -28,19 +24,15 @@ LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * combine_delay_sentances,
     ofxFloatSlider * max_time_between_scrolls,
     ofxFloatSlider * deadZoneHeight,
-    ofxFloatSlider * wordToSentancePoolDelay)
+    ofxFloatSlider * wordToSentancePoolDelay,
+    ofTrueTypeFont * font)
 {
 
     this -> sentances_per_second = sentances_per_second;
 
     this -> grid = grid;
 
-    this -> pool_y_coordinate = pool_y;
-    this -> pool_y_divider_1  = pool_y_divider_1;
-    this -> pool_y_divider_2  = pool_y_divider_2,
-
-    this -> text_scroll_y_coordinate_start = scroll_y_start;
-    this -> text_scroll_y_coordinate_end   = scroll_y_end;
+    this -> y_dividers = y_dividers;
 
     this -> meanderingDamping_letters   = meanderingDamping_letters;
     this -> meanderingSpeed_letters     = meanderingSpeed_letters;
@@ -72,7 +64,8 @@ LetterManager::LetterManager(Grid * grid,
 
     this -> deadZoneHeight          = deadZoneHeight;
     this -> wordToSentancePoolDelay = wordToSentancePoolDelay;
-    
+ 
+    this -> font = font;   
 }
 
 
@@ -115,34 +108,29 @@ void LetterManager::next_scroll()
 
 
 // Get y coordinates of the horizontal lines that demarcate the three regions.
-float LetterManager::getPoolY()
+float LetterManager::getYDivider(int index)
 {
-    return *this -> pool_y_coordinate;
-}
+    if (index < 0)
+    {
+        return getTopY();
+    }
 
-float LetterManager::getPoolY_d1()
-{
-    return *this -> pool_y_divider_1;
-}
+    if (index >= y_dividers -> size())
+    {
+        return getBottomY();
+    }
 
-float LetterManager::getPoolY_d2()
-{
-    return *this -> pool_y_divider_2;
-}
-
-float LetterManager::getScrollYStart()
-{
-    return *this -> text_scroll_y_coordinate_start;
-}
-
-float LetterManager::getScrollYEnd()
-{
-    return *this -> text_scroll_y_coordinate_end;
+    return *this -> y_dividers -> at(index);
 }
 
 float LetterManager::getBottomY()
 {
     return this -> bottom_y;
+}
+
+float LetterManager::getTopY()
+{
+    return 0;
 }
 
 float LetterManager::getMeanderingDamping(Combine_Stage stage)
@@ -170,36 +158,6 @@ float LetterManager::getMeanderingSpeed(Combine_Stage stage)
         default:
             return *this -> meanderingSpeed_sentances;
     }
-}
-
-
-void LetterManager::generatePoolBoundaries()
-{
-    float x0 = 0;
-    float x1 = ofGetWidth();
-    float y0 = *pool_y_coordinate;
-    float y1 = *text_scroll_y_coordinate_start;
-
-    ofVec2f xy00 = ofVec2f(x0, y0);
-    ofVec2f xy01 = ofVec2f(x0, y1);
-    ofVec2f xy10 = ofVec2f(x1, y0);
-    ofVec2f xy11 = ofVec2f(x1, y1);
-
-    LineSegment * top    = new LineSegment(xy00, xy10);
-    LineSegment * right  = new LineSegment(xy10, xy11);
-    LineSegment * bottom = new LineSegment(xy11, xy01);
-    LineSegment * left   = new LineSegment(xy01, xy00);
-
-    pool_boundaries.push_back(top);
-    pool_boundaries.push_back(right);
-    pool_boundaries.push_back(bottom);
-    pool_boundaries.push_back(left);
-}
-
-vector<LineSegment*> * LetterManager::getPoolBoundaries()
-{    
-   // FIXME: Consider clearing a vector and adding pointers to another output.
-   return &pool_boundaries;
 }
 
 const float LetterManager::getSpeedLimit()
@@ -265,4 +223,10 @@ float LetterManager::getDeadZoneHeight()
 float LetterManager::getWordToSentancePoolDelay()
 {
     return *this -> wordToSentancePoolDelay;
+}
+
+ofTrueTypeFont * LetterManager::getFont()
+{
+    // Maybe I should parrellelize this somehow.
+    return this -> font;
 }

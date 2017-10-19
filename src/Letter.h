@@ -7,15 +7,44 @@
 #include "OBB.h"
 #include "LetterManager.h"
 
+/*
+ * This class controls the letter particles that
+ * constitute the letter waterfall animation.
+ *
+ * There are two parameters that control behavior:
+ * 1. Comine State: ALONE, PARTIAL_WORDS, PARTIAL_SENTANCES, and SENTANCES.
+ * 2. behavior: WATERFALL, POOL, COMBINE, TEXT_SCROLL
+ *
+ * Each of these behaviors occurs in a separate division of the animation.
+ * as a shorthand, we can use the division variable to see what stage a letter is in.
+ */
+// The sequence of the waterfall is:
+// 1. Letters fall. (ALONE, WATERFALL)
+// 2. Letters pool. (PARTIAL_WORDS, POOL)
+// 3. Words form.   (PARTIAL
+// 4. Words fall.
+// 5. Words pool.
+// 6. Sentances form.
+// 7. Sentances slide to the left.
+// 8. Sentances scroll.
+
+// Note: Behavior is a combination of state and and combine_state.
+// Their are three main stages: Letters, Words, and Sentances.
+// Each of these states has three parts:
+// 1. The structures form at the top.
+// 2. The structures fall through the middle.
+// 3. The strucutres pool at the bottom,
+//    waiting for all of the neighbor structures to also be in the pool.
+// The structures then move into the forming pool at the top of the next screen.
 
 class Letter : public Body
 {
 public:
-    Letter(float x, float y,
+    Letter(
+        LetterManager * letter_manager,
+        float start_x, float start_y,
         Letter * letter_to_my_left,
         char character,
-        ofTrueTypeFont * font,
-        LetterManager * letter_manager,
         float offset_from_left,
         bool space_before,
         int sentance_index);
@@ -45,7 +74,7 @@ public:
 private:
 
     // Visuality and Collision geometry.
-    void init_texture(char character, ofTrueTypeFont * font);
+    void init_texture(char character);
 
 
 private:
@@ -57,17 +86,12 @@ private:
     float time = 0;
 
     bool dead = false;
-    enum State{WATERFALL, POOL, COMBINE, TEXT_SCROLL};
-    State state;
+    enum Behavior{WATERFALL, POOL, COMBINE, TEXT_SCROLL}; 
 
-    // Note: Behavior is a combination of state and and combine_state.
-    // Their are three main stages: Letters, Words, and Sentances.
-    // Each of these states has three parts:
-    // 1. The structures form at the top.
-    // 2. The structures fall through the middle.
-    // 3. The strucutres pool at the bottom,
-    //    waiting for all of the neighbor structures to also be in the pool.
-    // The structures then move into the forming pool at the top of the next screen.
+    Behavior behavior;
+
+    // The current stage is describes the current action this letter is taking.
+    int current_stage = 0;
 
 
     // 1.0 is fast, 0.0 is not at all.
@@ -90,7 +114,6 @@ private:
                
     ofFloatColor background_color = ofFloatColor(1.0, 1.0, 1.0);
 
-    ofTrueTypeFont * font;
 
     // Letters implicitly form doubly linked, non-circular lists.
     // These pointers are used a lot in stage 2 when the letters are being combined into words and then into sentances.
@@ -141,7 +164,8 @@ private:
     // letter -> word -> sentance combining pool.
 
     // -- Letters.
-    bool inPool();
+    bool inZone(); // Returns true if this letter is in its currently indicated zone.
+
     // TRUE if this letter and the one to the left have 'snapped' together and are linked.
     // Letter level booleans.
     bool connected_left = false;
@@ -178,7 +202,7 @@ private:
 
     void update_word_sentance_connectivity();
 
-    void setGroupState(State state);
+    void setGroupBehavior(Behavior Behavior);
     
 
     // Defined in LetterManager.h
@@ -215,10 +239,10 @@ private:
 
     // -- Position and movement functions.
 
-    // Returns true if the the conditions have been met for this letter to magnet
-    // towards the left letter.
-    inline bool pool_goto_right_of_left();
-    inline bool pool_goto_left_of_right();
+    // Determines whether letters should move to their left or right neighbors.
+    inline bool should_goto_right_of_left();
+    inline bool should_goto_left_of_right();
+
 
     // Puts the result in the output.
     // If the letter to my left stands still,
@@ -250,6 +274,19 @@ private:
 
     // This value should be used to steer letter away from singularities.
     ofVec2f average_position;
+
+
+    // Extra Helper functions.
+
+    // Sets the velocity to interpolate this letter to the left margin
+    void velocityInterpolateToTargetBasedOnY(float y_start, float y_end, float dt);
+
+    void tryToEjectLetterFromPool(float y_start, float dt);
+
+    // Move the angle to an upright position.
+    void haveLetterFaceUpwards();
+
+    void nextStage();
 
 
 // Collision Detection.

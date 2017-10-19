@@ -62,7 +62,8 @@ class ofApp : public ofBaseApp{
         int line_index;
 
 
-        ofRectangle phase_1;
+        ofRectangle phase_1A;
+        ofRectangle phase_1B;
         ofRectangle phase_2A;
         ofRectangle phase_2B;
         ofRectangle phase_2C;
@@ -75,16 +76,14 @@ class ofApp : public ofBaseApp{
     public:
 
     
-    // These control where the barriers between the stages are.
-    ofxFloatSlider pool_y;// = 400; // y coordinate where waterfall transforms into pool.
-    
-    //    ofxFloatSlider scroll_y;// = 800; // y coordinate where pool transforms into scroll.
-    ofxFloatSlider scroll_y_start;
-    ofxFloatSlider scroll_y_end;
-    
-    // The dividers between stages in the pool.
-    ofxFloatSlider pool_y1;// = pool_y*.66 + scroll_y*.33; // 1 third to scroll.
-    ofxFloatSlider pool_y2;// = pool_y*.2 + scroll_y*.8; // 2 thirds to scroll.
+
+    ofxFloatSlider divide_y1;
+    ofxFloatSlider divide_y2;
+    ofxFloatSlider divide_y3;
+    ofxFloatSlider divide_y4;
+    ofxFloatSlider divide_y5;
+    ofxFloatSlider divide_y6;
+    ofxFloatSlider divide_y7;
     
     ofxFloatSlider sentances_per_second;// = .3; //.3;
     

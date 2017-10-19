@@ -1,19 +1,18 @@
 #include "Letter.h"
 
 Letter::Letter(
+    LetterManager * letterManager,
     float x,
     float y,
     Letter * left,
-    char character,
-    ofTrueTypeFont * font,
-    LetterManager * letterManager,
+    char character,    
     float offset_from_left,
     bool space_before,
     int sentance_index) : Body(letterManager -> grid)
 {
 
     this -> letterManager = letterManager;
-    this -> state = WATERFALL;
+    this -> behavior = WATERFALL;
 
     // Position and Physics.
     this -> position = ofVec2f(x, y);
@@ -36,8 +35,6 @@ Letter::Letter(
 
     this -> x_offset_from_left = offset_from_left;
 
-    this -> font = font;
-
     this -> character = character;
 
     this -> dynamic = true;
@@ -50,7 +47,7 @@ Letter::Letter(
     float angular_velocity_variance = PI*5;
     this -> angle_speed = ofRandom(angular_velocity_variance) - angular_velocity_variance / 2;
 
-    this -> init_texture(character, font);
+    this -> init_texture(character);
 
     this -> scroll_delay = this -> letterManager -> get_max_time_between_scrolls();
 
@@ -87,7 +84,7 @@ void Letter::setPosition(float x, float y)
  *
  */
 
-void Letter::init_texture(char character, ofTrueTypeFont * font)
+void Letter::init_texture(char character)
 {
     this -> character = character;
 
@@ -97,6 +94,8 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
     this -> str.push_back('\0');
 
     // Determine character size on screen.
+    ofTrueTypeFont * font = letterManager -> getFont();
+
     ofRectangle char_bounds  = font -> getStringBoundingBox(this -> str, this -> position.x, this -> position.y);
     ofRectangle glyph_bounds = font -> getGlyphBBox();
     int width  = char_bounds.getWidth();
@@ -144,29 +143,23 @@ void Letter::init_texture(char character, ofTrueTypeFont * font)
  *
  */
 
+// I think I should rewrite this to concisely describe what needs to happen.
+// Apply forces based on behavior, bound dynamics, transition to the next state if necessary.
+
 void Letter::update(float dt)
 {
 
+    
+
+
+    // Ensure that letters are travelling towards the visible portion of the screen.
     if (this -> position.y < 0 && this -> velocity.y < 0)
     {
         this -> velocity.y *= -1;
         this -> position.y += 1;
     }
-    
-    /*
-    // Safe guard against letters that don't make it to the pool.
-    // FIXME: Remove this and solve it by gurantteeing that letters do not get stuck.
-    time += dt;
-    if (state == WATERFALL && time > 20)
-    {
-        ofVec2f center = ofVec2f(30, this -> letterManager -> getPoolY() + 30);
 
-
-        this -> transitionToPool();
-        this -> position = center;       
-    }*/
-
-    if (state == POOL && combine_delay > 0)
+    if (behavior == POOL && combine_delay > 0)
     {
         // Handle words of length 1.
         if (!word_complete && isStartOfWord() && isEndOfWord())
@@ -288,7 +281,7 @@ void Letter::move(float dt)
     stepPosition(dt);
 
     // Transition between states.
-    float pool_y = this -> letterManager -> getPoolY();
+    float pool_y = this -> letterManager -> getDivider(1)
     if (state == WATERFALL && position.y > pool_y)
     {
         this -> transitionToPool();
@@ -382,7 +375,7 @@ void Letter::draw()
     // Perform texture allocation here in the serial loop to prevent multiple binding problems.
     if (!allocated)
     {
-        this -> init_texture(this -> character, this -> font);
+        this -> init_texture(this -> character);
     }
 
     // We retrieve a snapshot of the values at this point in time, so that drawing is consistent.
@@ -397,7 +390,7 @@ void Letter::draw()
     int w = this -> char_width;  //fbo.getWidth();
     int h = this -> char_height; //fbo.getHeight();
     */
-    int h = this->char_height; //fbo.getHeight();
+    int h = this -> char_height; //fbo.getHeight();
 
     // Draws this glyph with the origin at its center point.
     // draws in local space, because of ofTranslate call.
@@ -407,13 +400,14 @@ void Letter::draw()
     //this -> fbo.draw(0, -h/2);//-w/2 This is what I used when baking textures.
 
     //this -> fbo.draw(x, y -h / 2);
-    
+
+    ofTrueTypeFont * font = letterManager -> getFont();
 
     // -- With matrices is too slow.
     //font -> drawString(this -> str, 0, font -> getAscenderHeight() - h/2);
 
     // Without matrices is too slow.
-    font -> drawString(this->str, x, y + font->getAscenderHeight() - h / 2);
+    font -> drawString(this -> str, x, y + font->getAscenderHeight() - h / 2);
 
     // Bitmap string is too slow.
     //ofDrawBitmapString(this->str, x, y + font->getAscenderHeight() - h / 2);
@@ -443,7 +437,7 @@ bool Letter::isDead()
     if (this -> letter_to_my_left == NULL)
     {
         // Caching the dead value makes dead collection O(n) for an n letter list.
-        dead = (state == TEXT_SCROLL && position.y > ofGetHeight() || dead);
+        dead = (behavior == TEXT_SCROLL && position.y > ofGetHeight() || dead);
         return dead;
     }
     else
@@ -477,7 +471,7 @@ float Letter::getY()
 // -- Routing functions that call sub behavior functions based on 
 void Letter::stepAcceleration(float dt)
 {
-    switch (state)
+    switch (behavior)
     {
         case WATERFALL:   stepWaterfallA(dt); break;
         case POOL:        stepPoolA(dt);      break;
@@ -487,7 +481,7 @@ void Letter::stepAcceleration(float dt)
 
 void Letter::stepVelocity(float dt)
 {
-    switch (state)
+    switch (behavior)
     {
         case WATERFALL:   stepWaterfallV(dt);  break;
         case POOL:        stepPoolV(dt);       break;
@@ -497,7 +491,7 @@ void Letter::stepVelocity(float dt)
 
 void Letter::stepPosition(float dt)
 {
-    switch (state)
+    switch (behavior)
     {
         case WATERFALL:   stepWaterfallP(dt);  break;
         case POOL:        stepPoolP(dt);       break;
@@ -858,7 +852,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
     *free = false;
 
     // Just fall if in waterfall.
-    if (state == WATERFALL)
+    if (behavior == WATERFALL)
     {
         *free = true;
         return this -> position;
@@ -866,7 +860,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
 
     ofVec2f output;
 
-    if (state == POOL)
+    if (behavior == POOL)
     {
 
        // -- Handle Magnet logic.
@@ -1010,7 +1004,7 @@ ofVec2f Letter::getTargetPosition(bool * free)
     // If this letter is the leader then it wants to be right where it is.
     if (letter_to_my_left == NULL)
     {
-        if (state == TEXT_SCROLL)
+        if (behavior == TEXT_SCROLL)
         {
             return ofVec2f(left_scroll_margin, this -> position.y);
         }
@@ -1075,7 +1069,7 @@ void Letter::setMagnet(Direction direction, bool value)
     while(last_search -> connected_right);
 }
 
-void Letter::setGroupState(State state)
+void Letter::setGroupBehavior(Behavior behavior)
 {
     Letter * search = findStartOfConnectedGroup();
     Letter * last_search;
@@ -1084,7 +1078,7 @@ void Letter::setGroupState(State state)
     do
     {
         last_search = search;
-        search -> state = state;
+        search -> behavior = behavior;
         search = search -> letter_to_my_right;
     } while (last_search -> connected_right);
 }
@@ -1101,64 +1095,6 @@ void Letter::setGroupCombineStage(Combine_Stage stage)
         search -> combine_stage = stage;
         search = search -> letter_to_my_right;
     } while (last_search -> connected_right);
-}
-
-inline bool Letter::pool_goto_right_of_left()
-{
-
-    if (combine_stage == ALONE)
-    {
-        return false;
-    }
-
-    if (this -> letter_to_my_left == NULL)
-    {
-        return false;
-    }
-
-    // ASSUMPTION: a left letter exists.
-
-    if (connected_left)
-    {
-        return true;
-    }
-
-    // ASSUMPTION: we are not yet connected to it.
-
-    if(this -> letter_to_my_left -> inPool() == false)
-    {
-        return false;
-    }
-
-    // ASSUMPTION: The left letter is in the pool searching and swimming for its mates.
-
-    if (combine_stage == PARTIAL_WORD)
-    {
-        if(!isStartOfWord())
-        {
-            return true; // going towards left.
-        }
-
-        return false; // Start of word, not yet connected to the whole word.
-    }
-
-    // ASSUMPTION: We have a complete word now that should move towards its left neighbbor when it is ready.
-
-    // letters follow leaders within complete words and follow the ends of the
-    // words to their left when they are complete.    
-    if(!isStartOfSentance() && this -> letter_to_my_left -> isWordComplete())
-    {
-        // -- FIXME: Remove me.
-        if (this -> isStartOfWord())
-        {
-            return true;
-        }
-
-        return true;
-    }
-
-    // complete SENTANCE state letters should not need to move.
-    return false;
 }
 
 inline bool Letter::getOffsetPositionFromLeft(ofVec2f * output) // ASSUMES that we have a left letter.
@@ -1213,8 +1149,70 @@ inline bool Letter::getOffsetPositionFromRight(ofVec2f * output) // ASSUMES that
     return true;
 }
 
-inline bool Letter::pool_goto_left_of_right()
+inline bool Letter::should_goto_right_of_left()
 {
+
+    if (combine_stage == ALONE)
+    {
+        return false;
+    }
+
+    if (this->letter_to_my_left == NULL)
+    {
+        return false;
+    }
+
+    // ASSUMPTION: a left letter exists.
+
+    if (connected_left)
+    {
+        return true;
+    }
+
+    // ASSUMPTION: we are not yet connected to it.
+
+    if (this->letter_to_my_left->inZone() == false)
+    {
+        return false;
+    }
+
+    // ASSUMPTION: The left letter is in the pool searching and swimming for its mates.
+
+    if (combine_stage == PARTIAL_WORD)
+    {
+        if (!isStartOfWord())
+        {
+            return true; // going towards left.
+        }
+
+        return false; // Start of word, not yet connected to the whole word.
+    }
+
+    // ASSUMPTION: We have a complete word now that should move towards its left neighbbor when it is ready.
+
+    // letters follow leaders within complete words and follow the ends of the
+    // words to their left when they are complete.    
+    if (!isStartOfSentance() && this->letter_to_my_left->isWordComplete())
+    {
+        // -- FIXME: Remove me.
+        if (this->isStartOfWord())
+        {
+            return true;
+        }
+
+        return true;
+    }
+
+    // complete SENTANCE state letters should not need to move.
+    return false;
+}
+
+
+inline bool Letter::should_goto_left_of_right()
+{
+
+    return false;
+
     if (this -> letter_to_my_right == NULL)
     {
         return false;
@@ -1229,7 +1227,7 @@ inline bool Letter::pool_goto_left_of_right()
 
     // ASSUMPTION: we are not yet connected to it.
 
-    if(this -> letter_to_my_right -> inPool() == false)
+    if(this -> letter_to_my_right -> inZone() == false)
     {
         return false;
     }
@@ -1284,63 +1282,82 @@ void Letter::stepTextScrollA(float dt)
 
 void Letter::stepTextScrollV(float dt)
 {
+    
+    // Letters to default scroll behavior.
     velocity.x = 0;
     velocity.y = this -> letterManager -> getTextScrollSpeed();
 
+    // Then correct the behavior of the letters.
+    float scroll_start = letterManager -> getYDivider(6);
+    float scroll_end   = letterManager -> getYDivider(7);
+
+    velocityInterpolateToTargetBasedOnY(scroll_start, scroll_end, dt);
+
+    tryToEjectLetterFromPool(scroll_start, dt);
+
+    haveLetterFaceUpwards();
+}
+
+void Letter::velocityInterpolateToTargetBasedOnY(float y_start, float y_end, float dt)
+{
     ofVec2f leader_position = this -> findStartOfSentance() -> position;
 
-    if (leader_position.y > letterManager -> getScrollYStart())
+
+    if (leader_position.y > y_start)
     {
         // Interpolate based on progress of the leader.
-        float y_dist = leader_position.y - letterManager -> getScrollYStart();
-        float offset = letterManager->getScrollYEnd() - letterManager->getScrollYStart();
+        float y_dist = leader_position.y - y_start;
+        float offset = y_end - y_start;
 
         float percentage_x = MAX(0, MIN(y_dist / offset, 1));
-        float percentage_y = MAX(0, MIN(y_dist/offset, 1));
+        float percentage_y = MAX(0, MIN(y_dist / offset, 1));
 
         bool free;
 
         ofVec2f target = getTargetPosition(&free);
 
-        velocity.x += (target.x - this -> position.x)/dt*(percentage_x*percentage_x*percentage_x);
-        velocity.y += (target.y - this -> position.y)/dt*percentage_y;
+        velocity.x += (target.x - this->position.x) / dt*(percentage_x*percentage_x*percentage_x);
+        velocity.y += (target.y - this->position.y) / dt*percentage_y;
 
         // We want the sentance to gradually interpolate by the time it reaches the to scroll stage.
 
     }
 
-    /* // Uniform travel to the left.
-    bool free;
-    velocity = (getTargetPosition(&free) - this -> position)*move_to_left;
-    */
+}
+
+void Letter::tryToEjectLetterFromPool(float y_start, float dt)
+{
 
     // Quickly eject the sentance form the pool, then scroll at constant scroll speed.
-    float dist_to_pool_end_y = this -> letterManager -> getScrollYStart() - this -> position.y;
+    float dist_to_pool_end_y = y_start - this -> position.y;
 
     if (dist_to_pool_end_y > 0)
     {
         velocity.y *= 3;
     }
     // Next scroll once per sentance.
-    else if(!left_pool && isStartOfSentance())
+    else if (!left_pool && isStartOfSentance())
     {
         // Let the letter Manager scoll another sentance.
-        this -> letterManager -> next_scroll();
+        this->letterManager->next_scroll();
         left_pool = true;
     }
+}
 
+void Letter::haveLetterFaceUpwards()
+{
     // Bring the letter facing upwards.
     float angle_speed1 = -angle*move_to_left;
-    float angle_speed2 = (PI*2 - angle)*move_to_left;
+    float angle_speed2 = (PI * 2 - angle)*move_to_left;
 
     // Set angle speed to the direction with lowest absolute value.
     if (-angle_speed1 < angle_speed2)
     {
-        this -> angle_speed = angle_speed1;
+        this->angle_speed = angle_speed1;
     }
     else
     {
-        this -> angle_speed = angle_speed2;
+        this->angle_speed = angle_speed2;
     }
 
     angle = 0;
@@ -1431,9 +1448,9 @@ void Letter::setRightLetter(Letter * right)
     this -> letter_to_my_right = right;
 }
 
-bool Letter::inPool()
+bool Letter::inZone()
 {
-    return state == POOL;
+    return this -> position.y > this -> y_bound_top() && position.y < this -> y_bound_bottom();
 }
 
 
@@ -1717,67 +1734,12 @@ Letter * Letter::findEndOfSentance()
 
 float Letter::y_bound_top()
 {
-    if (state == WATERFALL)
-    {
-        return 0;
-    }
-
-    if (state == POOL)
-    {
-        switch (combine_stage)
-        {
-            case ALONE:
-                return letterManager -> getPoolY();
-                break;
-            case PARTIAL_WORD:
-                return letterManager -> getPoolY_d1();
-                break;
-            case PARTIAL_SENTANCE:
-            case SENTANCE:
-                return letterManager -> getPoolY_d2();
-                break;
-        }
-    }
-
-    if (state == TEXT_SCROLL)
-    {
-        return letterManager -> getScrollYStart();
-    }
-
-    cerr << "ERROR: Letter State: " << state << ", combine_stage: " << combine_stage << " unrecognized." << endl;
+    return letterManager -> getYDivider(current_stage - 1);
 }
 
 float Letter::y_bound_bottom()
 {
-    if (state == WATERFALL)
-    {
-        return letterManager -> getPoolY();
-    }
-
-    if (state == POOL)
-    {
-
-        switch (combine_stage)
-        {
-        case ALONE:
-            return letterManager -> getPoolY_d1();
-            break;
-        case PARTIAL_WORD:
-            return letterManager -> getPoolY_d2();
-            break;
-        case PARTIAL_SENTANCE:
-        case SENTANCE:
-            return letterManager -> getScrollYStart();
-            break;
-        }
-    }
-
-    if (state == TEXT_SCROLL)
-    {
-        return letterManager -> getBottomY();
-    }
-
-    cerr << "ERROR: Letter State: " << state << ", combine_stage: " << combine_stage << " unrecognized." << endl;
+    return letterManager -> getYDivider(current_stage);
 }
 
 void Letter::enable_collision_detection()
@@ -1806,7 +1768,7 @@ void Letter::disable_collision_detection()
 
 void Letter::transitionToPool()
 {
-    state = POOL;
+    behavior = POOL;
 
     combine_delay = this -> getStageDelay();// ALONE.
 
@@ -1842,4 +1804,10 @@ float Letter::getGlyphAngle(ofVec2f & desired_velocity)
     }
     float angle = atan2(angle_y, angle_x);
     return angle;
+}
+
+// Transition to the next stage.
+void Letter::nextStage()
+{
+    current_stage += 1;
 }

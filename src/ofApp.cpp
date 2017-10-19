@@ -12,12 +12,15 @@ void ofApp::setup(){
     // Initialize all of the sliders.
     gui.setup();
 
+    int n = 8;
+    gui.add(divide_y1.setup("divide_y1", h * 1 / n, 0, h));
+    gui.add(divide_y2.setup("divide_y2", h * 2 / n, 0, h));
+    gui.add(divide_y3.setup("divide_y3", h * 3 / n, 0, h));
+    gui.add(divide_y4.setup("divide_y4", h * 4 / n, 0, h));
+    gui.add(divide_y5.setup("divide_y5", h * 5 / n, 0, h));
+    gui.add(divide_y6.setup("divide_y6", h * 6 / n, 0, h));
+    gui.add(divide_y7.setup("divide_y7", h * 7 / n, 0, h));
 
-    gui.add(pool_y.setup("pool_y", 400, 0, h/2));
-    gui.add(pool_y1.setup("pool_y1", 500, 0, h));
-    gui.add(pool_y2.setup("pool_y2", 600, 0, h));
-    gui.add(scroll_y_start.setup("scroll_y_start", 800, h / 2, h));
-    gui.add(scroll_y_end.setup("scroll_y_end", 850, h / 2, h));
     gui.add(sentances_per_second.setup("sentances_per_second", .4555, .1, 1));
     gui.add(gravity.setup("gravity", 5.455, 5, 100)); // accelartion
     gui.add(terminal_velocity.setup("terminal_velocity", 82.65, 70, 300)); // max speed
@@ -60,11 +63,16 @@ void ofApp::setup(){
     // we don't want an unstable queueing scenario that grows unboundedly.
     letter_manager = new LetterManager(grid,
         &sentances_per_second,
-        &pool_y,
-        &pool_y1,
-        &pool_y2,
-        &scroll_y_start,
-        &scroll_y_end,
+
+        &divide_y1,
+        &divide_y2,
+        &divide_y3,
+        &divide_y4,
+        &divide_y5,
+        &divide_y6,
+        &divide_y7,
+
+
         &meanderingDamping_letters,
         &meanderingSpeed_letters,
         &meanderingDamping_words,
@@ -81,7 +89,8 @@ void ofApp::setup(){
         &combine_delay_sentances,
         &max_scroll_delay,
         &dead_zone_height,
-        &wordToSentancePoolDelay
+        &wordToSentancePoolDelay,
+        &font
    );
 
 }
@@ -366,12 +375,10 @@ void ofApp::update(){
             int y = 200;
             */
 
-            Letter * l = new Letter(
+            Letter * l = new Letter(letter_manager,
                 x, y,
                 previous_letter,
-                c,
-                &font,
-                letter_manager,
+                c,                
                 previous_to_this_distance,
                 last_was_a_space,
                 line_index - 1); // last_was_a_space used to delliminate words.
@@ -511,32 +518,36 @@ void ofApp::draw()
     int height = ofGetHeight();
 
 //    #ifdef DEBUG
-    phase_1 = ofRectangle(0, 0, width, pool_y - 1);
+    phase_1A = ofRectangle(0, 0, width, divide_y1 - 1);
+    phase_1B = ofRectangle(0, divide_y1, width, divide_y2 - divide_y1 - 1);
 
     // 3 Pool Sections.
-    phase_2A = ofRectangle(0, pool_y, width, pool_y1 - pool_y - 1);
-    phase_2B = ofRectangle(0, pool_y1, width, pool_y2 - pool_y1 - 1);
-    phase_2C = ofRectangle(0, pool_y2, width, scroll_y_start - pool_y2 - 1);
+    phase_2A = ofRectangle(0, divide_y2, width, divide_y3 - divide_y3 - 1);
+    phase_2B = ofRectangle(0, divide_y3, width, divide_y4 - divide_y3 - 1);
+    phase_2C = ofRectangle(0, divide_y4, width, divide_y5 - divide_y4 - 1);
 
-    phase_3A = ofRectangle(0, scroll_y_start, width, scroll_y_end - scroll_y_start);
-    phase_3B = ofRectangle(0, scroll_y_end, width, height - scroll_y_start);
+    phase_3A = ofRectangle(0, divide_y5, width, divide_y6 - divide_y5 - 1);
+    phase_3B = ofRectangle(0, divide_y6, width, divide_y7 - divide_y6 - 1);
 
     ofSetColor(155, 255, 255); // blue.
-    ofDrawRectangle(phase_1);
+    ofDrawRectangle(phase_1A);
 
     ofSetColor(255, 127, 129); // red.
+    ofDrawRectangle(phase_1B);
+    
+    ofSetColor(155, 255, 255); // blue.
     ofDrawRectangle(phase_2A);
 
-    ofSetColor(155, 255, 255); // blue.
+    ofSetColor(255, 127, 129); // red.
     ofDrawRectangle(phase_2B);
 
-    ofSetColor(255, 127, 129); // red.
+    ofSetColor(155, 255, 255); // blue.
     ofDrawRectangle(phase_2C);
 
-    ofSetColor(155, 255, 255); // blue.
+    ofSetColor(255, 127, 129); // red.
     ofDrawRectangle(phase_3A);
 
-    ofSetColor(255, 127, 129); // red.
+    ofSetColor(155, 255, 255); // blue.
     ofDrawRectangle(phase_3B);
 
     //grid -> draw();
