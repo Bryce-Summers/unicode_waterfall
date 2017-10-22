@@ -241,5 +241,5 @@ float LetterManager::getRepellingForce()
 
 float LetterManager::combineThresholdDistance()
 {
-    return 100;
+    return 10;
 }

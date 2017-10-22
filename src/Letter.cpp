@@ -396,9 +396,11 @@ void Letter::boundMovement(float dt)
     }
 
     // Don't allow meandering to scrunch the letters against the right wall.
-    if (position.x > ofGetWidth() - getRemainingLength())
+
+    float right_bound = ofGetWidth() - getRemainingLength();
+    if (position.x > right_bound)
     {
-        position.x = ofGetWidth();
+        position.x = right_bound;
     }
 }
 
