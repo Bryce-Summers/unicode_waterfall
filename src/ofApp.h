@@ -69,6 +69,7 @@ class ofApp : public ofBaseApp{
         ofRectangle phase_2C;
         ofRectangle phase_3A;
         ofRectangle phase_3B;
+        ofRectangle phase_3C;
 
         size_t stringLength(string & str);
 
@@ -84,6 +85,9 @@ class ofApp : public ofBaseApp{
     ofxFloatSlider divide_y5;
     ofxFloatSlider divide_y6;
     ofxFloatSlider divide_y7;
+    ofxFloatSlider divide_y8;
+
+    vector<ofxFloatSlider *> y_dividers;
     
     ofxFloatSlider sentances_per_second;// = .3; //.3;
     

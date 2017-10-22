@@ -258,6 +258,17 @@ bool Grid::resolve_collisions(Body * dynamic_obj)
     return resolution_happened;
 }
 
+void Grid::findNeighbors(Body * obj, std::set<Body *> & output)
+{
+    // Look up all candidates minus the object itself.
+    ofRectangle aabb = obj -> getCollidable() -> getBoundingBox();
+
+    this -> lookupBodiesInBox(aabb, output);
+
+    // Remove the lookup key object.
+    output.erase(obj);
+}
+
 bool Grid::detect_collision(Body * obj)
 {
 

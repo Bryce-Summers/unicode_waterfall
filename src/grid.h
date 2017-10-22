@@ -51,7 +51,7 @@ public:
 class Grid
 {
 public:
-    // Deocmposes a region [0,0] x [screen_w, screen_h]
+    // Deocomposes a region [0,0] x [screen_w, screen_h]
     // rectangular equal regions with such that the grid
     // has the indicated rows and columns.
     Grid(int rows, int cols, int screen_w, int screen_h);
@@ -90,6 +90,8 @@ public:
     ofVec2f getWindVelocityAtPosition(ofVec2f position);
 
     ofVec2f getMeanderVelocityAtPosition(ofVec2f position);
+
+    void findNeighbors(Body * obj, std::set<Body *> & output);
 
 // Internal Functions that operate the grid.
 private:

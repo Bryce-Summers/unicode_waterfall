@@ -65,6 +65,8 @@ public:
     ofVec2f getCenterOfMass();
     float   getRestitutionCoef();
 
+    ofVec2f getPosition();
+
     // Returns the local velocity of a point on this rigid body at the given location
     // = translational velocity + rotational velocity
     ofVec2f getVelocityAtPt(ofVec2f location);

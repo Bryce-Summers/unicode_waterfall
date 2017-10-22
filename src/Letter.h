@@ -52,7 +52,12 @@ public:
 
     // -- Public Interface.
     void update(float dt); // Udpates internal state, but not position.
+    void avoidOthers(float dt); // Makes letters avoid nearbye letters.
     void move(float dt);   // Second pass updates all of the positions.
+
+    void boundDynamics(float dt);
+    void transitionToNextStateIfProper(float dt);
+
     void resolve_collision(float dt);
     void draw();
     bool isDead();
@@ -92,6 +97,15 @@ private:
 
     // The current stage is describes the current action this letter is taking.
     int current_stage = 0;
+
+    const int LETTER_WATERFALL = 0;
+    const int LETTER_POOL = 1;
+    const int LETTER_COMBINE = 2;
+    const int WORD_WATERFALL = 3;
+    const int WORD_POOL = 4;
+    const int WORD_COMBINE = 5;
+    const int SENTANCE_LEFT_ALIGN = 6;
+    const int SENTANCE_SCROLL = 7;
 
 
     // 1.0 is fast, 0.0 is not at all.
@@ -157,6 +171,15 @@ private:
     void stepPoolV(float dt);
     void stepPoolP(float dt);
 
+    // -- Combine Behavior.
+    void stepCombineA(float dt);
+    void stepCombineV(float dt);
+    void stepCombineP(float dt);
+
+    // Sets the velocity to chase the leader.
+    void chaseLeaderV(float dt);
+
+
     // The target speed of circulation for the 
     const float pool_speed = 30;
 
@@ -209,9 +232,10 @@ private:
     Combine_Stage combine_stage = ALONE;
    
     // countdown before letters move on to the next combine or stage.
-    float combine_delay = 0;
+    float action_delay = 0;
     float scroll_delay = 10;
     float sentance_pooling_delay = 0;
+    float driver_delay = .1;
 
     // FIXME: ensure that the complete sentances are scrolled in the correct order.
     //int my_sentance_index;
@@ -235,7 +259,7 @@ private:
 
 
     // Calculate the target position based on the left letter.
-    ofVec2f getTargetPosition(bool * free);
+    ofVec2f getTargetPosition(bool * free, float dt);
 
     // -- Position and movement functions.
 
@@ -288,6 +312,11 @@ private:
 
     void nextStage();
 
+    void storePosition();
+
+    // Bounds the regions that the object can move to by clamping it.
+    void boundMovement(float dt);
+    
 
 // Collision Detection.
 private:
@@ -302,9 +331,21 @@ private:
 
     virtual void updateCollidableFromPosition();
 
-    void transitionToPool();
+    // Transition helper functions.
+    void transitionToMeanderPool();
+    void transitionToCombinePool();
+    void transitionToWaterfall();
+    void transitionToScroll();
+
+    // Returns true if not letter in this word has a current stage less than this letter's
+    bool entire_word_in_stage();
+    bool entire_sentance_in_stage();
 
     float getStageDelay();
 
     float getGlyphAngle(ofVec2f & desired_velocity);
+
+    float getRemainingLength();
+
+
 };

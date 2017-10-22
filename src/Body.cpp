@@ -443,3 +443,8 @@ bool Body::isCollidable()
 {
     return collidable;
 }
+
+ofVec2f Body::getPosition()
+{
+    return position;
+}

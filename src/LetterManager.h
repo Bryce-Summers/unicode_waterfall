@@ -118,11 +118,6 @@ public:
     float getTopY();
     float getBottomY(); // Bottom y coordinate for the world.
 
-    void generatePoolBoundaries();
-
-    // The user may neither modify the returned vector of the line segments inside.
-    vector<LineSegment*> * getPoolBoundaries();
-
     float getMeanderingDamping(Combine_Stage stage);
     float getMeanderingSpeed(Combine_Stage stage);
 
@@ -151,4 +146,8 @@ public:
     float getWordToSentancePoolDelay();
 
     ofTrueTypeFont * getFont();
+
+    float getDriverDelay();
+    float getRepellingForce();
+    float combineThresholdDistance();
 };

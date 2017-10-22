@@ -12,7 +12,7 @@ void ofApp::setup(){
     // Initialize all of the sliders.
     gui.setup();
 
-    int n = 8;
+    int n = 9;
     gui.add(divide_y1.setup("divide_y1", h * 1 / n, 0, h));
     gui.add(divide_y2.setup("divide_y2", h * 2 / n, 0, h));
     gui.add(divide_y3.setup("divide_y3", h * 3 / n, 0, h));
@@ -20,6 +20,7 @@ void ofApp::setup(){
     gui.add(divide_y5.setup("divide_y5", h * 5 / n, 0, h));
     gui.add(divide_y6.setup("divide_y6", h * 6 / n, 0, h));
     gui.add(divide_y7.setup("divide_y7", h * 7 / n, 0, h));
+    gui.add(divide_y8.setup("divide_y8", h * 8 / n, 0, h));
 
     gui.add(sentances_per_second.setup("sentances_per_second", .4555, .1, 1));
     gui.add(gravity.setup("gravity", 5.455, 5, 100)); // accelartion
@@ -59,19 +60,21 @@ void ofApp::setup(){
     loadGridAndObstacles();
     loadInputText();
 
+    y_dividers.push_back(&divide_y1);
+    y_dividers.push_back(&divide_y2);
+    y_dividers.push_back(&divide_y3);
+    y_dividers.push_back(&divide_y4);
+    y_dividers.push_back(&divide_y5);
+    y_dividers.push_back(&divide_y6);
+    y_dividers.push_back(&divide_y7);
+    y_dividers.push_back(&divide_y8);
+
     // NOTE: We make the time between scolls less than the input rate of sentances, because 
     // we don't want an unstable queueing scenario that grows unboundedly.
     letter_manager = new LetterManager(grid,
         &sentances_per_second,
 
-        &divide_y1,
-        &divide_y2,
-        &divide_y3,
-        &divide_y4,
-        &divide_y5,
-        &divide_y6,
-        &divide_y7,
-
+        &y_dividers,
 
         &meanderingDamping_letters,
         &meanderingSpeed_letters,
@@ -439,6 +442,13 @@ void ofApp::update(){
         << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count()
         << " milliseconds" << std::endl;
 
+    
+    /*
+    for (auto iter = letters.begin(); iter != letters.end(); ++iter)
+    {
+        (*iter) -> avoidOthers(dt);
+    }*/
+
     // Second pass, update position.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
     {
@@ -522,12 +532,13 @@ void ofApp::draw()
     phase_1B = ofRectangle(0, divide_y1, width, divide_y2 - divide_y1 - 1);
 
     // 3 Pool Sections.
-    phase_2A = ofRectangle(0, divide_y2, width, divide_y3 - divide_y3 - 1);
+    phase_2A = ofRectangle(0, divide_y2, width, divide_y3 - divide_y2 - 1);
     phase_2B = ofRectangle(0, divide_y3, width, divide_y4 - divide_y3 - 1);
     phase_2C = ofRectangle(0, divide_y4, width, divide_y5 - divide_y4 - 1);
 
     phase_3A = ofRectangle(0, divide_y5, width, divide_y6 - divide_y5 - 1);
     phase_3B = ofRectangle(0, divide_y6, width, divide_y7 - divide_y6 - 1);
+    phase_3C = ofRectangle(0, divide_y7, width, divide_y8 - divide_y7 - 1);
 
     ofSetColor(155, 255, 255); // blue.
     ofDrawRectangle(phase_1A);
@@ -549,6 +560,9 @@ void ofApp::draw()
 
     ofSetColor(155, 255, 255); // blue.
     ofDrawRectangle(phase_3B);
+
+    ofSetColor(255, 127, 129); // red.
+    ofDrawRectangle(phase_3C);
 
     //grid -> draw();
 //    #endif

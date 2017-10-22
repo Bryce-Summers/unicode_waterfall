@@ -47,8 +47,6 @@ LetterManager::LetterManager(Grid * grid,
 
     this -> wind_factor = wind_factor;
 
-    this -> generatePoolBoundaries();
-
     // The bottom of the world.
     bottom_y = ofGetHeight() + 50;
 
@@ -229,4 +227,19 @@ ofTrueTypeFont * LetterManager::getFont()
 {
     // Maybe I should parrellelize this somehow.
     return this -> font;
+}
+
+float LetterManager::getDriverDelay()
+{
+    return 2; // FIXME: Add this to GUI.
+}
+
+float LetterManager::getRepellingForce()
+{
+    return 1000;
+}
+
+float LetterManager::combineThresholdDistance()
+{
+    return 100;
 }
