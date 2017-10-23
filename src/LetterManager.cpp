@@ -25,7 +25,8 @@ LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * max_time_between_scrolls,
     ofxFloatSlider * deadZoneHeight,
     ofxFloatSlider * wordToSentancePoolDelay,
-    ofTrueTypeFont * font)
+    ofTrueTypeFont * font,
+    int input_count)
 {
 
     this -> sentances_per_second = sentances_per_second;
@@ -63,7 +64,9 @@ LetterManager::LetterManager(Grid * grid,
     this -> deadZoneHeight          = deadZoneHeight;
     this -> wordToSentancePoolDelay = wordToSentancePoolDelay;
  
-    this -> font = font;   
+    this -> font = font;
+
+    this -> max_index = input_count;
 }
 
 
@@ -102,6 +105,11 @@ void LetterManager::next_scroll()
     
     // As of 9.8.17 4:32 pm, we are triggering this as soon as a sentance leaves the pool.
     time_till_next_scroll = 1.0 / *sentances_per_second * .25;
+
+    if (next_index >= max_index)
+    {
+        next_index = 0;
+    }
 }
 
 
@@ -241,5 +249,5 @@ float LetterManager::getRepellingForce()
 
 float LetterManager::combineThresholdDistance()
 {
-    return 10;
+    return 100;
 }

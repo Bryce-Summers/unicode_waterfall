@@ -26,8 +26,8 @@ Letter::Letter(
     collidable = NULL;
     collision_detection = true;
 
-    //this -> enable_collision_detection();
-    this -> disable_collision_detection();// FIXME: Remove this once we are ready to retest collisions.
+    this -> enable_collision_detection();
+    //this -> disable_collision_detection();// FIXME: Remove this once we are ready to retest collisions.
 
     // State.
     this -> letter_to_my_left  = left;
@@ -170,7 +170,7 @@ void Letter::boundDynamics(float dt)
 
     // Bounce off side walls.
     if ((position.x < 10 && velocity.x < 0) ||
-        (position.x > ofGetWidth() - 10 && velocity.x > 0))
+        (position.x > ofGetWidth() - getRemainingLength() && velocity.x > 0))
     {
         velocity.x *= -1;
     }
@@ -222,6 +222,7 @@ void Letter::boundDynamics(float dt)
     average_position = this -> position * .01 + .99*average_position;
 
     // Alternate drivers at a set interval.
+    /*
     if(false && behavior != WATERFALL && !connected_left && driver_delay > 0)
     {
         driver_delay -= dt;
@@ -238,7 +239,7 @@ void Letter::boundDynamics(float dt)
             }
             driver_delay = letterManager -> getDriverDelay();
         }
-    }
+    }*/
 
 }
 
@@ -338,7 +339,7 @@ void Letter::move(float dt)
 
     if (position.y < y_bound_top() + letterManager->getDeadZoneHeight())
     {
-        velocity += 1;
+        velocity.y += 1;
     }
 
     // Remove the old references to this object stored in the grid.
@@ -358,6 +359,33 @@ void Letter::move(float dt)
         this->revertToPrevious();
         this->velocity = ofVec2f(0, 0);
         angle_speed = 0;
+    }
+
+    // Manually enforce spacing.
+    if (connected_left)
+    {
+        ofVec2f offset = position - letter_to_my_left -> position;
+        float max_offset = x_offset_from_left * 1.2;
+        float min_offset = x_offset_from_left * .8;
+        float current_offset = offset.length();
+        if (current_offset > max_offset)
+        {
+            float factor = max_offset / current_offset;
+            factor = MAX(factor, .7);
+            offset *= factor;
+        }
+        if (current_offset < min_offset)
+        {
+            float factor = min_offset / current_offset;
+            factor = MIN(factor, 1.3);
+            offset *= factor;
+        }
+        position = letter_to_my_left -> position + offset;
+    }
+
+    if (!connected_left)
+    {
+        angle = 0;
     }
 
     boundMovement(dt);
@@ -587,8 +615,15 @@ void Letter::stepWaterfallA(float dt)
     this -> acceleration = ofVec2f(0, this -> letterManager -> getGravity());
 
     // Add wind.
-    ofVec2f wind = this -> grid -> getWindVelocityAtPosition(this->position);
-    this -> acceleration += wind * this -> letterManager -> getWindFactor() * mass;
+    if(this -> position.y > 0)
+    {
+        ofVec2f wind = this -> grid -> getWindVelocityAtPosition(this->position);
+        this -> acceleration += wind * this -> letterManager -> getWindFactor() * mass;
+    }
+    else
+    {
+        //velocity.x = 0;
+    }
 
     dynamicsA(dt);
 }
@@ -603,7 +638,8 @@ void Letter::stepWaterfallV(float dt)
     }
 
     // Chase leader if it has one.
-    chaseLeaderV(dt);
+    if(connected_left)
+        chaseLeaderV(dt);
 }
 
 void Letter::stepWaterfallP(float dt)
@@ -630,7 +666,9 @@ void Letter::stepPoolA(float dt)
     // Don't accelerate the letter if we are near a dead zone.
     float dead_zone = letterManager -> getDeadZoneHeight();
     if (abs(this->position.y - y_bound_top()) < dead_zone ||
-        abs(this->position.y - y_bound_bottom()) < dead_zone)
+        abs(this->position.y - y_bound_bottom()) < dead_zone ||
+        abs(this->position.x - 0) < dead_zone ||
+        abs(this->position.x - ofGetWidth() - getRemainingLength()) < dead_zone)
     {
         this -> acceleration = ofVec2f(0, 0);
     }
@@ -998,7 +1036,7 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
                 // same for symmetrical case below.
                 ofVec2f offset = output - this->position;
                 float dist_sqr = offset.lengthSquared();
-                float threshold = letterManager -> combineThresholdDistance()/dt;
+                float threshold = letterManager -> combineThresholdDistance()*dt;
                 threshold = threshold*threshold;
                 if (dist_sqr < threshold) // 10^2
                 {

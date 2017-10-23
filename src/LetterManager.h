@@ -46,7 +46,8 @@ public:
                   ofxFloatSlider * max_time_between_scrolls,
                   ofxFloatSlider * getDeadZoneHeight,
                   ofxFloatSlider * getWordToSentancePoolDelay,
-                  ofTrueTypeFont * font
+                  ofTrueTypeFont * font,
+                  int input_num
                  
 );
     ~LetterManager();
@@ -150,4 +151,6 @@ public:
     float getDriverDelay();
     float getRepellingForce();
     float combineThresholdDistance();
+
+    int max_index;
 };

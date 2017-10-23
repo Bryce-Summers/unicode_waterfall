@@ -93,7 +93,8 @@ void ofApp::setup(){
         &max_scroll_delay,
         &dead_zone_height,
         &wordToSentancePoolDelay,
-        &font
+        &font,
+        input.size()
    );
 
 }
@@ -152,7 +153,8 @@ void ofApp::loadFonts()
 void ofApp::loadGridAndObstacles()
 {
     // A grid spaced out over the window width in 100 by 100 equal locations.
-    grid = new Grid(20, 20, ofGetWidth(), ofGetHeight());
+    int N = 100;
+    grid = new Grid(N, N, ofGetWidth(), ofGetHeight());
 
     // We will focus on getting the other stages in working order first.
     ofPolyline p;
@@ -160,7 +162,7 @@ void ofApp::loadGridAndObstacles()
     {
         float angle = i*PI*2/20;
         float x = 200 + 50*cos(angle);
-        float y = 200 + 50*sin(angle);
+        float y = 100 + 50*sin(angle);
         p.addVertex(ofPoint(x, y));
     }
 
@@ -231,7 +233,9 @@ void ofApp::loadInputText()
         string str; //declare a string for storage  
         while(getline(fin, str))
         {
-            input.push_back(str); //push the string onto a vector of strings  
+            // Only push the non empty strings.
+            if(str.length() > 0)
+                input.push_back(str); //push the string onto a vector of strings  
         }
         fin.close();
     }
