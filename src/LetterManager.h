@@ -3,6 +3,7 @@
 #include "grid.h"
 #include "ofxGui.h"
 
+
 enum Combine_Stage {
     ALONE,
 
@@ -22,7 +23,7 @@ public:
 
     // NOTE: scroll_delay should be no greater than the sentance generation time,
     //       else the number of letters will monototically increase.
-    LetterManager(Grid * grid,
+    LetterManager(Grid * collision_detection_grid,
                   ofxFloatSlider * sentances_per_second,
 
                   vector<ofxFloatSlider *> * y_dividers,
@@ -46,10 +47,10 @@ public:
                   ofxFloatSlider * max_time_between_scrolls,
                   ofxFloatSlider * getDeadZoneHeight,
                   ofxFloatSlider * getWordToSentancePoolDelay,
-                  ofTrueTypeFont * font,
-                  int input_num
-                 
-);
+                  ofxFloatSlider * coef_of_restitution,
+                  int input_num,
+                  Grid * fluid_dynamics_grid
+    );
     ~LetterManager();
 
 private:
@@ -74,18 +75,18 @@ private:
     ofxFloatSlider * combine_delay_words;
     ofxFloatSlider * combine_delay_sentances;
     ofxFloatSlider * max_time_between_scrolls;
-
+    
+    ofxFloatSlider * coef_of_restitution;
 
     ofxFloatSlider * scrollSpeed;
 
     ofxFloatSlider * wind_factor;
 
-    ofTrueTypeFont * font;
-
     const float speed_limit = 300;
 
 public:
-    Grid * grid;
+    Grid * collision_detection_grid;
+    Grid * fluid_dynamics_grid;
 
     // Increases the count down till the next sentance can come.
     void update(float dt);// INPUT: Time in seconds.
@@ -146,11 +147,15 @@ public:
     float getDeadZoneHeight();
     float getWordToSentancePoolDelay();
 
-    ofTrueTypeFont * getFont();
-
     float getDriverDelay();
     float getRepellingForce();
     float combineThresholdDistance();
 
     int max_index;
+
+    ofVec2f getWindVelocityAtPosition(ofVec2f position);
+    ofVec2f getMeanderVelocityAtPosition(ofVec2f position);
+
+    float getRestitutionCoef();
+
 };

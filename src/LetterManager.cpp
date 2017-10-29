@@ -1,7 +1,7 @@
 #include "LetterManager.h"
 
 
-LetterManager::LetterManager(Grid * grid,
+LetterManager::LetterManager(Grid * collision_detection_grid,
     ofxFloatSlider * sentances_per_second,
     vector<ofxFloatSlider *> * y_dividers,
 
@@ -25,13 +25,16 @@ LetterManager::LetterManager(Grid * grid,
     ofxFloatSlider * max_time_between_scrolls,
     ofxFloatSlider * deadZoneHeight,
     ofxFloatSlider * wordToSentancePoolDelay,
-    ofTrueTypeFont * font,
-    int input_count)
+    ofxFloatSlider * coef_of_restitution,
+    int input_count,
+    Grid * fluid_dynamics_grid
+)
 {
 
     this -> sentances_per_second = sentances_per_second;
 
-    this -> grid = grid;
+    this -> collision_detection_grid = collision_detection_grid;
+    this -> fluid_dynamics_grid = fluid_dynamics_grid;
 
     this -> y_dividers = y_dividers;
 
@@ -41,7 +44,7 @@ LetterManager::LetterManager(Grid * grid,
     this -> meanderingSpeed_words       = meanderingSpeed_words;
     this -> meanderingDamping_sentances = meanderingDamping_sentances;
     this -> meanderingSpeed_sentances   = meanderingSpeed_sentances;
-
+    this -> coef_of_restitution = coef_of_restitution;
 
 
     this -> scrollSpeed        = scrollSpeed;
@@ -63,8 +66,6 @@ LetterManager::LetterManager(Grid * grid,
 
     this -> deadZoneHeight          = deadZoneHeight;
     this -> wordToSentancePoolDelay = wordToSentancePoolDelay;
- 
-    this -> font = font;
 
     this -> max_index = input_count;
 }
@@ -231,12 +232,6 @@ float LetterManager::getWordToSentancePoolDelay()
     return *this -> wordToSentancePoolDelay;
 }
 
-ofTrueTypeFont * LetterManager::getFont()
-{
-    // Maybe I should parrellelize this somehow.
-    return this -> font;
-}
-
 float LetterManager::getDriverDelay()
 {
     return 2; // FIXME: Add this to GUI.
@@ -250,4 +245,19 @@ float LetterManager::getRepellingForce()
 float LetterManager::combineThresholdDistance()
 {
     return 100;
+}
+
+ofVec2f LetterManager::getWindVelocityAtPosition(ofVec2f position)
+{
+    return fluid_dynamics_grid -> getWindVelocityAtPosition(position);
+}
+
+ofVec2f LetterManager::getMeanderVelocityAtPosition(ofVec2f position)
+{
+    return fluid_dynamics_grid -> getMeanderVelocityAtPosition(position);
+}
+
+float LetterManager::getRestitutionCoef()
+{
+    return *coef_of_restitution;
 }

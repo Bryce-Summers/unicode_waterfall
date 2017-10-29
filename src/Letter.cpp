@@ -7,8 +7,10 @@ Letter::Letter(
     Letter * left,
     char character,    
     float offset_from_left,
+    float offset_in_text_scroll,
     bool space_before,
-    int sentance_index) : Body(letterManager -> grid)
+    int sentance_index,
+    ofTrueTypeFont * font) : Body(letterManager -> collision_detection_grid)
 {
 
     this -> letterManager = letterManager;
@@ -33,7 +35,8 @@ Letter::Letter(
     this -> letter_to_my_left  = left;
     //this -> letter_to_my_right = right;
 
-    this -> x_offset_from_left = offset_from_left;
+    this -> minnimal_offset = offset_from_left;
+    this -> maximal_offset  = offset_in_text_scroll;
 
     this -> character = character;
 
@@ -46,6 +49,8 @@ Letter::Letter(
     // Letters start out with a rotational speed.
     float angular_velocity_variance = PI*5;
     this -> angle_speed = ofRandom(angular_velocity_variance) - angular_velocity_variance / 2;
+
+    this -> font = font;
 
     this -> init_texture(character);
 
@@ -66,7 +71,7 @@ Letter::~Letter()
 // Firmly teleports the letter.
 void Letter::setPosition(float x, float y)
 {
-    grid -> remove_from_collision_grid(this);
+    collision_detection_grid -> remove_from_collision_grid(this);
     this -> position.x = x;
     this -> position.y = y;
     this -> previous_position = this->position;
@@ -74,7 +79,7 @@ void Letter::setPosition(float x, float y)
     if(this -> collision_detection && this -> position.y > 0)
     {
         this -> updateCollidableFromPosition();
-        grid -> add_to_collision_grid(this);
+        collision_detection_grid -> add_to_collision_grid(this);
     }
 }
 
@@ -94,7 +99,6 @@ void Letter::init_texture(char character)
     this -> str.push_back('\0');
 
     // Determine character size on screen.
-    ofTrueTypeFont * font = letterManager -> getFont();
 
     ofRectangle char_bounds  = font -> getStringBoundingBox(this -> str, this -> position.x, this -> position.y);
     ofRectangle glyph_bounds = font -> getGlyphBBox();
@@ -313,7 +317,7 @@ void Letter::avoidOthers(float dt)
 {
     std::set<Body *> neighbors;
 
-    grid -> findNeighbors(this, neighbors);
+    collision_detection_grid -> findNeighbors(this, neighbors);
     
     float repelling_force = letterManager -> getRepellingForce();
 
@@ -345,7 +349,7 @@ void Letter::move(float dt)
     // Remove the old references to this object stored in the grid.
     if (collision_detection)
     {
-        grid -> remove_from_collision_grid(this);
+        collision_detection_grid -> remove_from_collision_grid(this);
     }
 
     angle += this -> angle_speed*dt;
@@ -365,8 +369,8 @@ void Letter::move(float dt)
     if (connected_left)
     {
         ofVec2f offset = position - letter_to_my_left -> position;
-        float max_offset = x_offset_from_left * 1.2;
-        float min_offset = x_offset_from_left * .8;
+        float max_offset = getOffsetFromLeft() * 1.2;
+        float min_offset = getOffsetFromLeft() * .8;
         float current_offset = offset.length();
         if (current_offset > max_offset)
         {
@@ -395,14 +399,14 @@ void Letter::move(float dt)
         updateCollidableFromPosition();
 
         // Delay entering the screen if it is coming to a collision with another letter.
-        if(grid -> detect_collision(this))
+        if(collision_detection_grid -> detect_collision(this))
         {
             this -> position.y -= -this -> char_height*2;
         }
         else
         {
             // Add the new references to this object to the grid.
-            grid -> add_to_collision_grid(this);
+            collision_detection_grid -> add_to_collision_grid(this);
         }
     }
 
@@ -438,14 +442,14 @@ float Letter::getRemainingLength()
     {
         return 0;
     }
-    return letter_to_my_right -> x_offset_from_left + letter_to_my_right -> getRemainingLength();
+    return letter_to_my_right -> getOffsetFromLeft() + letter_to_my_right -> getRemainingLength();
 }
 
 void Letter::resolve_collision(float dt)
 {
     // Grid will broadly detect colliding bodies.
     // the body will rever the position to 'previous_position' if necessary.
-    this -> grid -> resolve_collisions(this);
+    this -> collision_detection_grid -> resolve_collisions(this);
 }
 
 void Letter::draw()
@@ -480,10 +484,8 @@ void Letter::draw()
 
     //this -> fbo.draw(x, y -h / 2);
 
-    ofTrueTypeFont * font = letterManager -> getFont();
-
     // -- With matrices is too slow.
-    font -> drawString(this -> str, 0, font -> getAscenderHeight() - h/2);
+    font -> drawString(this -> str, 0, 0);//font -> getAscenderHeight() + h);
 
     // Without matrices is too slow.
     //font -> drawString(this -> str, x, y + font->getAscenderHeight() - h / 2);
@@ -617,7 +619,7 @@ void Letter::stepWaterfallA(float dt)
     // Add wind.
     if(this -> position.y > 0)
     {
-        ofVec2f wind = this -> grid -> getWindVelocityAtPosition(this->position);
+        ofVec2f wind = letterManager -> getWindVelocityAtPosition(this -> position);
         this -> acceleration += wind * this -> letterManager -> getWindFactor() * mass;
     }
     else
@@ -660,7 +662,7 @@ void Letter::stepPoolA(float dt)
 {
 
 
-    ofVec2f velocity = grid -> getMeanderVelocityAtPosition(this -> position);
+    ofVec2f velocity = letterManager -> getMeanderVelocityAtPosition(this -> position);
     this -> acceleration = velocity * this -> letterManager -> getMeanderingDamping(combine_stage);
     
     // Don't accelerate the letter if we are near a dead zone.
@@ -724,7 +726,7 @@ void Letter::stepPoolA(float dt)
         acceleration *= 50;
         */
 
-        ofVec2f velocity = grid -> getMeanderVelocityAtPosition(this -> position);
+        ofVec2f velocity = letterManager -> getMeanderVelocityAtPosition(this -> position);
         this -> acceleration = velocity * this -> letterManager -> getMeanderingDamping(combine_stage);
 
     }
@@ -749,7 +751,7 @@ void Letter::stepPoolA(float dt)
 
         // Simply move the letter along a divergence - free vector field 
         // with no slip conditions on the boundaries.
-        ofVec2f velocity = grid -> getMeanderVelocityAtPosition(this -> position);
+        ofVec2f velocity = letterManager -> getMeanderVelocityAtPosition(this -> position);
         this -> acceleration = velocity * this -> letterManager -> getMeanderingDamping(combine_stage);
 
         // Accelerate letters away from singularities.
@@ -1022,6 +1024,16 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
         *  4. Set driving ends to free motion.
         */
 
+        // Have leaders of combine groups plant their heads in the bottom of the combine
+        // pool.
+        if (combine_stage == PARTIAL_WORD && this -> isStartOfWord())
+        {
+            return ofVec2f(this -> position.x, y_bound_bottom());
+        }
+        else if ((combine_stage == PARTIAL_SENTANCE || combine_stage == SENTANCE) && this -> isStartOfSentance())
+        {
+            return ofVec2f(this -> position.x, y_bound_bottom());
+        }
 
         // -- Magnets attract towards their opposite.
 
@@ -1154,7 +1166,7 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
     {
         if (behavior == TEXT_SCROLL)
         {
-            return ofVec2f(left_scroll_margin, this -> position.y);
+            return ofVec2f(left_scroll_margin + getOffsetFromLeft(), this -> position.y);
         }
 
         return this -> position;
@@ -1165,7 +1177,7 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
     if (behavior == TEXT_SCROLL)
     {
         bool free1;
-        return this->letter_to_my_left->getTargetPosition(&free1, dt) + ofVec2f(this->x_offset_from_left, 0);
+        return this->letter_to_my_left->getTargetPosition(&free1, dt) + ofVec2f(getOffsetFromLeft(), 0);
     }
     
     // Default Circulation behavior.
@@ -1269,7 +1281,7 @@ inline bool Letter::getOffsetPositionFromLeft(ofVec2f * output) // ASSUMES that 
         dx *= -1;
     }*/
 
-    float mag = this -> x_offset_from_left;
+    float mag = this -> getOffsetFromLeft();
 
     offset = ofVec2f(dx*mag, dy*mag);
 
@@ -1286,11 +1298,11 @@ inline bool Letter::getOffsetPositionFromRight(ofVec2f * output) // ASSUMES that
 
     // for leader to this angle.
     ofVec2f offset = this -> position - this -> letter_to_my_right -> position;
-    float angle = this -> letter_to_my_right -> angle;//atan2(offset.y, offset.x);
+    float angle = this -> letter_to_my_right -> angle; //atan2(offset.y, offset.x);
 
     float dx = cos(angle);
     float dy = sin(angle);
-    float mag = this -> letter_to_my_right -> x_offset_from_left;
+    float mag = this -> letter_to_my_right -> getOffsetFromLeft();
 
     offset = ofVec2f(dx*mag, dy*mag);
 
@@ -1908,7 +1920,7 @@ void Letter::disable_collision_detection()
     if(collision_detection)
     {
         collision_detection = false;
-        grid -> remove_from_collision_grid(this);
+        collision_detection_grid -> remove_from_collision_grid(this);
 
         // From body.h
         this -> deactivateCollider();
@@ -2027,4 +2039,22 @@ bool Letter::entire_sentance_in_stage()
     } while (!search -> isEndOfSentance());
 
     return true;
+}
+
+float Letter::getOffsetFromLeft()
+{
+    if (behavior != TEXT_SCROLL)
+    {
+        // Hides spaces and indentation.
+        return minnimal_offset;
+    }
+    else
+    {
+        return maximal_offset;
+    }
+}
+
+float Letter::getRestitutionCoef()
+{
+    return letterManager -> getRestitutionCoef();
 }

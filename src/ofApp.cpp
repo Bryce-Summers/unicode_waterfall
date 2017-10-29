@@ -43,7 +43,11 @@ void ofApp::setup(){
 
     gui.add(dead_zone_height.setup("dead_zone_height", 5, 5, 100));
     gui.add(wordToSentancePoolDelay.setup("w_2_s_delay", 0, 1, 10));// Time in seconds that it a complete word will wait in the word pool.
-    
+
+    gui.add(bounce_energy.setup("bounce_energy", .25, 0, 1)); // What percentage of a letter's energy is conserved upon bouncing. Over 1 creates more energy.
+
+    gui.add(show_grid.setup(false));
+
     gui.loadFromFile("gui.xml");
     
     frame = 0;
@@ -71,7 +75,7 @@ void ofApp::setup(){
 
     // NOTE: We make the time between scolls less than the input rate of sentances, because 
     // we don't want an unstable queueing scenario that grows unboundedly.
-    letter_manager = new LetterManager(grid,
+    letter_manager = new LetterManager(collision_detection_grid,
         &sentances_per_second,
 
         &y_dividers,
@@ -93,8 +97,9 @@ void ofApp::setup(){
         &max_scroll_delay,
         &dead_zone_height,
         &wordToSentancePoolDelay,
-        &font,
-        input.size()
+        &bounce_energy,
+        input.size(),
+        fluid_dynamics_grid
    );
 
 }
@@ -107,9 +112,43 @@ void ofApp::loadFonts()
     //old OF default is 96 - but this results in fonts looking larger than in other programs. 
     ofTrueTypeFont::setGlobalDpi(72);
 
-    font.load("verdana.ttf", 14, true, true);
-    font.setLineHeight(18.0f);
-    font.setLetterSpacing(1.037);
+    // Standard sizes for fonts.
+    // Please use up to 10.
+    vector<int> sizes;
+    sizes.push_back(14);
+    sizes.push_back(20);
+    sizes.push_back(32);
+    sizes.push_back(48);
+    sizes.push_back(64);
+
+    for (auto size : sizes)
+    {
+        ofTrueTypeFont * normal = new ofTrueTypeFont();
+        normal -> load("verdana.ttf", size, true, true);
+
+        ofTrueTypeFont * italic = new ofTrueTypeFont();
+        italic -> load("verdanai.ttf", size, true, true);
+
+
+        /* settings for 14 pt font.
+        normal -> setLineHeight(18.0f);
+        normal -> setLetterSpacing(1.037);
+        */
+
+        // Generalize line spacings for any size.
+        normal -> setLineHeight(1.2857142857142858*size);
+        //normal -> setLetterSpacing(0.07407142857142857*size);
+        italic -> setLineHeight(1.2857142857142858*size);
+        //italic -> setLetterSpacing(0.07407142857142857*size);
+
+        normal -> setLetterSpacing(1.037);
+        italic -> setLetterSpacing(1.037);
+
+        normal_fonts.push_back(normal);
+        italic_fonts.push_back(italic);
+    }
+
+    fontManager = new FontManager(&normal_fonts, &italic_fonts);
 
     /*
     verdana14.load("verdana.ttf", 14, true, true);
@@ -133,6 +172,7 @@ void ofApp::loadFonts()
     franklinBook14A.setLetterSpacing(1.037);
     */
 
+    /*
     bFirst = true;
     typeStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789,:&!?";
 
@@ -147,14 +187,17 @@ void ofApp::loadFonts()
         //cout << length << endl; // Number of letters.
         char c = str[i];
         accum.push_back(c);
-    }
+    }*/
 }
 
 void ofApp::loadGridAndObstacles()
 {
+
     // A grid spaced out over the window width in 100 by 100 equal locations.
-    int N = 100;
-    grid = new Grid(N, N, ofGetWidth(), ofGetHeight());
+    int N = 10;
+    collision_detection_grid = new Grid(N, N, ofGetWidth(), ofGetHeight());
+    int F = 100;
+    fluid_dynamics_grid = new Grid(F, F, ofGetWidth(), ofGetHeight());
 
     // We will focus on getting the other stages in working order first.
     ofPolyline p;
@@ -167,7 +210,7 @@ void ofApp::loadGridAndObstacles()
     }
 
     // Create an obstacle that automatically adds itself to the grid.
-    Obstacle * obj = new Obstacle(p, grid);
+    Obstacle * obj = new Obstacle(p, collision_detection_grid);
     obstacles.push_back(obj);
 
     ofPolyline p2;
@@ -176,7 +219,7 @@ void ofApp::loadGridAndObstacles()
     p2.addVertex(ofPoint(550, 260));
     p2.addVertex(ofPoint(500, 260));
     p2.addVertex(ofPoint(500, 225));
-    obj = new Obstacle(p2, grid);
+    obj = new Obstacle(p2, collision_detection_grid);
     obstacles.push_back(obj);
 
     ofPolyline p3;
@@ -185,7 +228,7 @@ void ofApp::loadGridAndObstacles()
     p3.addVertex(ofPoint(750, 260));
     p3.addVertex(ofPoint(700, 260));
     p3.addVertex(ofPoint(700, 225));
-    obj = new Obstacle(p3, grid);
+    obj = new Obstacle(p3, collision_detection_grid);
     obstacles.push_back(obj);
     //*/
     
@@ -242,18 +285,6 @@ void ofApp::loadInputText()
 
 }
 
-size_t ofApp::stringLength(string & str)
-{
-    // We need this to well form the string for length computation.
-    str.push_back('\n');
-    // str.length();// number of characters.
-    size_t length = font.stringWidth(str);// Width of string displayed on screen.
-    // Remove the linebreak in preparation for adding more characters.
-    str.pop_back();
-
-    return length;
-}
-
 //--------------------------------------------------------------
 void ofApp::update(){
 
@@ -284,140 +315,7 @@ void ofApp::update(){
     {
         time_accum = 0;//-= this -> seconds_per_frame;
 
-
-        // Remove me.
-        if(bogus)
-        {
-            return;
-        }
-        
-        // Cause this to generate only the first sentance for debugging purposes.
-        //bogus = true;
-    
-        // Create a sentance of letters.
-        //int letters_per_sentance = 5;
-        Letter * previous_letter = NULL;
-        //for(int i = 0; i < letters_per_sentance; i++)
-        string line = input[line_index++];
-
-        // Cycle back to the first file and first line if the text runs out.
-        if (line_index >= input.size())
-        {
-            line_index = 0;
-        }
-
-        bool last_was_a_space = false;
-        int len = line.length();
-        char last_char = ' ';
-        const int margin = 20;       
-
-        float y0_height = margin * 10;
-
-        string accum;
-
-        for(int char_index = 0; char_index < len; char_index++)
-        {
-            char c = line[char_index];
-            if(c == '\n')
-            {
-                continue;
-            }
-
-            // Don't create animated invisible letters for spaces, but do record the gap.
-            if(c == ' ')
-            {
-                last_was_a_space = true;
-                continue;
-            }
-
-            // Blank space on the left and right sides of the screen where letters will not form.
-            int x = margin + ofRandom(ofGetWidth() - margin*2);
-
-            // Height scaled to create the illusion of a continuous stream of letters.
-            int y = -20 - ofRandom(y0_height);
-
-            // figure out the gap between this letter and the next one.
-            int previous_to_this_distance = 0;
-            
-            // If we are past the first character, we compute the correct spacings of the letters.
-            if(char_index > 0)
-            {
-
-                // length of the image rendered for this string on a screen.
-                int len_old = stringLength(accum);
-
-                // The trick is to put the space first,
-                // since trailing spaces are ignored in the font getStringWidth function.
-                if (last_was_a_space)
-                
-                {
-                    accum.push_back(' ');
-                }
-
-                accum.push_back(c);
-                int len_new = stringLength(accum);
-
-                string singleton;
-                singleton.push_back(c);
-                int len_char = stringLength(singleton);
-                singleton.pop_back();
-
-                singleton.push_back(last_char);
-                int len_last_char = stringLength(singleton);
-             
-                // TODO: Try end of new string - end of string with last character + len(last_char) - len(c)
-                // We need to account for all of the spaces.
-   
-                // Distance with proper kerning.
-                previous_to_this_distance = len_new - len_old - len_char + len_last_char;
-            }
-            else
-            {
-                accum.push_back(c);
-            }
-
-            
-            /*
-            int x = 200; // A test to see if the letters collide with the circle.
-            int y = 200;
-            */
-
-            Letter * l = new Letter(letter_manager,
-                x, y,
-                previous_letter,
-                c,                
-                previous_to_this_distance,
-                last_was_a_space,
-                line_index - 1); // last_was_a_space used to delliminate words.
-            
-            // Try 100 locations for a collision free.
-            int tries = 10;
-            while (grid -> detect_collision(l) && tries-- > 0)
-            {
-                int x = margin + ofRandom(ofGetWidth() - margin * 2);
-                int y = -20 - ofRandom(y0_height);
-                l -> setPosition(x, y);
-            }
-            
-            if (tries == 0)
-            {
-                cout << "ERROR: Density of incoming letters is too much!" << endl;
-                cout << "ERROR: Please lower sentances per second" << endl;
-                cout << "ERROR: or increase gravity and terminal velocity." << endl;
-            }
-
-            letters.push_back(l);
-            if(previous_letter != NULL)
-            {
-                previous_letter -> setRightLetter(l);
-            }
-            
-
-            // Update trailing data for next loop.
-            previous_letter = l;
-            last_char = c;
-            last_was_a_space = false;
-        }
+        spawnSentance();
         
     }
 
@@ -494,7 +392,7 @@ void ofApp::update(){
         Letter * l = **iter;
 
         // remove letter from collisions.
-        grid -> remove_from_collision_grid(l);
+        collision_detection_grid -> remove_from_collision_grid(l);
 
         // Remove the now defunct pointer from the letter list.
         letters.erase(*iter);
@@ -513,6 +411,33 @@ void ofApp::update(){
         << std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count()
         << " milliseconds" << std::endl;
 }
+
+void ofApp::spawnSentance()
+{
+    // Remove me.
+    if (bogus)
+    {
+        return;
+    }
+
+    // Cause this to generate only the first sentance for debugging purposes.
+    //bogus = true;
+    
+    //for(int i = 0; i < letters_per_sentance; i++)
+    string line = input[line_index];
+
+    fontManager -> spawnSentance(line, &letters, letter_manager, line_index);
+
+    line_index += 1;
+
+    // Cycle back to the first file and first line if the text runs out.
+    if (line_index >= input.size())
+    {
+        line_index = 0;
+    }
+
+}
+
 
 //--------------------------------------------------------------
 void ofApp::draw()
@@ -566,10 +491,7 @@ void ofApp::draw()
     ofDrawRectangle(phase_3B);
 
     ofSetColor(255, 127, 129); // red.
-    ofDrawRectangle(phase_3C);
-
-    //grid -> draw();
-//    #endif
+    ofDrawRectangle(phase_3C); 
 
     // Draw all of the letters to the screen.
     ofSetColor(0, 0, 0, 255); // Letters are black.
@@ -609,7 +531,26 @@ void ofApp::draw()
         << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
         << " milliseconds" << std::endl;
 
+    
+    // I'm not showing this grid, because it is only interesting for optimization purposes.
+    //collision_detection_grid -> draw();
+    if(show_grid)
+        fluid_dynamics_grid -> draw();
+
     gui.draw();
+
+    /*
+    std::string str = "üöéñ and so on";
+     // Try using the following for drawing a Unicode string.
+    auto substr = ofUTF8Substring(str, start, len);
+    auto text32 = ofx::TextConverter::toUTF32(str);
+    string letter = ofx::TextConverter::toUTF8(text32[0]);
+    std::cout << ofx::TextConverter::toUTF8(text32[0]) << " letter " << letter << endl;
+    ofSetColor(255);
+    font.drawString(letter, 0, 0);
+    */
+    
+
 }
 
 //--------------------------------------------------------------

@@ -46,8 +46,10 @@ public:
         Letter * letter_to_my_left,
         char character,
         float offset_from_left,
+        float offset_in_text_scroll,
         bool space_before,
-        int sentance_index);
+        int sentance_index,
+        ofTrueTypeFont * font);
     ~Letter();
 
     // -- Public Interface.
@@ -118,6 +120,8 @@ private:
     void enable_collision_detection();
     void disable_collision_detection();
 
+    // Every character has a pointer to the font that will render it.
+    ofTrueTypeFont * font;
 
     char character;
     string str;
@@ -141,10 +145,10 @@ private:
     // determine the starting and ending points for words.
     bool space_before; 
 
-
-    // my x = letter_to_my_left x + width + spacing + kerning.
-    // my x = left x + x_offset_from_left
-    float x_offset_from_left;
+    // Offset without any indentations or wide spacing.
+    float minnimal_offset;
+    // Offset with indentations and wide spacing.
+    float maximal_offset;
 
     // -- Routing functions that call sub behavior functions based on 
     void stepAcceleration(float dt);
@@ -317,6 +321,7 @@ private:
     // Bounds the regions that the object can move to by clamping it.
     void boundMovement(float dt);
     
+    virtual float getRestitutionCoef();
 
 // Collision Detection.
 private:
@@ -347,5 +352,6 @@ private:
 
     float getRemainingLength();
 
+    float getOffsetFromLeft();
 
 };

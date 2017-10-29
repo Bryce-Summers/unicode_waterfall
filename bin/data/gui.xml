@@ -5,8 +5,8 @@
 	<scroll_y_start>772.5</scroll_y_start>
 	<scroll_y_end>812.5</scroll_y_end>
 	<sentances_per_second>0.4555</sentances_per_second>
-	<gravity>5.455</gravity>
-	<terminal_velocity>82.65</terminal_velocity>
+	<gravity>49.175</gravity>
+	<terminal_velocity>83.8</terminal_velocity>
 	<curl_letters>0.025</curl_letters>
 	<m_speed_letters>88</m_speed_letters>
 	<curl_words>0.009</curl_words>
@@ -31,4 +31,6 @@
 	<divide_y6>666.667</divide_y6>
 	<divide_y7>777.778</divide_y7>
 	<divide_y8>888.889</divide_y8>
+<bounce_energy>0.25</bounce_energy>
+	<UnknownName>0</UnknownName>
 </group>

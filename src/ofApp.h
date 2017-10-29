@@ -9,8 +9,10 @@
 #include <fstream>
 #include "Useful.h" // char to string.
 #include "LetterManager.h"
+#include "FontManager.h"
 
 #include "ofxGui.h"
+//#include "ofxUnicode.h"
 
 class ofApp : public ofBaseApp{
 
@@ -18,6 +20,9 @@ class ofApp : public ofBaseApp{
 		void setup();
 		void update();
 		void draw();
+
+        // Creates a new sentance worth of letters to be added to the animation.
+        void spawnSentance();
 
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -46,14 +51,21 @@ class ofApp : public ofBaseApp{
         bool bFirst;
         string typeStr;
 
-
-        ofTrueTypeFont font;
-
+        // A vector of up to 10 sizes of fonts.
+        vector<ofTrueTypeFont *> normal_fonts; // Non stylized.
+        vector<ofTrueTypeFont *> italic_fonts; // Stylized in an italic manner.
+        FontManager * fontManager;
 
         void loadGridAndObstacles();
         // Objects in the scene.
         LetterManager * letter_manager;
-        Grid * grid;
+
+        // Use one grid for collision detection.
+        Grid * collision_detection_grid;
+
+        // Use the other grid for the calculation of fluid dynamics.
+        Grid * fluid_dynamics_grid;
+
         list<Obstacle *> obstacles;
         list<Letter *>   letters;
 
@@ -70,9 +82,6 @@ class ofApp : public ofBaseApp{
         ofRectangle phase_3A;
         ofRectangle phase_3B;
         ofRectangle phase_3C;
-
-        size_t stringLength(string & str);
-
 
     public:
 
@@ -127,55 +136,10 @@ class ofApp : public ofBaseApp{
 
     ofxFloatSlider dead_zone_height;
     ofxFloatSlider wordToSentancePoolDelay;
-    
-        // -- Parameters that can be tweaked.
+   
+    ofxFloatSlider bounce_energy;    
+    ofxToggle show_grid;
 
-
-//        // These control where the barriers between the stages are.
-//        ofxFloatSlider pool_y = 400; // y coordinate where waterfall transforms into pool.
-//
-//        ofxFloatSlider scroll_y_start = 800; // y coordinate where pool transforms into scroll.
-//        ofxFloatSlider scroll_y_end = 800; // y coordinate where pool transforms into scroll.
-//
-//                              // The dividers between stages in the pool.
-//        ofxFloatSlider pool_y1 = pool_y*.66 + scroll_y_start*.33; // 1 third to scroll.
-//        ofxFloatSlider pool_y2 = pool_y*.2 + scroll_y_start*.8; // 2 thirds to scroll.
-//
-//        ofxFloatSlider sentances_per_second = .3; //.3;
-//
-//        // Amount that a given accelaration is damped for altering meandering direction.
-//        ofxFloatSlider meanderingDamping_letters = .5;
-//
-//        // The constant speed that a pool word will meander at.
-//        // This should be faster if the pool is larger.
-//        //float meanderingSpeed = 50; // Pixels per second.
-//        ofxFloatSlider meanderingSpeed_letters = 100;
-//        // 50 works for 800 wide pool.
-//        // 100 for 1920 wide pool.
-//
-//
-//        // -- More meandering Sliders for each phase.
-//        ofxFloatSlider meanderingDamping_words     =  .5;
-//        ofxFloatSlider meanderingSpeed_words       = 100;
-//        ofxFloatSlider meanderingDamping_sentances =  .5;
-//        ofxFloatSlider meanderingSpeed_sentances   = 100;
-//
-//        ofxFloatSlider combine_delay_letters = 5;
-//        ofxFloatSlider combine_delay_words = 1;
-//        ofxFloatSlider combine_delay_sentances = 1;
-//        ofxFloatSlider max_scroll_delay  = 1;
-//
-//
-//        // How much the wind affects the letters.
-//        ofxFloatSlider wind_factor = 0.01;
-//
-//        // Rate at which sentances scroll down the screen in the Stage 3: text_scroll.
-//        ofxFloatSlider scrollSpeed = 40;
-//
-//        ofxFloatSlider poolTurnSpeed = .1;
-//
-//        ofxFloatSlider gravity = 30;// pixels / time / time.
-//        ofxFloatSlider terminal_velocity = 80;
 
         // -- GUI Sliders.        
 

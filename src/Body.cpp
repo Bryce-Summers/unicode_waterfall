@@ -1,8 +1,8 @@
 #include "Body.h"
 
-Body::Body(Grid * grid)
+Body::Body(Grid * collision_detection_grid)
 {
-    this -> grid = grid;
+    this -> collision_detection_grid = collision_detection_grid;
 
     // Default Values.
     restitution_coef = 1.0;
@@ -136,13 +136,12 @@ void Body::resolve_collision(Body * other)
         cout << "Third Option" << endl;
     }
     */
-    
 
     // Udates both body's dynamics.
     this -> updateDynamics(info, other);
     
     // Resolve any new collisions the other may be experiencing.
-    grid -> resolve_collisions(other);
+    collision_detection_grid-> resolve_collisions(other);
 
 }
 
@@ -195,18 +194,16 @@ bool Body::separatePenetratingBody(Body * other)
 
 void Body::moveBody(ofVec2f old_location, ofVec2f new_location)
 {
-    grid -> remove_from_collision_grid(this);
+    collision_detection_grid -> remove_from_collision_grid(this);
     this -> position += new_location - old_location;
     this -> updateCollidableFromPosition();
-    grid -> add_to_collision_grid(this);
+    collision_detection_grid -> add_to_collision_grid(this);
 }
 
 
 void Body::updateDynamics(CollideInfo & info, Body * body2)
 {
-    
     Body * body1 = this;
-    
 
     // Extract all relevant quantities,
     // Then convert this into a single dimensional collision problem.
@@ -224,6 +221,8 @@ void Body::updateDynamics(CollideInfo & info, Body * body2)
     ofVec2f old_projected_velocity2 = v2*normal;
 
     this -> solve1DRigidBodyCollision(body2, &v1, &v2);
+
+    
 
     ofVec2f new_projected_velocity1 = v1*normal;
     ofVec2f new_projected_velocity2 = v2*normal;
@@ -274,7 +273,10 @@ void Body::updateDynamics(CollideInfo & info, Body * body2)
 
 // IN/OUT v1, v2, updates the given velocities from the results of the 1D collision
 // between this and the other rigid body.
-void Body::solve1DRigidBodyCollision(Body * other, float * v1_in_out, float * v2_in_out)
+void Body::solve1DRigidBodyCollision(
+    Body * other,
+    float * v1_in_out,
+    float * v2_in_out)
 {
     // Resolve collision by satisfying the following Physical laws:
     // 1. conservation of momentum and 
@@ -287,7 +289,8 @@ void Body::solve1DRigidBodyCollision(Body * other, float * v1_in_out, float * v2
     // Collision with a static object results in a full bounce.
     if (!(other -> isDynamic()))
     {
-        *v1_in_out = -v1;
+        float coef = other -> getRestitutionCoef();
+        *v1_in_out = -v1 * coef;
         return;
     }
 

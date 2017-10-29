@@ -17,7 +17,7 @@ class Grid;
 class Body
 {
 public:
-    Body(Grid * grid);// Values should be set by the subclasses if needed.
+    Body(Grid * collision_detection_grid);// Values should be set by the subclasses if needed.
     ~Body();
 
 // Dynamics quantities.
@@ -26,7 +26,7 @@ private:
 
 protected:
    
-    Grid * grid;
+    Grid * collision_detection_grid;
 
     float mass;
     float restitution_coef;
@@ -63,7 +63,7 @@ public:
     float   getAngularSpeed();
     float   getMass();
     ofVec2f getCenterOfMass();
-    float   getRestitutionCoef();
+    virtual float   getRestitutionCoef();
 
     ofVec2f getPosition();
 
@@ -107,5 +107,4 @@ private:
     bool separatePenetratingBody(Body * other);
     // Moves this body such that the pt at the old location has been translated to the new_location.
     void moveBody(ofVec2f old_location, ofVec2f new_location);
-};
-
+}; 
