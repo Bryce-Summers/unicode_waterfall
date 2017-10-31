@@ -261,3 +261,8 @@ float LetterManager::getRestitutionCoef()
 {
     return *coef_of_restitution;
 }
+
+void LetterManager::addVelocityToMeander(ofVec2f position, ofVec2f velocity)
+{
+    fluid_dynamics_grid -> addVelocityToMeander(position, velocity);
+}

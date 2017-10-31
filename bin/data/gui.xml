@@ -5,24 +5,24 @@
 	<scroll_y_start>772.5</scroll_y_start>
 	<scroll_y_end>812.5</scroll_y_end>
 	<sentances_per_second>0.4555</sentances_per_second>
-	<gravity>49.175</gravity>
-	<terminal_velocity>83.8</terminal_velocity>
-	<curl_letters>0.025</curl_letters>
-	<m_speed_letters>88</m_speed_letters>
+	<gravity>5.455</gravity>
+	<terminal_velocity>82.65</terminal_velocity>
+	<curl_letters>0.009</curl_letters>
+	<m_speed_letters>100</m_speed_letters>
 	<curl_words>0.009</curl_words>
-	<m_speed_words>30</m_speed_words>
+	<m_speed_words>100</m_speed_words>
 	<curl_sentances>0.009</curl_sentances>
 	<m_speed_sentances>100</m_speed_sentances>
-	<wind_factor>0.155</wind_factor>
+	<wind_factor>0.01</wind_factor>
 	<scrollSpeed>40</scrollSpeed>
 	<poolTurnSpeed>0.015708</poolTurnSpeed>
-	<c_delay_letters>0.01</c_delay_letters>
-	<c_delay_words>0.01</c_delay_words>
-	<c_delay_sentances>0.01</c_delay_sentances>
-	<max_scroll_delay>2.035</max_scroll_delay>
+	<c_delay_letters>1</c_delay_letters>
+	<c_delay_words>1</c_delay_words>
+	<c_delay_sentances>1</c_delay_sentances>
+	<max_scroll_delay>5</max_scroll_delay>
 <group/>
-	<dead_zone_height>32.075</dead_zone_height>
-	<w_2_s_delay>1</w_2_s_delay>
+	<dead_zone_height>5</dead_zone_height>
+	<w_2_s_delay>0</w_2_s_delay>
 <divide_y1>111.111</divide_y1>
 	<divide_y2>222.222</divide_y2>
 	<divide_y3>333.333</divide_y3>
@@ -32,5 +32,6 @@
 	<divide_y7>777.778</divide_y7>
 	<divide_y8>888.889</divide_y8>
 <bounce_energy>0.25</bounce_energy>
-	<UnknownName>0</UnknownName>
+	<UnknownName>1</UnknownName>
+<viscocity>0.1</viscocity>
 </group>

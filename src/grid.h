@@ -2,6 +2,7 @@
 #include "ofMain.h"
 #include "CollideHeaders.h"
 #include "Body.h"
+#include "Fluid.h"
 
 /*
  * A grid that drives several behaviors in the scene.
@@ -43,8 +44,6 @@ public:
     // The Letters are requested to have the following behavior:
     // buoyancy, weight of the particles, degree of turbulence, strength of the wind
     ofVec2f wind_velocity;
-
-    ofVec2f meander_velocity;
     ofVec2f temp;
 };
 
@@ -63,11 +62,15 @@ public:
 private:
     int numRows;
     int numCols;
-    std::vector<GridCell> gridCells;
+    
     float screenX2grid;
     float screenY2grid;
     float gridX2screen;
     float gridY2screen;
+    
+    std::vector<GridCell> gridCells;
+
+    Fluid * fluid;
 
 
 // The public facing interfacial services that this grid provides.
@@ -91,7 +94,13 @@ public:
 
     ofVec2f getMeanderVelocityAtPosition(ofVec2f position);
 
+    void addVelocityToMeander(ofVec2f position, ofVec2f velocity);
+
+
     void findNeighbors(Body * obj, std::set<Body *> & output);
+
+    // Updates the dynamics grids
+    void step_meander_velocities(float dt, float viscocity);
 
 // Internal Functions that operate the grid.
 private:
@@ -131,5 +140,7 @@ private:
     // Returns >0 if c is on the right of ray a1a2.
     int line_side_test(ofVec2f a1, ofVec2f a2, ofVec2f c);
 
+    // -- Fluid Dynamics Functions.
+    
 };
 

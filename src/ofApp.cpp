@@ -48,7 +48,9 @@ void ofApp::setup(){
 
     gui.add(show_grid.setup(false));
 
-    gui.loadFromFile("gui.xml");
+    gui.add(viscocity.setup("viscocity", .1, 0, 1)); // Percentage of the screen the velocity travels to each frame.
+
+    //gui.loadFromFile("gui.xml");
     
     frame = 0;
 
@@ -196,8 +198,9 @@ void ofApp::loadGridAndObstacles()
     // A grid spaced out over the window width in 100 by 100 equal locations.
     int N = 10;
     collision_detection_grid = new Grid(N, N, ofGetWidth(), ofGetHeight());
-    int F = 100;
-    fluid_dynamics_grid = new Grid(F, F, ofGetWidth(), ofGetHeight());
+    int F_rows = 40;
+    int F_columns =  40;
+    fluid_dynamics_grid = new Grid(F_rows, F_columns, ofGetWidth(), ofGetHeight());
 
     // We will focus on getting the other stages in working order first.
     ofPolyline p;
@@ -410,6 +413,9 @@ void ofApp::update(){
     std::cout << "Update: "
         << std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count()
         << " milliseconds" << std::endl;
+
+    fluid_dynamics_grid -> step_meander_velocities(dt, viscocity);
+
 }
 
 void ofApp::spawnSentance()

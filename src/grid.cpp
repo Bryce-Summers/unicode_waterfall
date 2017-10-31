@@ -32,7 +32,12 @@ void Grid::draw()
         //ofDrawBitmapString(cell.size(), cell.screen_x, cell.screen_y + 20);
 
         ofVec2f position = ofVec2f(cell.screen_x, cell.screen_y);
-        ofDrawLine(position, position + cell.meander_velocity/1000);
+        ofVec2f grid_position = ofVec2f(cell.grid_x, cell.grid_y);
+        ofVec2f velocity = fluid -> getVelocityAtPosition(grid_position);
+        velocity.x *= gridX2screen;
+        velocity.y *= gridY2screen;
+
+        ofDrawLine(position, position + velocity);
     }
 
 }
@@ -54,6 +59,10 @@ void Grid::createGrid(int numRows, int numColumns, int screen_w, int screen_h)
 
     int len = numRows*numColumns;
 
+    fluid = new Fluid(numRows, numColumns);
+    vector<float> * v_x = fluid -> getVX();
+    vector<float> * v_y = fluid -> getVY();
+
     for (int i = 0; i < len; i++)
     {
         GridCell cell = GridCell();
@@ -72,71 +81,17 @@ void Grid::createGrid(int numRows, int numColumns, int screen_w, int screen_h)
         // Initialize wind position to random cross wind.
         cell.wind_velocity = ofVec2f(ofRandom(300) - 150, -tubluence);
 
-        cell.meander_velocity = ofVec2f(ofRandom(300) - 150, ofRandom(300) - 150);
+        ofVec2f meander_velocity = ofVec2f(ofRandom(300) - 150, ofRandom(300) - 150);
+        meander_velocity.x *= screenX2grid;
+        meander_velocity.y *= screenY2grid;
+
+        // Velocities are scaled to grid space.
+        // Initialize the meander velocities, which will be used for pool behavior.
+        fluid -> setVelocityAtRowCol(cell.grid_x, cell.grid_y, 
+            meander_velocity);
+        
 
         gridCells.push_back(cell);
-    }
-
-    // Convert the velocity field into a divergence free field.
-
-    for(int iter = 0; iter < 5; iter++)
-    {
-
-        // Set boundary to no slip.
-        for (int c = 0; c < numCols; c++)
-        {
-            // top.
-            int index = indexAtRowColumn(0, c);
-            GridCell * cell = &gridCells[index];
-            cell -> meander_velocity.y = MAX(0, cell -> meander_velocity.y);
-
-            index = indexAtRowColumn(numRows - 1, c);
-            cell = &gridCells[index];
-            cell -> meander_velocity.y = MIN(0, cell -> meander_velocity.y);
-        }
-
-        // Set the left and right row.
-        for (int r = 0; r < numRows; r++)
-        {
-            // top.
-            int index = indexAtRowColumn(r, 0);
-            GridCell * cell = &gridCells[index];
-            cell -> meander_velocity.x = MAX(0, cell -> meander_velocity.x);
-
-            index = indexAtRowColumn(r, numCols - 1);
-            cell = &gridCells[index];
-            cell -> meander_velocity.x = MIN(0, cell -> meander_velocity.x);
-        }
-
-        // Remove Gradient.
-        for (int i = 0; i < len; i++)
-        {
-            int row = index2Row(i);
-            int col = index2Col(i);
-
-            int i_top    = indexAtRowColumn(row - 1, col);
-            int i_left   = indexAtRowColumn(row, col - 1);
-            int i_right  = indexAtRowColumn(row, col + 1);
-            int i_bottom = indexAtRowColumn(row + 1, col);
-
-            GridCell * top    = &gridCells[i_top];
-            GridCell * left   = &gridCells[i_left];
-            GridCell * right  = &gridCells[i_right];
-            GridCell * bottom = &gridCells[i_bottom];        
-
-            ofVec2f grad = right -> meander_velocity - left -> meander_velocity;
-            grad += bottom -> meander_velocity - top -> meander_velocity;
-
-            GridCell * center = &gridCells[i];
-            center -> temp = center -> meander_velocity - grad;
-        }
-
-        for (int i = 0; i < len; i++)
-        {
-            GridCell * center = &gridCells[i];
-            center -> meander_velocity = center -> temp;
-        }
-
     }
 
     return;
@@ -464,10 +419,18 @@ ofVec2f Grid::getWindVelocityAtPosition(ofVec2f position)
 
 ofVec2f Grid::getMeanderVelocityAtPosition(ofVec2f position)
 {
-    int index = indexAtPoint(position);
-    GridCell * cell = &this->gridCells[index];
+    float grid_x = position.x * screenX2grid;
+    float grid_y = position.y * screenY2grid;
 
-    return cell -> meander_velocity;
+    ofVec2f grid_pos = ofVec2f(grid_x, grid_y);
+
+    ofVec2f grid_velocity = fluid -> getVelocityAtPosition(grid_pos);
+    
+    // Convert from grid velocity to screen velocity.
+    grid_velocity.x *= gridX2screen;
+    grid_velocity.x *= gridY2screen;
+
+    return grid_velocity;
 }
 
 
@@ -497,4 +460,25 @@ void GridCell::addAllCollidablesToSet(std::set<Body *> & collision_set)
 int GridCell::size()
 {
     return current_objects.size();
+}
+
+void Grid::step_meander_velocities(float dt, float viscocity)
+{
+    fluid -> setViscocity(viscocity);
+    fluid -> step(dt);
+}
+
+void Grid::addVelocityToMeander(ofVec2f position, ofVec2f velocity)
+{
+    // Convert to grid position.
+    float grid_x = position.x * screenX2grid;
+    float grid_y = position.y * screenY2grid;
+    ofVec2f grid_pos = ofVec2f(grid_x, grid_y);
+
+    // Convert to grid velocity.
+    float grid_vx = velocity.x * gridX2screen;
+    float grid_vy = velocity.y * gridY2screen;
+    ofVec2f grid_velocity = ofVec2f(grid_vx, grid_vy);
+
+    fluid -> addVelocityAtPosition(grid_pos, grid_velocity);
 }

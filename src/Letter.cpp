@@ -339,7 +339,19 @@ void Letter::avoidOthers(float dt)
 
 void Letter::move(float dt)
 {
-    storePosition(); 
+    // Simply test out fluid movement.
+    if (position.y < 0)
+    {
+        position.y = ofGetHeight()/2;
+    }
+
+    velocity = letterManager -> getMeanderVelocityAtPosition(position);
+    position += velocity*dt;
+    //letterManager->addVelocityToMeander(this->position, this->velocity);
+    return;
+
+
+    storePosition();
 
     if (position.y < y_bound_top() + letterManager->getDeadZoneHeight())
     {
@@ -409,6 +421,9 @@ void Letter::move(float dt)
             collision_detection_grid -> add_to_collision_grid(this);
         }
     }
+
+
+    letterManager -> addVelocityToMeander(this -> position, this -> velocity);
 
 }
 

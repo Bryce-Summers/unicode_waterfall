@@ -158,4 +158,6 @@ public:
 
     float getRestitutionCoef();
 
+    // allows letters to influence the pools.
+    void addVelocityToMeander(ofVec2f position, ofVec2f velocity);
 };

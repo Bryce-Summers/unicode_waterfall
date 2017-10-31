@@ -16,6 +16,7 @@
 
 class ofApp : public ofBaseApp{
 
+
 	public:
 		void setup();
 		void update();
@@ -140,11 +141,15 @@ class ofApp : public ofBaseApp{
     ofxFloatSlider bounce_energy;    
     ofxToggle show_grid;
 
+    ofxFloatSlider viscocity;
 
-        // -- GUI Sliders.        
 
-        ofxPanel gui;
 
-        int timing = 0;
+    // -- GUI Sliders.
+    ofxPanel gui;
+
+    int timing = 0;
+
+        
 
 };
