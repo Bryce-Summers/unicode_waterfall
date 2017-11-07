@@ -2,10 +2,13 @@
 
 #include "ofMain.h"
 
+
+// Note all arrays are packed. (row, col). e.g. y, x.
+
 class Fluid
 {
 public:
-    Fluid(int numRows, int numColumns);
+    Fluid(int numRows, int numColumns, int screen_width, int screen_height);
     ~Fluid();
 
 // Public Interface.
@@ -22,12 +25,16 @@ public:
     vector<float> * getVY();
 
     // Returns the interpolated value from the data buffers.
+    // positions and velocities are in screen space coordinates.
     ofVec2f getVelocityAtPosition(ofVec2f pos);
     void    addVelocityAtPosition(ofVec2f position, ofVec2f velocity);
 
     // Performs conversion from [0-numRows]x[0-numCols] space to
     // [0-numRows+2]x[0-numCols+2] space.
     void setVelocityAtRowCol(int row, int col, ofVec2f velocity);
+
+    // Add random velocities throughout the fluid.
+    void addRandomVelocities(float mag);
 
 // Data Buffers.
 private:
@@ -37,16 +44,26 @@ private:
     int rowNum; // The number rows stacked vertically on top of each other.
     int colNum; // The number of columns horizontally sitting next to each other.
 
+    float screenToLocalX;
+    float screenToLocalY;
+
     // Constant boundary codes.
     const int COPY = 0;
     const int HORI = 1;
     const int VERT = 2;
 
     // Single dimensional packed array.
-    vector<float> v_x;  // Velocity x. field value 1.
-    vector<float> v_y;  // Velocity y. field value 2.
-    vector<float> temp1;// Temporary buffer.
-    vector<float> temp2;// Temporary buffer.
+
+    // Velocity x. field value 1.
+    // horizontal screen pixels / time.
+    vector<float> v_x;
+    // Velocity y. field value 2.
+    // vertical screen pixels / time.
+    vector<float> v_y;
+
+    // Temporary buffers.
+    vector<float> temp1;
+    vector<float> temp2;
 
     float viscocity;
 

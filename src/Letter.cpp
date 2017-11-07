@@ -340,16 +340,7 @@ void Letter::avoidOthers(float dt)
 void Letter::move(float dt)
 {
     // Simply test out fluid movement.
-    if (position.y < 0)
-    {
-        position.y = ofGetHeight()/2;
-    }
-
-    velocity = letterManager -> getMeanderVelocityAtPosition(position);
-    position += velocity*dt;
-    //letterManager->addVelocityToMeander(this->position, this->velocity);
-    return;
-
+    //fluidTest(dt);
 
     storePosition();
 
@@ -399,10 +390,11 @@ void Letter::move(float dt)
         position = letter_to_my_left -> position + offset;
     }
 
+    /*
     if (!connected_left)
     {
         angle = 0;
-    }
+    }*/
 
     boundMovement(dt);
 
@@ -425,6 +417,19 @@ void Letter::move(float dt)
 
     letterManager -> addVelocityToMeander(this -> position, this -> velocity);
 
+}
+
+void Letter::fluidTest(float dt)
+{
+    if (position.y < 0)
+    {
+        position.y = ofGetHeight() / 2;
+    }
+
+    velocity = letterManager->getMeanderVelocityAtPosition(position);
+    position += velocity*dt;
+    //letterManager->addVelocityToMeander(this->position, this->velocity);
+    return;
 }
 
 void Letter::storePosition()
@@ -1043,10 +1048,13 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
         // pool.
         if (combine_stage == PARTIAL_WORD && this -> isStartOfWord())
         {
+            // Random oscilates the angle.
+            this -> angle_speed = ofRandom(2*PI);
             return ofVec2f(this -> position.x, y_bound_bottom());
         }
         else if ((combine_stage == PARTIAL_SENTANCE || combine_stage == SENTANCE) && this -> isStartOfSentance())
         {
+            this -> angle_speed = ofRandom(2 * PI);
             return ofVec2f(this -> position.x, y_bound_bottom());
         }
 

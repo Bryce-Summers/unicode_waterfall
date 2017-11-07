@@ -354,4 +354,6 @@ private:
 
     float getOffsetFromLeft();
 
+    void fluidTest(float dt);
+
 };

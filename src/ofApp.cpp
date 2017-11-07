@@ -48,9 +48,9 @@ void ofApp::setup(){
 
     gui.add(show_grid.setup(false));
 
-    gui.add(viscocity.setup("viscocity", .1, 0, 1)); // Percentage of the screen the velocity travels to each frame.
+    gui.add(viscocity.setup("viscocity", 4.5, 0, 100)); // Percentage of the screen the velocity travels to each frame.
 
-    //gui.loadFromFile("gui.xml");
+    gui.loadFromFile("gui.xml");
     
     frame = 0;
 

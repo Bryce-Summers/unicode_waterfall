@@ -59,7 +59,7 @@ void Grid::createGrid(int numRows, int numColumns, int screen_w, int screen_h)
 
     int len = numRows*numColumns;
 
-    fluid = new Fluid(numRows, numColumns);
+    fluid = new Fluid(numRows, numColumns, screen_w, screen_h);
     vector<float> * v_x = fluid -> getVX();
     vector<float> * v_y = fluid -> getVY();
 
@@ -81,7 +81,8 @@ void Grid::createGrid(int numRows, int numColumns, int screen_w, int screen_h)
         // Initialize wind position to random cross wind.
         cell.wind_velocity = ofVec2f(ofRandom(300) - 150, -tubluence);
 
-        ofVec2f meander_velocity = ofVec2f(ofRandom(300) - 150, ofRandom(300) - 150);
+        int mag = 10;
+        ofVec2f meander_velocity = ofVec2f(ofRandom(mag*2) - mag, ofRandom(mag*2) - mag);
         meander_velocity.x *= screenX2grid;
         meander_velocity.y *= screenY2grid;
 
@@ -419,17 +420,7 @@ ofVec2f Grid::getWindVelocityAtPosition(ofVec2f position)
 
 ofVec2f Grid::getMeanderVelocityAtPosition(ofVec2f position)
 {
-    float grid_x = position.x * screenX2grid;
-    float grid_y = position.y * screenY2grid;
-
-    ofVec2f grid_pos = ofVec2f(grid_x, grid_y);
-
-    ofVec2f grid_velocity = fluid -> getVelocityAtPosition(grid_pos);
-    
-    // Convert from grid velocity to screen velocity.
-    grid_velocity.x *= gridX2screen;
-    grid_velocity.x *= gridY2screen;
-
+    ofVec2f grid_velocity = fluid -> getVelocityAtPosition(position);
     return grid_velocity;
 }
 
@@ -464,6 +455,7 @@ int GridCell::size()
 
 void Grid::step_meander_velocities(float dt, float viscocity)
 {
+    fluid -> addRandomVelocities(10);
     fluid -> setViscocity(viscocity);
     fluid -> step(dt);
 }

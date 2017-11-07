@@ -1,7 +1,7 @@
 #include "Fluid.h"
 
 
-Fluid::Fluid(int nRows, int nColumns)
+Fluid::Fluid(int nRows, int nColumns, int screen_width, int screen_height)
 {
     this -> viscocity = .5;
 
@@ -24,6 +24,11 @@ Fluid::Fluid(int nRows, int nColumns)
         temp1.push_back(0);
         temp2.push_back(0);
     }
+
+    // Compute the dimensional space translations.
+    this -> screenToLocalX = 1.0*nColumns/screen_width;
+    this -> screenToLocalY = 1.0*nRows   /screen_width;
+
 }
 
 
@@ -59,19 +64,25 @@ vector<float> * Fluid::getVY()
 // ASSUMES position is in local space.
 ofVec2f Fluid::getVelocityAtPosition(ofVec2f pos)
 {
-    float row = pos.y;
-    float col = pos.x;
+    // Convert to local position.
+    float row = pos.y * this -> screenToLocalY;
+    float col = pos.x * this -> screenToLocalX;
 
+    // Get Screen pixels / time velocities.
     float vx = getVX(row, col);
     float vy = getVY(row, col);
 
     return ofVec2f(vx, vy);
 }
 
+// Position given in Screen coordinates.
 void Fluid::addVelocityAtPosition(ofVec2f position, ofVec2f velocity)
 {
-    addToValue(&v_x, position.y, position.x, velocity.x);
-    addToValue(&v_y, position.y, position.x, velocity.y);
+    float x = position.x * screenToLocalX;
+    float y = position.y * screenToLocalY;
+
+    addToValue(&v_x, y, x, velocity.x);
+    addToValue(&v_y, y, x, velocity.y);
 }
 
 void Fluid::setVelocityAtRowCol(int row, int col, ofVec2f velocity)
@@ -96,19 +107,21 @@ void Fluid::step(float dt, float visc)
 {
 
     //dt /= ;
+    float dtx = dt*this -> screenToLocalX;
+    float dty = dt*this -> screenToLocalY;
 
     // Diffuse the velocity.
-    diffuse(1, &temp1, &v_x, visc, dt*colNum/ofGetScreenWidth());
-    diffuse(2, &temp2, &v_y, visc, dt*rowNum/ofGetScreenHeight());
+    diffuse(1, &temp1, &v_x, visc, dtx);
+    diffuse(2, &temp2, &v_y, visc, dty);
     copyFromTo(&temp1, &v_x);
     copyFromTo(&temp2, &v_y);
 
     removeDivergence();
 
     // Advect v_x along velocity field v_x,v_y, store in temp1.
-    advect(1, &temp1, &v_x, &v_x, &v_y, dt);
+    advect(1, &temp1, &v_x, &v_x, &v_y, dtx);
     // Advect v_y along velocity field v_x,v_y, store in temp2.
-    advect(2, &temp2, &v_y, &v_x, &v_y, dt);
+    advect(2, &temp2, &v_y, &v_x, &v_y, dty);
     copyFromTo(&temp1, &v_x);// I could optimize this be swaping pointers if I wanted to...
     copyFromTo(&temp2, &v_y);
 
@@ -262,17 +275,20 @@ int Fluid::IX(int row, int col)
       for(int i = 1; i <= colNum; i++)
       {
           div -> at(IX(j, i)) =
-                         -0.5f*
+              this -> screenToLocalX*
                                (
                                 u -> at(IX(j, i + 1))
                                -u -> at(IX(j, i - 1))
-                               )/colNum + 
+                               )/2 +
+              this -> screenToLocalY*
                                (
                                 v -> at(IX(j + 1, i))
                                -v -> at(IX(j - 1, i))
-                               )/rowNum;
+                               )/2;
           p -> at(IX(j, i)) = 0; // Pressure field is initialized to 0.
       }
+
+      // divergence = localX, localY / time.
       
       
       setBoundary(0, div);
@@ -286,8 +302,8 @@ int Fluid::IX(int row, int col)
       for(int j = 1; j <= rowNum; j++)
       for(int i = 1; i <= colNum; i++)
       {
-          u -> at(IX(j, i)) -= 0.5f*colNum*(p -> at(IX(j, i + 1)) - p -> at(IX(j,     i - 1)));
-          v -> at(IX(j, i)) -= 0.5f*rowNum*(p -> at(IX(j + 1, i)) - p -> at(IX(j - 1, i    )));
+          u -> at(IX(j, i)) -= 0.5f/screenToLocalX*(p -> at(IX(j, i + 1)) - p -> at(IX(j,     i - 1)));
+          v -> at(IX(j, i)) -= 0.5f/screenToLocalY*(p -> at(IX(j + 1, i)) - p -> at(IX(j - 1, i    )));
       }
       
       setBoundary(1, u);
@@ -312,6 +328,7 @@ int Fluid::IX(int row, int col)
       x -> at(IX(rowNum + 1, i    )) = b == 2 ? -x -> at(IX(rowNum, i)) : x -> at(IX(rowNum, i));
     }
     
+    // Corners are the weighted average of their orthogonal neighbors, weighted by how close they are.
     (*x)[IX(0,                   0)] = 0.5f*((*x)[IX(0,               1)] + (*x)[IX(1,               0 )]);
     (*x)[IX(rowNum + 1,          0)] = 0.5f*((*x)[IX(rowNum + 1,      1)] + (*x)[IX(rowNum,          0 )]);
     (*x)[IX(0,          colNum + 1)] = 0.5f*((*x)[IX(0,          colNum)] + (*x)[IX(1,      colNum + 1 )]);
@@ -353,8 +370,8 @@ void Fluid::lin_solve(int b, vector<float> * x, vector<float> * x0, float a, flo
       int i0, j0, i1, j1;
       float x, y, s0, t0, s1, t1;
       
-      float dtx = colNum/ofGetScreenWidth();
-      float dty = rowNum/ofGetScreenHeight();
+      float dtx = 1.0*colNum/ofGetScreenWidth();
+      float dty = 1.0*rowNum/ofGetScreenHeight();
 
       // for every cell.
       for(int j = 1; j <= rowNum; j++)
@@ -402,5 +419,30 @@ void Fluid::lin_solve(int b, vector<float> * x, vector<float> * x0, float a, flo
   {
     float a = dt*diff*rowNum*colNum;
     lin_solve(b, x, x0, a, 1 + 4*a );
+  }
+
+  // Add random velocities throughout the fluid.
+  void Fluid::addRandomVelocities(float mag)
+  {
+
+      //for (int j = 1; j <= rowNum; j++)
+      for (int i = 1; i <= colNum; i++)
+      {
+        int j = 1;
+
+        // Screen x pixels/time.
+        //float vx = ofRandom(mag*2) - mag;
+        //float vy = ofRandom(mag*2) - mag;
+        float vx = ofRandom(mag*2);
+        float vy = 0;
+
+        float y = j/screenToLocalY;
+        float x = i/screenToLocalX;
+
+        ofVec2f vel = ofVec2f(vx, vy);
+        ofVec2f pos = ofVec2f(x, y);
+        
+        this -> addVelocityAtPosition(pos, vel);
+      }
   }
 
