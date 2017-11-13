@@ -448,6 +448,8 @@ void ofApp::spawnSentance()
 //--------------------------------------------------------------
 void ofApp::draw()
 {
+    ofScale(ofVec2f(.5, .5));
+
     auto t1 = Clock::now();
 
     std::stringstream strm;
@@ -542,6 +544,8 @@ void ofApp::draw()
     //collision_detection_grid -> draw();
     if(show_grid)
         fluid_dynamics_grid -> draw();
+
+    ofScale(2, 2);
 
     gui.draw();
 
