@@ -10,8 +10,15 @@ Letter::Letter(
     float offset_in_text_scroll,
     bool space_before,
     int sentance_index,
-    ofTrueTypeFont * font) : Body(letterManager -> collision_detection_grid)
+    int font_size_index, // Everything the letter needs to dynamically query its font.
+    bool font_italics,
+    FontManager * fontManager) : Body(letterManager -> collision_detection_grid)
 {
+
+    // Font.
+    this -> font_size_index = font_size_index;
+    this -> font_italics = font_italics;
+    this -> fontManager = fontManager;
 
     this -> letterManager = letterManager;
     this -> behavior = WATERFALL;
@@ -49,8 +56,6 @@ Letter::Letter(
     // Letters start out with a rotational speed.
     float angular_velocity_variance = PI*5;
     this -> angle_speed = ofRandom(angular_velocity_variance) - angular_velocity_variance / 2;
-
-    this -> font = font;
 
     this -> init_texture(character);
 
@@ -99,7 +104,7 @@ void Letter::init_texture(char character)
     this -> str.push_back('\0');
 
     // Determine character size on screen.
-
+    ofTrueTypeFont * font = fontManager -> getFont(font_size_index, font_italics);
     ofRectangle char_bounds  = font -> getStringBoundingBox(this -> str, this -> position.x, this -> position.y);
     ofRectangle glyph_bounds = font -> getGlyphBBox();
     int width  = char_bounds.getWidth();
@@ -179,19 +184,6 @@ void Letter::boundDynamics(float dt)
         velocity.x *= -1;
     }
 
-    // bounce off pool walls.
-    if (behavior == POOL || behavior == COMBINE)
-    {
-        float top    = this -> y_bound_top();
-        float bottom = this -> y_bound_bottom();
-
-        if ((position.y < top    && velocity.y < 0) ||
-            (position.y > bottom && velocity.y > 0))
-        {
-            velocity.y *= -1;
-        }
-    }
-
     // Bound the dynamics in the waterfall to avoid over energizing the letters.
     if (behavior == WATERFALL)
     {
@@ -225,26 +217,6 @@ void Letter::boundDynamics(float dt)
     // Keep a running update for the average position.
     average_position = this -> position * .01 + .99*average_position;
 
-    // Alternate drivers at a set interval.
-    /*
-    if(false && behavior != WATERFALL && !connected_left && driver_delay > 0)
-    {
-        driver_delay -= dt;
-
-        if(driver_delay <= 0)
-        {
-            if(driving == LEFT)
-            {
-                setDriving(RIGHT);
-            }
-            else
-            { 
-               setDriving(LEFT);
-            }
-            driver_delay = letterManager -> getDriverDelay();
-        }
-    }*/
-
 }
 
 void Letter::transitionToNextStateIfProper(float dt)
@@ -265,11 +237,11 @@ void Letter::transitionToNextStateIfProper(float dt)
 
 
     // Waterfall to meander pool.
-    float y_divider = this -> letterManager -> getYDivider(current_stage);
+    float y_divider = getCurrentYDivider();
     if (behavior == WATERFALL && position.y > y_divider)
     {
         this -> transitionToMeanderPool();
-        current_stage++;
+        incrementStage();
     }
 
 
@@ -282,21 +254,21 @@ void Letter::transitionToNextStateIfProper(float dt)
         if (current_stage == LETTER_POOL && entire_word_in_stage())
         {
             transitionToCombinePool();
-            current_stage++;
+            incrementStage(); // On the first divider, so no increment.
         }
 
         // COMBINE POOL.
         if (current_stage == LETTER_COMBINE && word_complete)
         {
             transitionToWaterfall();
-            current_stage++;
+            incrementStage();
         }
 
         // WORD POOL.
         if (current_stage == WORD_POOL && entire_sentance_in_stage())
         {
             transitionToCombinePool();
-            current_stage++;
+            incrementStage();
         }
 
         // WORD COMBINE -> Sentance scroll.
@@ -307,10 +279,26 @@ void Letter::transitionToNextStateIfProper(float dt)
                this -> sentance_index == letterManager -> get_scroll_index() && (scroll_delay < 0 || sentance_index > 0))
             {
                 transitionToScroll();
-                current_stage++;
+                incrementStage();
             }      
         }
     }
+
+}
+
+void Letter::incrementStage()
+{
+    Letter * search = findStartOfConnectedGroup();
+    Letter * last_search;
+
+    // Set elements from left to right.
+    do
+    {
+        last_search = search;
+        search -> current_stage++;
+        search = search  -> letter_to_my_right;
+    } while (last_search -> connected_right);
+
 }
 
 void Letter::avoidOthers(float dt)
@@ -343,11 +331,6 @@ void Letter::move(float dt)
     //fluidTest(dt);
 
     storePosition();
-
-    if (position.y < y_bound_top() + letterManager->getDeadZoneHeight())
-    {
-        velocity.y += 1;
-    }
 
     // Remove the old references to this object stored in the grid.
     if (collision_detection)
@@ -505,6 +488,7 @@ void Letter::draw()
     //this -> fbo.draw(x, y -h / 2);
 
     // -- With matrices is too slow.
+    ofTrueTypeFont * font = fontManager -> getFont(font_size_index, font_italics);
     font -> drawString(this -> str, 0, 0);//font -> getAscenderHeight() + h);
 
     // Without matrices is too slow.
@@ -538,7 +522,7 @@ bool Letter::isDead()
     if (this -> letter_to_my_left == NULL)
     {
         // Caching the dead value makes dead collection O(n) for an n letter list.
-        dead = (behavior == TEXT_SCROLL && position.y > ofGetHeight() || dead);
+        dead = (behavior == TEXT_SCROLL && position.y > letterManager -> getBottomY() || dead);
         return dead;
     }
     else
@@ -684,16 +668,6 @@ void Letter::stepPoolA(float dt)
 
     ofVec2f velocity = letterManager -> getMeanderVelocityAtPosition(this -> position);
     this -> acceleration = velocity * this -> letterManager -> getMeanderingDamping(combine_stage);
-    
-    // Don't accelerate the letter if we are near a dead zone.
-    float dead_zone = letterManager -> getDeadZoneHeight();
-    if (abs(this->position.y - y_bound_top()) < dead_zone ||
-        abs(this->position.y - y_bound_bottom()) < dead_zone ||
-        abs(this->position.x - 0) < dead_zone ||
-        abs(this->position.x - ofGetWidth() - getRemainingLength()) < dead_zone)
-    {
-        this -> acceleration = ofVec2f(0, 0);
-    }
 
     bool free;
     ofVec2f target_position = this -> getTargetPosition(&free, dt);
@@ -701,17 +675,15 @@ void Letter::stepPoolA(float dt)
     // Apply singularity for the leader.
     if (free)
     {
-        // Accelerate letters away from singularities.
-        ofVec2f singularity_avoidance = this->position - this->average_position;
-        float len = singularity_avoidance.length();
+        this -> acceleration = ofVec2f(ofRandom(20) - 10, 0);
+    }
 
-        len = MAX(.01, len);
-
-        float mag = this -> letterManager -> getMeanderingSpeed(combine_stage) *
-            this -> letterManager -> getMeanderingDamping(combine_stage) / len / len;
-        singularity_avoidance *= mag;
-
-        this -> acceleration += singularity_avoidance;
+    // Don't accelerate the letter if we are near a dead zone.
+    float dead_zone = letterManager->getDeadZoneHeight();
+    if (abs(this->position.x - 0) < dead_zone ||
+        abs(this->position.x - ofGetWidth() - getRemainingLength()) < dead_zone)
+    {
+        this->acceleration = ofVec2f(0, 0);
     }
 
     // Special boundary avoidance could be put here, but it has created mysterious bugs in the past.
@@ -914,36 +886,26 @@ void Letter::stepPoolV(float dt)
 
     bool free;
     ofVec2f target_position = this -> getTargetPosition(&free, dt);
-    
-    float turn_speed = this -> letterManager -> getTurnSpeed();
 
     if (!free)
     {
-        ofVec2f desired_velocity = (target_position - this -> position) / dt;
+        ofVec2f desired_velocity = ofVec2f((target_position.x - this -> position.x) / dt, 0);
 
         float speed = desired_velocity.length();
 
-        if(speed > .001)
+        float chase_factor = 1.5;
+        float max_speed = letterManager->getMeanderingSpeed(combine_stage) * chase_factor;
+
+        if(speed > max_speed)
         {
             // Chasing letters, should be able to exceed the meander speed to catch up with the
             // word they want to connect to or follow.
-            float chase_factor = 1.5;
-
-            float max_speed = letterManager -> getMeanderingSpeed(combine_stage) * chase_factor;
-
             float speedup = min(speed, max_speed) / speed;
 
             //this -> velocity = desired_velocity*speedup;
             //this -> velocity = desired_velocity * speedup + this -> acceleration * dt;
             // Interpolate between the meandering velocity and the following velocity.
             this -> velocity = this -> velocity * .1 + desired_velocity*speedup * .9;
-            
-            // Update angle to match where this letter is going.
-            float angle = getGlyphAngle(desired_velocity);
-    
-            // Gradually alter the angle to desired.
-            setAngleSpeed(angle, turn_speed/dt);
-            //this -> angle_speed = angle;
         }
     }
 
@@ -955,49 +917,25 @@ void Letter::stepPoolV(float dt)
         // dynamics has already applied the acceleration,
         // so all that remains is to clip the velocity to the meandering velocity.
 
+
         this -> velocity.normalize();
         this -> velocity *= letterManager -> getMeanderingSpeed(combine_stage);
+        this -> velocity.y = 0;
 
-        // Speedup sentance leader movement?
-        if (combine_stage == SENTANCE)
+
+        if(ofRandom(1) < .01)
         {
-            //this -> velocity *= 2;
+            this -> velocity *= -1;
         }
-
-        // Update angle to match where this letter is going.
-        float angle = getGlyphAngle(velocity);
-        //this -> angle = angle;
-        setAngleSpeed(angle, turn_speed/dt);
-        
     }
-    
-
-    /*
-    // -- Make connected words rigid.
-    bool free;
-    ofVec2f target_position = this->getTargetPosition(&free);
-
-    if ((connected_left && driving == LEFT) ||
-        (connected_right && driving == RIGHT))
-    {
-        /*
-        // Assumed to be between 0 and 1.
-        float m_factor = letterManager -> getMagnetFactor();
-        float m_comp = 1.0 - m_factor;
-        */
-    /*
-        this->position = target_position*m_factor + this->position*m_comp;
-    }
-    */
-
 }
 
 void Letter::stepPoolP(float dt)
 {
     dynamicsP(dt);
     
-    //this -> position.x += ofRandom(2) - 1;
-    //this -> position.y += ofRandom(2) - 1;
+    this -> position.y = getCurrentYDivider();
+    haveLetterFaceUpwards();
 }
 
 void Letter::stepCombineA(float dt)
@@ -1008,18 +946,11 @@ void Letter::stepCombineA(float dt)
 void Letter::stepCombineV(float dt)
 {
     stepPoolV(dt);
-
-    // Force letters down into the combine pool.
-    if (position.y < y_bound_top())
-    {   
-        velocity.x = 0;
-        velocity.y = letterManager -> getMeanderingSpeed(combine_stage);
-    }
 }
 
 void Letter::stepCombineP(float dt)
 {
-    dynamicsP(dt);
+    stepPoolP(dt);
 }
 
 
@@ -1043,20 +974,6 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
         *  3. Connected letters follow their group in the driving direction.
         *  4. Set driving ends to free motion.
         */
-
-        // Have leaders of combine groups plant their heads in the bottom of the combine
-        // pool.
-        if (combine_stage == PARTIAL_WORD && this -> isStartOfWord())
-        {
-            // Random oscilates the angle.
-            this -> angle_speed = ofRandom(2*PI);
-            return ofVec2f(this -> position.x, y_bound_bottom());
-        }
-        else if ((combine_stage == PARTIAL_SENTANCE || combine_stage == SENTANCE) && this -> isStartOfSentance())
-        {
-            this -> angle_speed = ofRandom(2 * PI);
-            return ofVec2f(this -> position.x, y_bound_bottom());
-        }
 
         // -- Magnets attract towards their opposite.
 
@@ -1099,12 +1016,10 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
 
             if (!connected_right)
             {
-                ofVec2f offset = output - this -> position;
-                float dist_sqr = offset.lengthSquared();
+                float offset = output.x - this -> position.x;
                 float threshold = letterManager -> getMeanderingSpeed(combine_stage);
-                threshold = threshold * threshold;
-
-                if (dist_sqr < threshold) // 10^2
+                
+                if (offset < threshold)
                 {
                     setMagnet(RIGHT, false);
                     letter_to_my_right->setMagnet(LEFT, false);
@@ -1127,8 +1042,7 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
         if (!connected_left &&
             ((current_stage == LETTER_COMBINE && !isStartOfWord()) || 
              (current_stage == WORD_COMBINE  && !isStartOfSentance())) &&
-             action_delay < 0 &&
-             position.y > y_bound_top() && letter_to_my_left -> position.y > y_bound_top()
+             action_delay < 0
            )
         {
             setMagnet(LEFT, true);
@@ -1144,32 +1058,13 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
             return output;
         }
 
-
-        /*
-        // We are no longer allowing right magnetization.
-        // Magnetize right.
-        if(combine_delay < 0 && !connected_right && pool_goto_left_of_right() &&
-            this -> letter_to_my_right -> combine_delay < 0)
-        {
-            setMagnet(RIGHT, true);
-            this -> letter_to_my_right -> setMagnet(LEFT, true);
-            setDriving(RIGHT);
-            letter_to_my_right -> setDriving(LEFT);
-
-            getOffsetPositionFromRight(&output);
-            return output;
-        }
-        */
-
     }
 
 
     // Follow left or right connections.
 
     // Follow left connection.
-    if (connected_left && driving == LEFT &&
-        letter_to_my_left->position.y > this->y_bound_top() &&
-        letter_to_my_left->position.y < this->y_bound_bottom())
+    if (connected_left && driving == LEFT)
     {
         getOffsetPositionFromLeft(&output);
         return output;
@@ -1183,7 +1078,6 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
     }
 
 
-
     // If this letter is the leader then it wants to be right where it is.
     if (letter_to_my_left == NULL)
     {
@@ -1192,6 +1086,8 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
             return ofVec2f(left_scroll_margin + getOffsetFromLeft(), this -> position.y);
         }
 
+        // The Leader is free however.
+        *free = true;
         return this -> position;
     }    
     
@@ -1467,20 +1363,25 @@ void Letter::stepTextScrollA(float dt)
 
 void Letter::stepTextScrollV(float dt)
 {
-    
     // Letters to default scroll behavior.
     velocity.x = 0;
     velocity.y = this -> letterManager -> getTextScrollSpeed();
 
+    
     // Then correct the behavior of the letters.
-    float scroll_start = letterManager -> getYDivider(SENTANCE_LEFT_ALIGN);
-    float scroll_end   = letterManager -> getYDivider(SENTANCE_SCROLL);
+    //float scroll_start = letterManager -> getYDivider(SENTANCE_LEFT_ALIGN);
+    //float scroll_end   = letterManager -> getYDivider(SENTANCE_SCROLL);
+
+    // Have the text simply come out of the pool, not aligning to the left outside of the pool line.
+    float scroll_start = getCurrentYDivider();
+    float scroll_end   = scroll_start + 1;
 
     velocityInterpolateToTargetBasedOnY(scroll_start, scroll_end, dt);
 
     tryToEjectLetterFromPool(scroll_start, dt);
 
     haveLetterFaceUpwards();
+
 }
 
 void Letter::velocityInterpolateToTargetBasedOnY(float y_start, float y_end, float dt)
@@ -1544,7 +1445,7 @@ void Letter::haveLetterFaceUpwards()
         this->angle_speed = angle_speed2;
     }
 
-    angle = 0;
+    //angle = 0;
 }
 
 // ASSUMPTIONS: target is positive and < 2*PI.
@@ -1576,7 +1477,11 @@ void Letter::setAngleSpeed(float target, float percentage)
 
 void Letter::stepTextScrollP(float dt)
 {
-    dynamicsP(dt);
+  dynamicsP(dt);
+
+  bool free;
+  ofVec2f target_position = getTargetPosition(&free, dt);
+  this->position = target_position;
 
 }
 
@@ -1634,7 +1539,7 @@ void Letter::setRightLetter(Letter * right)
 
 bool Letter::inZone()
 {
-    return this -> position.y > this -> y_bound_top() && position.y < this -> y_bound_bottom();
+    return true;
 }
 
 
@@ -1916,16 +1821,6 @@ Letter * Letter::findEndOfSentance()
     return search;
 }
 
-float Letter::y_bound_top()
-{
-    return letterManager -> getYDivider(current_stage - 1);
-}
-
-float Letter::y_bound_bottom()
-{
-    return letterManager -> getYDivider(current_stage);
-}
-
 void Letter::enable_collision_detection()
 {
     if(!collision_detection)
@@ -1952,7 +1847,7 @@ void Letter::disable_collision_detection()
 
 void Letter::transitionToMeanderPool()
 {
-    behavior = POOL;
+    setGroupBehavior(POOL);
 
     action_delay = this -> getStageDelay();// ALONE.
 
@@ -1967,14 +1862,14 @@ void Letter::transitionToMeanderPool()
 
 void Letter::transitionToCombinePool()
 {
-    behavior = COMBINE;
+    setGroupBehavior(COMBINE);
     action_delay = this -> getStageDelay();// ALONE.
 }
 
 void Letter::transitionToWaterfall()
 {
     enable_collision_detection();
-    behavior = WATERFALL;
+    setGroupBehavior(WATERFALL);
 }
 
 void Letter::transitionToScroll()
@@ -2025,11 +1920,10 @@ bool Letter::entire_word_in_stage()
     Letter * last_search;
 
     int stage = this -> current_stage;
-    float top_bound = y_bound_top();
     
     do
     {        
-        if (search -> current_stage < stage || search -> position.y < top_bound)
+        if (search -> current_stage < stage)
         {
             return false;
         }
@@ -2047,11 +1941,10 @@ bool Letter::entire_sentance_in_stage()
     Letter * last_search;
 
     int stage = this -> current_stage;
-    float top_bound = y_bound_top();
 
     do
     {
-        if (search -> current_stage < stage || search -> position.y < top_bound)
+        if (search -> current_stage < stage)
         {
             return false;
         }
@@ -2069,15 +1962,27 @@ float Letter::getOffsetFromLeft()
     if (behavior != TEXT_SCROLL)
     {
         // Hides spaces and indentation.
-        return minnimal_offset;
+        return minnimal_offset*fontManager->getSpaceSizeFactor(font_size_index);
     }
     else
     {
-        return maximal_offset;
+        return maximal_offset*fontManager -> getSpaceSizeFactor(font_size_index);
     }
 }
 
 float Letter::getRestitutionCoef()
 {
     return letterManager -> getRestitutionCoef();
+}
+
+float Letter::getCurrentYDivider()
+{
+    if(current_stage < WORD_WATERFALL)
+    {
+        return letterManager -> getYDivider(0); // divider 1.
+    }
+    else
+    {
+        return letterManager ->getYDivider(1);
+    }
 }

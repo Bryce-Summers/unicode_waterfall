@@ -9,18 +9,26 @@ void ofApp::setup(){
     float w = ofGetWidth();
     float h = ofGetHeight();
 
+    //w = 1080;
+    //h = 1920;
+
+    //int bottom_y = 1920 + 50;// ofGetHeight() + 50;
+    int bottom_y = ofGetHeight() + 50;
+
     // Initialize all of the sliders.
     gui.setup();
 
     int n = 9;
     gui.add(divide_y1.setup("divide_y1", h * 1 / n, 0, h));
     gui.add(divide_y2.setup("divide_y2", h * 2 / n, 0, h));
+    /*
     gui.add(divide_y3.setup("divide_y3", h * 3 / n, 0, h));
     gui.add(divide_y4.setup("divide_y4", h * 4 / n, 0, h));
     gui.add(divide_y5.setup("divide_y5", h * 5 / n, 0, h));
     gui.add(divide_y6.setup("divide_y6", h * 6 / n, 0, h));
     gui.add(divide_y7.setup("divide_y7", h * 7 / n, 0, h));
     gui.add(divide_y8.setup("divide_y8", h * 8 / n, 0, h));
+    */
 
     gui.add(sentances_per_second.setup("sentances_per_second", .4555, .1, 1));
     gui.add(gravity.setup("gravity", 5.455, 5, 100)); // accelartion
@@ -50,7 +58,32 @@ void ofApp::setup(){
 
     gui.add(viscocity.setup("viscocity", 4.5, 0, 100)); // Percentage of the screen the velocity travels to each frame.
 
-    gui.loadFromFile("gui.xml");
+    gui.add(fontSize1.setup("fSize1", 14, 14, 100));
+    gui.add(fontSize2.setup("fSize2", 20, 14, 100));
+    gui.add(fontSize3.setup("fSize3", 32, 14, 100));
+    gui.add(fontSize4.setup("fSize4", 48, 14, 100));
+    gui.add(fontSize5.setup("fSize5", 64, 14, 100));
+    /*
+    gui.add(fontSize5.setup("fSize6", 64, 14, 100));
+    gui.add(fontSize5.setup("fSize7", 64, 14, 100));
+    gui.add(fontSize5.setup("fSize8", 64, 14, 100));
+    gui.add(fontSize5.setup("fSize9", 64, 14 100));
+    */
+
+    gui.add(spaceSize1.setup("space1", 1, 1, 5));
+    gui.add(spaceSize2.setup("space2", 1, 1, 5));
+    gui.add(spaceSize3.setup("space3", 1, 1, 5));
+    gui.add(spaceSize4.setup("space4", 1, 1, 5));
+    gui.add(spaceSize5.setup("space5", 1, 1, 5));
+    /*
+    gui.add(spaceSize6.setup("space6", 1, 1, 50));
+    gui.add(spaceSize7.setup("space7", 1, 1, 50));
+    gui.add(spaceSize8.setup("space8", 1, 1, 50));
+    gui.add(spaceSize9.setup("space9", 1, 1, 50));
+    */
+
+    gui.loadFromFile("gui.xml"); // Normal settings.
+    //gui.loadFromFile("gui_stephan.xml"); // Stephan's settings.
     
     frame = 0;
 
@@ -61,19 +94,46 @@ void ofApp::setup(){
     this -> seconds_per_frame = 1.0 / frame_rate
     */
 
+    fontSliders.push_back(&fontSize1);
+    fontSliders.push_back(&fontSize2);
+    fontSliders.push_back(&fontSize3);
+    fontSliders.push_back(&fontSize4);
+    fontSliders.push_back(&fontSize5);
+    /*
+    fontSliders.push_back(fontSize6);
+    fontSliders.push_back(fontSize7);
+    fontSliders.push_back(fontSize8);
+    fontSliders.push_back(fontSize9);
+    */
 
-    loadFonts();
+    spaceSliders.push_back(&spaceSize1);
+    spaceSliders.push_back(&spaceSize2);
+    spaceSliders.push_back(&spaceSize3);
+    spaceSliders.push_back(&spaceSize4);
+    spaceSliders.push_back(&spaceSize5);
+    /*
+    spaceSliders.push_back(&spaceSize6);
+    spaceSliders.push_back(&spaceSize7);
+    spaceSliders.push_back(&spaceSize8);
+    spaceSliders.push_back(&spaceSize9);
+    */
+
+    init_fontAndSpaceSizeVectors(); // Inits sizes from gui.
+    fontManager = new FontManager(&fontSizes, &spaceSizes);
+
     loadGridAndObstacles();
     loadInputText();
 
     y_dividers.push_back(&divide_y1);
     y_dividers.push_back(&divide_y2);
+    /*
     y_dividers.push_back(&divide_y3);
     y_dividers.push_back(&divide_y4);
     y_dividers.push_back(&divide_y5);
     y_dividers.push_back(&divide_y6);
     y_dividers.push_back(&divide_y7);
     y_dividers.push_back(&divide_y8);
+    */
 
     // NOTE: We make the time between scolls less than the input rate of sentances, because 
     // we don't want an unstable queueing scenario that grows unboundedly.
@@ -101,95 +161,28 @@ void ofApp::setup(){
         &wordToSentancePoolDelay,
         &bounce_energy,
         input.size(),
-        fluid_dynamics_grid
+        fluid_dynamics_grid,
+        bottom_y        
    );
 
 }
 
-void ofApp::loadFonts()
+void ofApp::init_fontAndSpaceSizeVectors()
 {
-    ofBackground(54, 54, 54, 255);
-
-
-    //old OF default is 96 - but this results in fonts looking larger than in other programs. 
-    ofTrueTypeFont::setGlobalDpi(72);
-
-    // Standard sizes for fonts.
-    // Please use up to 10.
-    vector<int> sizes;
-    sizes.push_back(14);
-    sizes.push_back(20);
-    sizes.push_back(32);
-    sizes.push_back(48);
-    sizes.push_back(64);
-
-    for (auto size : sizes)
+    for (int i = 0; i < sizesInUse; i++)
     {
-        ofTrueTypeFont * normal = new ofTrueTypeFont();
-        normal -> load("verdana.ttf", size, true, true);
-
-        ofTrueTypeFont * italic = new ofTrueTypeFont();
-        italic -> load("verdanai.ttf", size, true, true);
-
-
-        /* settings for 14 pt font.
-        normal -> setLineHeight(18.0f);
-        normal -> setLetterSpacing(1.037);
-        */
-
-        // Generalize line spacings for any size.
-        normal -> setLineHeight(1.2857142857142858*size);
-        //normal -> setLetterSpacing(0.07407142857142857*size);
-        italic -> setLineHeight(1.2857142857142858*size);
-        //italic -> setLetterSpacing(0.07407142857142857*size);
-
-        normal -> setLetterSpacing(1.037);
-        italic -> setLetterSpacing(1.037);
-
-        normal_fonts.push_back(normal);
-        italic_fonts.push_back(italic);
+        fontSizes.push_back((int)*fontSliders[i]);
+        spaceSizes.push_back(*spaceSliders[i]);
     }
+}
 
-    fontManager = new FontManager(&normal_fonts, &italic_fonts);
-
-    /*
-    verdana14.load("verdana.ttf", 14, true, true);
-    verdana14.setLineHeight(18.0f);
-    verdana14.setLetterSpacing(1.037);
-
-    verdana30.load("verdana.ttf", 30, true, true);
-    verdana30.setLineHeight(34.0f);
-    verdana30.setLetterSpacing(1.035);
-
-    verdana14A.load("verdana.ttf", 14, false);
-    verdana14A.setLineHeight(18.0f);
-    verdana14A.setLetterSpacing(1.037);
-
-    franklinBook14.load("frabk.ttf", 14);
-    franklinBook14.setLineHeight(18.0f);
-    franklinBook14.setLetterSpacing(1.037);
-
-    franklinBook14A.load("frabk.ttf", 14, false);
-    franklinBook14A.setLineHeight(18.0f);
-    franklinBook14A.setLetterSpacing(1.037);
-    */
-
-    /*
-    bFirst = true;
-    typeStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789,:&!?";
-
-    string str = "From fairest creatures we desire increase, ";
-    
-    string accum;
-
-    int len = str.length();
-    for (int i = 0; i < len + 1; i++)
+void ofApp::refreshFontAndSpaceSizes()
+{
+    for (int i = 0; i < sizesInUse; i++)
     {
-        int length = font.stringWidth(accum);
-        //cout << length << endl; // Number of letters.
-        char c = str[i];
-        accum.push_back(c);
-    }*/
+        fontSizes[i] = (int)*fontSliders[i];
+        spaceSizes[i] = (float)*spaceSliders[i];
+    }
 }
 
 void ofApp::loadGridAndObstacles()
@@ -214,7 +207,7 @@ void ofApp::loadGridAndObstacles()
 
     // Create an obstacle that automatically adds itself to the grid.
     Obstacle * obj = new Obstacle(p, collision_detection_grid);
-    obstacles.push_back(obj);
+    //obstacles.push_back(obj);
 
     ofPolyline p2;
     p2.addVertex(ofPoint(525, 200));
@@ -223,7 +216,7 @@ void ofApp::loadGridAndObstacles()
     p2.addVertex(ofPoint(500, 260));
     p2.addVertex(ofPoint(500, 225));
     obj = new Obstacle(p2, collision_detection_grid);
-    obstacles.push_back(obj);
+    //obstacles.push_back(obj);
 
     ofPolyline p3;
     p3.addVertex(ofPoint(725, 210));
@@ -232,7 +225,7 @@ void ofApp::loadGridAndObstacles()
     p3.addVertex(ofPoint(700, 260));
     p3.addVertex(ofPoint(700, 225));
     obj = new Obstacle(p3, collision_detection_grid);
-    obstacles.push_back(obj);
+    //obstacles.push_back(obj);
     //*/
     
     // Construct some bounds for the sides of the view screen.
@@ -291,6 +284,8 @@ void ofApp::loadInputText()
 //--------------------------------------------------------------
 void ofApp::update(){
 
+    synchFontSizes();
+
     timing++;
     if (timing > 15)
     {
@@ -324,10 +319,12 @@ void ofApp::update(){
 
     auto t2 = Clock::now();
     // Letter Creation.
+    /*
     if(timing == 0)
     std::cout << "Letter Creation: "
         << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
         << " milliseconds" << std::endl;
+    */
 
 
     letter_manager -> update(dt);
@@ -342,10 +339,12 @@ void ofApp::update(){
     }
 
     auto t3 = Clock::now();
+    /*
     if (timing == 0)
         std::cout << "letter updates: "
         << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count()
         << " milliseconds" << std::endl;
+    */
 
     
     /*
@@ -361,10 +360,12 @@ void ofApp::update(){
     }
 
     auto t4 = Clock::now();
+    /*
     if (timing == 0)
         std::cout << "letter moves: "
         << std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count()
         << " milliseconds" << std::endl;
+    */
 
     // Second pass, check for and resolve collisions.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
@@ -373,10 +374,12 @@ void ofApp::update(){
     }
 
     auto t5 = Clock::now();
+    /*
     if (timing == 0)
         std::cout << "Resolving Collisions. "
         << std::chrono::duration_cast<std::chrono::milliseconds>(t5 - t4).count()
         << " milliseconds" << std::endl;
+    */
 
     // Dead collection pass.
     for (auto iter = letters.begin(); iter != letters.end(); ++iter)
@@ -448,7 +451,8 @@ void ofApp::spawnSentance()
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-    ofScale(ofVec2f(.5, .5));
+
+    //ofScale(.5, .5);
 
     auto t1 = Clock::now();
 
@@ -464,7 +468,8 @@ void ofApp::draw()
     int width = ofGetWidth();
     int height = ofGetHeight();
 
-//    #ifdef DEBUG
+    /*
+    // #ifdef DEBUG
     phase_1A = ofRectangle(0, 0, width, divide_y1 - 1);
     phase_1B = ofRectangle(0, divide_y1, width, divide_y2 - divide_y1 - 1);
 
@@ -476,6 +481,7 @@ void ofApp::draw()
     phase_3A = ofRectangle(0, divide_y5, width, divide_y6 - divide_y5 - 1);
     phase_3B = ofRectangle(0, divide_y6, width, divide_y7 - divide_y6 - 1);
     phase_3C = ofRectangle(0, divide_y7, width, divide_y8 - divide_y7 - 1);
+    
 
     ofSetColor(155, 255, 255); // blue.
     ofDrawRectangle(phase_1A);
@@ -499,7 +505,11 @@ void ofApp::draw()
     ofDrawRectangle(phase_3B);
 
     ofSetColor(255, 127, 129); // red.
-    ofDrawRectangle(phase_3C); 
+    ofDrawRectangle(phase_3C);
+    */
+    ofSetColor(0, 0, 0, 255); // Black divider lines.
+    ofDrawLine(0, divide_y1, width, divide_y1);
+    ofDrawLine(0, divide_y2, width, divide_y2);
 
     // Draw all of the letters to the screen.
     ofSetColor(0, 0, 0, 255); // Letters are black.
@@ -534,18 +544,20 @@ void ofApp::draw()
     // End of draw.
     auto t2 = Clock::now();
 
+    /*
     if(ofRandom(1) < .01)
     std::cout << "Draw: "
         << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
         << " milliseconds" << std::endl;
+    */
 
     
     // I'm not showing this grid, because it is only interesting for optimization purposes.
     //collision_detection_grid -> draw();
-    if(show_grid)
-        fluid_dynamics_grid -> draw();
+    //if(show_grid)
+    //  fluid_dynamics_grid -> draw();
 
-    ofScale(2, 2);
+    //ofScale(2, 2);
 
     gui.draw();
 
@@ -616,4 +628,27 @@ void ofApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
+}
+
+void ofApp::synchFontSizes()
+{
+    bool changed = false;
+    for (int i = 0; i < sizesInUse; i++)
+    {
+        if (fontSizes[i] != (int)*fontSliders[i])
+        {
+            changed = true;
+            fontSizes[i] = (int)*fontSliders[i];
+        }
+        if (spaceSizes[i] != *spaceSliders[i])
+        {
+            changed = true;
+            spaceSizes[i] = *spaceSliders[i];
+        }
+    }
+
+    if (changed)
+    {
+        fontManager -> reloadFonts();
+    }
 }

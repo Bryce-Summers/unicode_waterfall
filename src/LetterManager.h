@@ -49,7 +49,8 @@ public:
                   ofxFloatSlider * getWordToSentancePoolDelay,
                   ofxFloatSlider * coef_of_restitution,
                   int input_num,
-                  Grid * fluid_dynamics_grid
+                  Grid * fluid_dynamics_grid,
+                  int bottom_y
     );
     ~LetterManager();
 

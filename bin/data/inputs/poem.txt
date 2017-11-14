@@ -1,7 +1,6 @@
     \3A \2varying \1size \3line \2of \1text.
           \3A \2varying \1size \3line \2of \1text.
                 \3A \2varying \1size \3line \2of \1text.
-
      A normal line of text.
   \5A very large line of text.
       \3A \2varying \1size \3line \2of \1text.

@@ -46,6 +46,7 @@ class ofApp : public ofBaseApp{
 
         int frame_rate;
 
+        void synchFontSizes();
 
         void loadFonts();
         // From fonts example.
@@ -97,15 +98,50 @@ class ofApp : public ofBaseApp{
     ofxFloatSlider divide_y7;
     ofxFloatSlider divide_y8;
 
+    ofxFloatSlider fontSize1;
+    ofxFloatSlider fontSize2;
+    ofxFloatSlider fontSize3;
+    ofxFloatSlider fontSize4;
+    ofxFloatSlider fontSize5;
+    ofxFloatSlider fontSize6;
+    ofxFloatSlider fontSize7;
+    ofxFloatSlider fontSize8;
+    ofxFloatSlider fontSize9;
+
+    // Space factors that multiply the offset amounts of letters.
+    ofxFloatSlider spaceSize1;
+    ofxFloatSlider spaceSize2;
+    ofxFloatSlider spaceSize3;
+    ofxFloatSlider spaceSize4;
+    ofxFloatSlider spaceSize5;
+    ofxFloatSlider spaceSize6;
+    ofxFloatSlider spaceSize7;
+    ofxFloatSlider spaceSize8;
+    ofxFloatSlider spaceSize9;
+
+    // The number of sizes in use right now.
+    // We can use up to 10 some day.
+    const int sizesInUse = 5;
+
     vector<ofxFloatSlider *> y_dividers;
-    
+    vector<ofxFloatSlider *> fontSliders;
+    vector<ofxFloatSlider *> spaceSliders;
+    vector<int> fontSizes;
+    vector<float> spaceSizes;
+
+    // Initializes the current font arrays.
+    void init_fontAndSpaceSizeVectors();
+
+    // Sets the font sizes array values to the current slider values.
+    void refreshFontAndSpaceSizes();
+   
     ofxFloatSlider sentances_per_second;// = .3; //.3;
     
     // Amount that a given accelaration is damped for altering meandering direction.
     ofxFloatSlider meanderingDamping_letters;// = .5;
     
     // The constant speed that a pool word will meander at.
-    // This should be faster if the pool is larger.
+    // This should be faster if the pool is large r.
     //float meanderingSpeed = 50; // Pixels per second.
     ofxFloatSlider meanderingSpeed_letters;// = 100;
     // 50 works for 800 wide pool.

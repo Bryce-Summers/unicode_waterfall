@@ -4,34 +4,44 @@
 	<pool_y2>510</pool_y2>
 	<scroll_y_start>772.5</scroll_y_start>
 	<scroll_y_end>812.5</scroll_y_end>
-	<sentances_per_second>0.4555</sentances_per_second>
-	<gravity>5.455</gravity>
-	<terminal_velocity>82.65</terminal_velocity>
-	<curl_letters>0.009</curl_letters>
+	<sentances_per_second>1</sentances_per_second>
+	<gravity>55.825</gravity>
+	<terminal_velocity>164.3</terminal_velocity>
+	<curl_letters>0.036</curl_letters>
 	<m_speed_letters>100</m_speed_letters>
 	<curl_words>0.009</curl_words>
 	<m_speed_words>100</m_speed_words>
 	<curl_sentances>0.009</curl_sentances>
 	<m_speed_sentances>100</m_speed_sentances>
-	<wind_factor>0.01</wind_factor>
-	<scrollSpeed>40</scrollSpeed>
+	<wind_factor>0.18</wind_factor>
+	<scrollSpeed>74.8</scrollSpeed>
 	<poolTurnSpeed>0.015708</poolTurnSpeed>
 	<c_delay_letters>1</c_delay_letters>
 	<c_delay_words>1</c_delay_words>
 	<c_delay_sentances>1</c_delay_sentances>
-	<max_scroll_delay>5</max_scroll_delay>
+	<max_scroll_delay>1.81</max_scroll_delay>
 <group/>
-	<dead_zone_height>5</dead_zone_height>
+	<dead_zone_height>18.775</dead_zone_height>
 	<w_2_s_delay>0</w_2_s_delay>
-<divide_y1>111.111</divide_y1>
-	<divide_y2>222.222</divide_y2>
-	<divide_y3>333.333</divide_y3>
-	<divide_y4>444.444</divide_y4>
-	<divide_y5>555.556</divide_y5>
-	<divide_y6>666.667</divide_y6>
-	<divide_y7>777.778</divide_y7>
-	<divide_y8>888.889</divide_y8>
-<bounce_energy>0.25</bounce_energy>
-	<UnknownName>1</UnknownName>
-<viscocity>4.5</viscocity>
+<divide_y1>180</divide_y1>
+	<divide_y2>465</divide_y2>
+	<divide_y3>950.4</divide_y3>
+	<divide_y4>1219.2</divide_y4>
+	<divide_y5>1286.4</divide_y5>
+	<divide_y6>1296</divide_y6>
+	<divide_y7>1315.2</divide_y7>
+	<divide_y8>1334.4</divide_y8>
+<bounce_energy>0.05</bounce_energy>
+	<UnknownName>204</UnknownName>
+<viscocity>100</viscocity>
+<fSize1>14</fSize1>
+	<fSize2>20</fSize2>
+	<fSize3>32</fSize3>
+	<fSize4>48</fSize4>
+	<fSize5>64</fSize5>
+	<space1>1</space1>
+	<space2>1</space2>
+	<space3>1</space3>
+	<space4>1</space4>
+	<space5>1</space5>
 </group>

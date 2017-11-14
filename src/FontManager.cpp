@@ -1,11 +1,13 @@
 #include "FontManager.h"
 
 // Must at the minnimum contains at least 1 normal font.
-FontManager::FontManager(vector<ofTrueTypeFont *> * normal_fonts,
-                         vector<ofTrueTypeFont *> * italic_fonts)
+FontManager::FontManager(vector<int>   * fontSizes,
+                         vector<float> * spaceSizes)
 {
-    this -> normal_fonts = normal_fonts;
-    this -> italic_fonts = italic_fonts;
+    this -> fontSizes = fontSizes;
+    this -> spaceSizes = spaceSizes;
+
+    loadFonts();
 }
 
 
@@ -13,16 +15,115 @@ FontManager::~FontManager()
 {
 }
 
+void FontManager::loadFonts()
+{
+    loadFonts(&this -> normal_fonts, &italic_fonts);
+}
+
+void FontManager::reloadFonts()
+{
+    vector<ofTrueTypeFont *> new_normal_fonts;
+    vector<ofTrueTypeFont *> new_italic_fonts;
+    loadFonts(&new_normal_fonts, &new_italic_fonts);
+
+    for (int i = 0; i < fontSizes -> size(); i++)
+    {
+        ofTrueTypeFont * old1 = normal_fonts[i];
+        normal_fonts[i] = new_normal_fonts[i];
+        delete old1;
+
+        ofTrueTypeFont * old2 = italic_fonts[i];
+        italic_fonts[i] = new_italic_fonts[i];
+        delete old2;
+    }
+}
+
+void FontManager::loadFonts(
+    vector<ofTrueTypeFont *> * normal_fonts,
+    vector<ofTrueTypeFont *> * italic_fonts)
+{
+    //old OF default is 96 - but this results in fonts looking larger than in other programs. 
+    ofTrueTypeFont::setGlobalDpi(72);
+
+    for (auto iter = fontSizes->begin(); iter != fontSizes->end(); iter++)
+    {
+        int size = *iter;
+
+        ofTrueTypeFont * normal = new ofTrueTypeFont();
+        normal->load("verdana.ttf", size, true, true);
+
+        ofTrueTypeFont * italic = new ofTrueTypeFont();
+        italic->load("verdanai.ttf", size, true, true);
+
+
+        /* settings for 14 pt font.
+        normal -> setLineHeight(18.0f);
+        normal -> setLetterSpacing(1.037);
+        */
+
+        // Generalize line spacings for any size.
+        normal->setLineHeight(1.2857142857142858*size);
+        //normal -> setLetterSpacing(0.07407142857142857*size);
+        italic->setLineHeight(1.2857142857142858*size);
+        //italic -> setLetterSpacing(0.07407142857142857*size);
+
+        normal->setLetterSpacing(1.037);
+        italic->setLetterSpacing(1.037);
+
+        normal_fonts -> push_back(normal);
+        italic_fonts -> push_back(italic);
+    }
+
+    /*
+    verdana14.load("verdana.ttf", 14, true, true);
+    verdana14.setLineHeight(18.0f);
+    verdana14.setLetterSpacing(1.037);
+
+    verdana30.load("verdana.ttf", 30, true, true);
+    verdana30.setLineHeight(34.0f);
+    verdana30.setLetterSpacing(1.035);
+
+    verdana14A.load("verdana.ttf", 14, false);
+    verdana14A.setLineHeight(18.0f);
+    verdana14A.setLetterSpacing(1.037);
+
+    franklinBook14.load("frabk.ttf", 14);
+    franklinBook14.setLineHeight(18.0f);
+    franklinBook14.setLetterSpacing(1.037);
+
+    franklinBook14A.load("frabk.ttf", 14, false);
+    franklinBook14A.setLineHeight(18.0f);
+    franklinBook14A.setLetterSpacing(1.037);
+    */
+
+    /*
+    bFirst = true;
+    typeStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789,:&!?";
+
+    string str = "From fairest creatures we desire increase, ";
+
+    string accum;
+
+    int len = str.length();
+    for (int i = 0; i < len + 1; i++)
+    {
+    int length = font.stringWidth(accum);
+    //cout << length << endl; // Number of letters.
+    char c = str[i];
+    accum.push_back(c);
+    }*/
+}
+
 // Returns the font of size_index [1...N], and the italic version if italic is true.
 ofTrueTypeFont * FontManager::getFont(int size_index, bool italic)
 {   
     if(!italic)
     {
-        return normal_fonts -> at(size_index - 1);
+        return normal_fonts[size_index - 1];
     }
     else
     {
-        return italic_fonts -> at(size_index - 1);
+        return italic_fonts[size_index - 1];
     }
 }
 
@@ -159,7 +260,9 @@ void FontManager::outputLetter(char c)
         offset_full, // Used as offset in text scroll.
         space_after_previous_letter, // used to delliminate words.
         sentance_index, // Sentance index.
-        current_font
+        size_index, // Everything the letter needs to dynamically query its font.
+        italics,
+        this
     );
 
     output -> push_back(l);
@@ -261,3 +364,7 @@ void FontManager::conclude()
     this -> letterManager = NULL;
 }
 
+float FontManager::getSpaceSizeFactor(int sizeIndex)
+{
+    return spaceSizes -> at(sizeIndex - 1);
+}

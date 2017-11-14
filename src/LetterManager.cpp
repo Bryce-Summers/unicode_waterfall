@@ -27,7 +27,8 @@ LetterManager::LetterManager(Grid * collision_detection_grid,
     ofxFloatSlider * wordToSentancePoolDelay,
     ofxFloatSlider * coef_of_restitution,
     int input_count,
-    Grid * fluid_dynamics_grid
+    Grid * fluid_dynamics_grid,
+    int bottom_y
 )
 {
 
@@ -52,7 +53,7 @@ LetterManager::LetterManager(Grid * collision_detection_grid,
     this -> wind_factor = wind_factor;
 
     // The bottom of the world.
-    bottom_y = ofGetHeight() + 50;
+    this -> bottom_y = bottom_y;
 
     this -> turn_speed = pool_turn_speed;
 
@@ -244,7 +245,7 @@ float LetterManager::getRepellingForce()
 
 float LetterManager::combineThresholdDistance()
 {
-    return 100;
+    return 300;
 }
 
 ofVec2f LetterManager::getWindVelocityAtPosition(ofVec2f position)

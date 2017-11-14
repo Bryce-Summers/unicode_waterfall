@@ -4,6 +4,7 @@
 #include "Letter.h"
 #include "LetterManager.h"
 
+class Letter;
 
 /*
  * Written by Bryce Summers on October.28th.2017
@@ -14,12 +15,16 @@
 class FontManager
 {
 public:
-    FontManager(vector<ofTrueTypeFont *> * normal_fonts,
-                vector<ofTrueTypeFont *> * italic_fonts);
+    FontManager(vector<int>   * fontSizes,
+                vector<float> * spaceSizes);
     ~FontManager();
 
-    vector<ofTrueTypeFont *> * normal_fonts;
-    vector<ofTrueTypeFont *> * italic_fonts;
+    vector<int>   * fontSizes;
+    vector<float> * spaceSizes;
+
+    vector<ofTrueTypeFont *> normal_fonts;
+    vector<ofTrueTypeFont *> italic_fonts;
+
 
     // Returns the font of size_index [0...N], and the italic version if italic is true.
     ofTrueTypeFont * getFont(int size_index, bool italic);
@@ -30,11 +35,19 @@ public:
                        LetterManager * letterManager,
                        int sentance_index);
 
+    void reloadFonts();
+    float getSpaceSizeFactor(int sizeIndex);
+
 private:
+
+    void loadFonts();
+    void loadFonts(vector<ofTrueTypeFont *> * normal_fonts,
+                   vector<ofTrueTypeFont *> * italic_fonts);
 
     // -- Finite State machine for generating characters.
 
     // Variable state.
+
     ofTrueTypeFont * current_font;
     int size_index; // 1 - N (Human readable starting at 1, offset by -1 on the machine.
     bool italics;
@@ -50,10 +63,6 @@ private:
     list<Letter *> * output;
     LetterManager * letterManager;
     int sentance_index;
-
-
-
-
 
     void initial_state(list<Letter *> * output,
         LetterManager * letterManager,

@@ -6,6 +6,9 @@
 #include "Collidable.h"
 #include "OBB.h"
 #include "LetterManager.h"
+#include "FontManager.h"
+
+class FontManager;
 
 /*
  * This class controls the letter particles that
@@ -49,7 +52,9 @@ public:
         float offset_in_text_scroll,
         bool space_before,
         int sentance_index,
-        ofTrueTypeFont * font);
+        int font_size_index, // Everything the letter needs to dynamically query its font.
+        bool font_italics,
+        FontManager * fontManager);
     ~Letter();
 
     // -- Public Interface.
@@ -86,6 +91,11 @@ private:
 
 private:
 
+    // Font.
+    int font_size_index;
+    bool font_italics;
+    FontManager * fontManager;
+
     // Determines how much a letter is affected by wind.
     float mass;
 
@@ -119,9 +129,6 @@ private:
     bool collision_detection; // Controls whether the letter needs to avoid letters and obstacles.
     void enable_collision_detection();
     void disable_collision_detection();
-
-    // Every character has a pointer to the font that will render it.
-    ofTrueTypeFont * font;
 
     char character;
     string str;
@@ -164,10 +171,6 @@ private:
     void stepWaterfallA(float dt);
     void stepWaterfallV(float dt);
     void stepWaterfallP(float dt);
-
-    // Return the y bound for the current stage.
-    float y_bound_top();
-    float y_bound_bottom();
 
 
     // -- Pool behavior.
@@ -355,5 +358,9 @@ private:
     float getOffsetFromLeft();
 
     void fluidTest(float dt);
+
+    void incrementStage();
+
+    float getCurrentYDivider();
 
 };
