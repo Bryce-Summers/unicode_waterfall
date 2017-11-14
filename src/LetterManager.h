@@ -95,6 +95,7 @@ public:
     bool isScrollReady();
     int get_scroll_index();
     void next_scroll();
+    void setScrollDelay(float amount);
 
 
     // The y - coordinate that letters transition from the waterfall behavior to the pooling behavior.

@@ -196,6 +196,7 @@ void ofApp::loadGridAndObstacles()
     fluid_dynamics_grid = new Grid(F_rows, F_columns, ofGetWidth(), ofGetHeight());
 
     // We will focus on getting the other stages in working order first.
+    /*
     ofPolyline p;
     for (int i = 0; i < 20; i++)
     {
@@ -207,7 +208,7 @@ void ofApp::loadGridAndObstacles()
 
     // Create an obstacle that automatically adds itself to the grid.
     Obstacle * obj = new Obstacle(p, collision_detection_grid);
-    //obstacles.push_back(obj);
+    obstacles.push_back(obj);
 
     ofPolyline p2;
     p2.addVertex(ofPoint(525, 200));
@@ -216,7 +217,7 @@ void ofApp::loadGridAndObstacles()
     p2.addVertex(ofPoint(500, 260));
     p2.addVertex(ofPoint(500, 225));
     obj = new Obstacle(p2, collision_detection_grid);
-    //obstacles.push_back(obj);
+    obstacles.push_back(obj);
 
     ofPolyline p3;
     p3.addVertex(ofPoint(725, 210));
@@ -225,7 +226,7 @@ void ofApp::loadGridAndObstacles()
     p3.addVertex(ofPoint(700, 260));
     p3.addVertex(ofPoint(700, 225));
     obj = new Obstacle(p3, collision_detection_grid);
-    //obstacles.push_back(obj);
+    obstacles.push_back(obj);
     //*/
     
     // Construct some bounds for the sides of the view screen.

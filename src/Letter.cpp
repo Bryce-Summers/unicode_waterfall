@@ -276,11 +276,12 @@ void Letter::transitionToNextStateIfProper(float dt)
         {
             scroll_delay -= dt;
             if(letterManager -> isScrollReady() &&
-               this -> sentance_index == letterManager -> get_scroll_index() && (scroll_delay < 0 || sentance_index > 0))
+               this -> sentance_index == letterManager -> get_scroll_index() && (scroll_delay < 0))
             {
                 transitionToScroll();
                 incrementStage();
-            }      
+                letterManager -> setScrollDelay(1.5*char_height / letterManager -> getTextScrollSpeed());
+            }
         }
     }
 
@@ -934,7 +935,9 @@ void Letter::stepPoolP(float dt)
 {
     dynamicsP(dt);
     
-    this -> position.y = getCurrentYDivider();
+    float per = .01;
+    float per_c = 1.0 - per;
+    this -> position.y = per * this -> position.y + per_c*getCurrentYDivider();
     haveLetterFaceUpwards();
 }
 
@@ -1431,6 +1434,19 @@ void Letter::tryToEjectLetterFromPool(float y_start, float dt)
 
 void Letter::haveLetterFaceUpwards()
 {
+
+    while (angle < 0)
+    {
+        angle += PI*2;
+    }
+
+    while (angle > 2 * PI)
+    {
+        angle -= 2*PI;
+    }
+
+    //angle = angle % PI*2;
+
     // Bring the letter facing upwards.
     float angle_speed1 = -angle*move_to_left;
     float angle_speed2 = (PI * 2 - angle)*move_to_left;
@@ -1962,11 +1978,11 @@ float Letter::getOffsetFromLeft()
     if (behavior != TEXT_SCROLL)
     {
         // Hides spaces and indentation.
-        return minnimal_offset*fontManager->getSpaceSizeFactor(font_size_index);
+        return minnimal_offset;
     }
     else
     {
-        return maximal_offset*fontManager -> getSpaceSizeFactor(font_size_index);
+        return minnimal_offset + (maximal_offset - minnimal_offset)*fontManager -> getSpaceSizeFactor(font_size_index);
     }
 }
 

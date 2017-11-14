@@ -106,12 +106,17 @@ void LetterManager::next_scroll()
     scroll_ready = false;
     
     // As of 9.8.17 4:32 pm, we are triggering this as soon as a sentance leaves the pool.
-    time_till_next_scroll = 1.0 / *sentances_per_second * .25;
+    time_till_next_scroll = 1.0 / *sentances_per_second * .7;
 
     if (next_index >= max_index)
     {
         next_index = 0;
     }
+}
+
+void LetterManager::setScrollDelay(float amount)
+{
+    time_till_next_scroll = amount;
 }
 
 
