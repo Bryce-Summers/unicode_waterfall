@@ -172,6 +172,8 @@ void FontManager::initial_state(
     LetterManager * letterManager,
     int sentance_index)
 {
+    this -> first_letter = true;
+
     // Variable State.
     this -> size_index = 1;
     this -> italics = false;
@@ -250,6 +252,10 @@ void FontManager::outputLetter(char c)
     ofVec2f pos = getInitialPosition();
 
     float offset_min  = getOffsetWithoutLargeSpaces(c);
+    if (first_letter) // Give the first letter, the full spacing.
+    {
+        offset_min = 0;
+    }
     float offset_full = getOffsetWithLargeSpaces(c);
 
     Letter * l = new Letter(letterManager,
@@ -264,6 +270,9 @@ void FontManager::outputLetter(char c)
         italics,
         this
     );
+
+    // First letter has been spawned.
+    first_letter = false;
 
     output -> push_back(l);
 
@@ -336,8 +345,12 @@ float FontManager::getKernedNonspacedOffset(char c)
     return ligature_width - character_width;
 }
 
-
 float FontManager::stringWidth(string & str)
+{
+    return stringWidth(str, current_font);
+}
+
+float FontManager::stringWidth(string & str, ofTrueTypeFont * font)
 {
     // We need this to well form the string for length computation.
     str.push_back('\n');
@@ -345,7 +358,7 @@ float FontManager::stringWidth(string & str)
     
     // Width of string displayed on screen.
     // Remove the linebreak in preparation for adding more characters.
-    size_t length = current_font -> stringWidth(str);
+    size_t length = font -> stringWidth(str);
                                                   
     str.pop_back();
 
@@ -367,4 +380,11 @@ void FontManager::conclude()
 float FontManager::getSpaceSizeFactor(int sizeIndex)
 {
     return spaceSizes -> at(sizeIndex - 1);
+}
+
+float FontManager::getWordOffset(string & str, int font_size_index, bool font_italics)
+{
+    ofTrueTypeFont * font = getFont(font_size_index, font_italics);
+    float offset = stringWidth(str, font);
+    return offset;
 }

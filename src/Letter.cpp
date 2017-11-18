@@ -934,7 +934,17 @@ void Letter::stepPoolV(float dt)
 
         this -> velocity.normalize();
         this -> velocity *= letterManager -> getMeanderingSpeed(combine_stage);
-        this -> velocity.y = 0;
+
+        // Move letters towards the line.
+        if (abs(target_position.y - this->position.y) > 1)
+        {
+            float toY = (target_position.y - position.y);
+            this -> velocity.y = MIN(toY/ dt, toY/abs(toY)/dt);
+        }
+        else
+        {
+            this -> velocity.y = 0;
+        }
 
 
         if(ofRandom(1) < .01)
@@ -1098,6 +1108,14 @@ ofVec2f Letter::getTargetPosition(bool * free, float dt)
         if (behavior == TEXT_SCROLL)
         {
             return ofVec2f(left_scroll_margin + getOffsetFromLeft(), this -> position.y);
+        }
+
+        // The Leader is free however.
+        *free = true;
+
+        if (behavior == COMBINE || behavior == POOL)
+        {
+            return ofVec2f(this -> position.x, this -> getCurrentYDivider());
         }
 
         // The Leader is free however.
@@ -1907,6 +1925,11 @@ void Letter::transitionToScroll()
     this -> setSentanceComplete();
     this -> setGroupBehavior(TEXT_SCROLL);
     cout << "Index scrolled = " << this -> sentance_index << endl;
+
+    // In the entire sentance,
+    // we need to convert letters into words,
+    // so that kerning is proper.
+    combineWordGroups();
 }
 
 
@@ -2013,5 +2036,52 @@ float Letter::getCurrentYDivider()
     else
     {
         return letterManager ->getYDivider(1);
+    }
+}
+
+void Letter::combineWordGroups()
+{
+    // We start at the very beginning. Thats a very good place to start.
+    Letter * start = findStartOfSentance();
+
+    // Combine every word.
+    while (start != NULL)
+    {
+        Letter * end = start -> findEndOfWord() -> letter_to_my_right;
+        Letter * current = start;
+        string s;
+        while (current != end)
+        {
+            s += current -> str;
+            if (current != start)
+            {
+                current -> dead = true;
+            }
+            current = current -> letter_to_my_right;
+        }
+        
+        start -> str = s;
+        start -> letter_to_my_right = end;
+        if (end != NULL)
+        {
+            end -> letter_to_my_left = start;
+            float min_offset = fontManager -> getWordOffset(start -> str + "",
+                                                            start -> font_size_index,
+                                                            font_italics);
+
+            float max_offset = fontManager -> getWordOffset(start -> str + ".",// period is size of space.
+                                                            start -> font_size_index,
+                                                            font_italics);
+            // Set a new offset.
+            end -> minnimal_offset = min_offset;
+            end -> maximal_offset  = max_offset;
+        }
+        else // If we've combined the last word, we need to remove ghost right connection pointers.
+        {
+            start -> connected_right = false;
+        }
+
+        // Transition to next word.
+        start = end;
     }
 }

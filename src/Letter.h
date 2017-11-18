@@ -363,4 +363,9 @@ private:
 
     float getCurrentYDivider();
 
+    // In the entire sentance,
+    // we need to convert letters into words,
+    // so that kerning is proper.
+    void combineWordGroups();
+
 };

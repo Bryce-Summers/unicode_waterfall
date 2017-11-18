@@ -38,6 +38,8 @@ public:
     void reloadFonts();
     float getSpaceSizeFactor(int sizeIndex);
 
+    float getWordOffset(string & str, int font_size_index, bool font_italics);
+
 private:
 
     void loadFonts();
@@ -47,6 +49,8 @@ private:
     // -- Finite State machine for generating characters.
 
     // Variable state.
+
+    bool first_letter = false;
 
     ofTrueTypeFont * current_font;
     int size_index; // 1 - N (Human readable starting at 1, offset by -1 on the machine.
@@ -93,7 +97,9 @@ private:
 
     float getKernedNonspacedOffset(char c);
 
-    float stringWidth(string & str);
+    // Defaults to current font.
+    float FontManager::stringWidth(string & str);
+    float FontManager::stringWidth(string & str, ofTrueTypeFont * font);
 
     // Finish by clearing away any unnecessary pointer state.
     void conclude();
