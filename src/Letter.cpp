@@ -399,7 +399,7 @@ void Letter::move(float dt)
     }
 
 
-    letterManager -> addVelocityToMeander(this -> position, this -> velocity);
+    //letterManager -> addVelocityToMeander(this -> position, this -> velocity);
 
 }
 
@@ -890,7 +890,17 @@ void Letter::stepPoolV(float dt)
 
     if (!free)
     {
-        ofVec2f desired_velocity = ofVec2f((target_position.x - this -> position.x) / dt, 0);
+        //ofVec2f desired_velocity = ofVec2f((target_position.x - this -> position.x) / dt, 0);
+        ofVec2f desired_velocity = (target_position - this -> position)/dt;
+
+        /*
+        float per = .01;
+        float per_c = 1.0 - per;
+        float desired_position = getCurrentYDivider();
+
+        float vel = (desired_position - this->position.y);
+        vel = vel / abs(vel)*MIN(abs(vel), abs(letterManager->getTerminalVelocity()))*dt;
+        */
 
         float speed = desired_velocity.length();
 
@@ -908,6 +918,9 @@ void Letter::stepPoolV(float dt)
             // Interpolate between the meandering velocity and the following velocity.
             this -> velocity = this -> velocity * .1 + desired_velocity*speedup * .9;
         }
+
+        this -> velocity.y = desired_velocity.y;
+
     }
 
     
@@ -935,9 +948,7 @@ void Letter::stepPoolP(float dt)
 {
     dynamicsP(dt);
     
-    float per = .01;
-    float per_c = 1.0 - per;
-    this -> position.y = per * this -> position.y + per_c*getCurrentYDivider();
+    //this -> position.y; += vel;
     haveLetterFaceUpwards();
 }
 
@@ -1497,7 +1508,9 @@ void Letter::stepTextScrollP(float dt)
 
   bool free;
   ofVec2f target_position = getTargetPosition(&free, dt);
-  this->position = target_position;
+  this -> position = target_position;
+
+  //this -> position.y = (int)(this -> position.y);
 
 }
 
