@@ -2035,7 +2035,7 @@ float Letter::getCurrentYDivider()
     }
     else
     {
-        return letterManager ->getYDivider(1);
+        return letterManager -> getYDivider(1);
     }
 }
 
@@ -2065,11 +2065,13 @@ void Letter::combineWordGroups()
         if (end != NULL)
         {
             end -> letter_to_my_left = start;
-            float min_offset = fontManager -> getWordOffset(start -> str + "",
+            
+            float min_offset = fontManager -> getWordOffset(start -> str,
                                                             start -> font_size_index,
                                                             font_italics);
-
-            float max_offset = fontManager -> getWordOffset(start -> str + ".",// period is size of space.
+            
+            string stringWithSpace = start -> str + "."; // period is size of space.
+            float max_offset = fontManager -> getWordOffset(stringWithSpace,
                                                             start -> font_size_index,
                                                             font_italics);
             // Set a new offset.
