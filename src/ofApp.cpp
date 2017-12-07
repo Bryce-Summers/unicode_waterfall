@@ -418,7 +418,7 @@ void ofApp::update(){
         << std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count()
         << " milliseconds" << std::endl;
 
-    fluid_dynamics_grid -> step_meander_velocities(dt, viscocity);
+    //fluid_dynamics_grid -> step_meander_velocities(dt, viscocity);
 
 }
 

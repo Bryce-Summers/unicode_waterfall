@@ -65,6 +65,9 @@ Letter::Letter(
 
     average_position = this -> position;
 
+    waterfall_offset_x = ofRandom(ofGetWidth());
+    waterfall_offset_y = ofRandom(ofGetHeight());
+
 }
 
 
@@ -624,7 +627,10 @@ void Letter::stepWaterfallA(float dt)
     // Add wind.
     if(this -> position.y > 0)
     {
-        ofVec2f wind = letterManager -> getWindVelocityAtPosition(this -> position);
+        ofVec2f wind_position = ofVec2f((int)(this -> position.x + waterfall_offset_x) % ofGetWidth(),
+                                        (int)(this -> position.y + waterfall_offset_y) % ofGetHeight());
+        
+        ofVec2f wind = letterManager -> getWindVelocityAtPosition(wind_position);
         this -> acceleration += wind * this -> letterManager -> getWindFactor() * mass;
     }
     else
@@ -855,6 +861,7 @@ void Letter::chaseLeaderV(float dt)
 
         float speed = desired_velocity.length();
 
+        
         if (speed > .001)
         {
             // Chasing letters, should be able to exceed the meander speed to catch up with the
@@ -2013,8 +2020,15 @@ float Letter::getOffsetFromLeft()
 {
     if (behavior != TEXT_SCROLL)
     {
-        // Hides spaces and indentation.
-        return minnimal_offset;
+        if(behavior == WATERFALL && font_size_index < 3)
+        {
+            return minnimal_offset * 2;
+        }
+        else
+        {
+            // Hides spaces and indentation.
+            return minnimal_offset;
+        }
     }
     else
     {

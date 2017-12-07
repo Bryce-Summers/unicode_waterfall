@@ -91,6 +91,9 @@ private:
 
 private:
 
+    float waterfall_offset_x;
+    float waterfall_offset_y;
+
     // Font.
     int font_size_index;
     bool font_italics;
